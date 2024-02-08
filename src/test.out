@@ -149,3 +149,6 @@ comment                    pressure [Pa]     density [kg/m3]     temperature [K]
 ----- Data appended at: 23:31:19 on 07/02/2024 -----
 comment                    pressure [Pa]     density [kg/m3]     temperature [K]     enthalpy [J/kg]      velocity [m/s]   sound speed [m/s]         Mach number  total enth. [J/kg] Pitot pressure [Pa] total pressure [Pa]    heat flux [W/m2]      Pitot Reynolds
 2023-0-27-s1-#01        3.0225170000e+03    7.3642634381e-03    1.3828357908e+03    1.2259901637e+06    2.1518221708e+02    7.3550231030e+02    2.9256497779e-01    1.2491418570e+06    3.2000000000e+03    3.1966969220e+03    8.6079199751e+04    3.0179793201e+02
+----- Data appended at: 23:33:20 on 07/02/2024 -----
+comment                    pressure [Pa]     density [kg/m3]     temperature [K]     enthalpy [J/kg]      velocity [m/s]   sound speed [m/s]         Mach number  total enth. [J/kg] Pitot pressure [Pa] total pressure [Pa]    heat flux [W/m2]      Pitot Reynolds
+2023-0-27-s1-#01        3.0225170000e+03    7.3642634381e-03    1.3828357908e+03    1.2259901637e+06    2.1518221708e+02    7.3550231030e+02    2.9256497779e-01    1.2491418570e+06    3.2000000000e+03    3.1966969220e+03    8.6079199751e+04    3.0179793201e+02
