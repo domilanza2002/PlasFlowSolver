@@ -1,0 +1,15 @@
+///////////////////////////////////////////////////
+/// PLASPROBES initial variable values          ///
+///                                             ///
+/// Alignment and order of data to be strictly  ///
+/// respected,  9 lines to be kept before first ///
+/// data field (corresponding to this header).  ///
+/// There must be 31 character before the value.///
+/// Notation for floating points: 2.0d-3        ///
+///////////////////////////////////////////////////
+TOTAL TEMPERATURE...........::   1000.0d0
+STATIC TEMPERATURE..........::   1000.0d0
+VELOCITY....................::   100.0d0
+TOTAL PRESSURE..............::   0.0d0
+1234567890123456789012345678901
+100 100 1 0

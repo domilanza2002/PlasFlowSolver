@@ -1,0 +1,161 @@
+#.................................................
+#   JACOBIAN_MATRIX.PY, v2.0.0, January 2024, Domenico Lanza.
+#.................................................
+#   This file is needed to compute the jacobian matrix of the system
+#   in order to use the newton-raphson method
+#.................................................
+import math #we import the math library
+import enthalpy as enthalpy_file #we import the enthalpy file
+import entropy as entropy_file #we import the entropy file
+import barker_effect as barker_effect_file #we import the barker effect file
+import heat_flux as heat_flux_file #we import the heat flux file
+def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue): #we define the function jacobian_matrix
+    #.................................................
+    #   This function returns the jacobian matrix of the system
+    #   in order to use the newton-raphson method
+    #   In order to compute the partial derivatives, we use a 
+    #   forward finite difference method
+    #.................................................
+    #   INPUTS:
+    #   probes: probes of the system
+    #   settings: settings of the program
+    #   Te: temperature at the exit
+    #   Tt: temperature at the turbine
+    #   Pe: pressure at the exit
+    #   Pt: pressure at the turbine
+    #   Pb: pressure at the barker
+    #   q: heat flux
+    #   he: enthalpy at the exit
+    #   ht: enthalpy at the turbine
+    #   se: entropy at the exit
+    #   st: entropy at the turbine
+    #   ue: velocity at the exit
+    #   OUTPUTS:
+    #   jac: jacobian matrix
+    #.................................................
+    # we declare some variables:
+    jac=None #variable to store the jacobian matrix
+    delta=None #variable to store the delta for the finite difference
+    Tstar=None #new temperature for the finite difference
+    dhdte=None #derivative of h(Pe,Te) wrt Te
+    dsdte=None #derivative of s(Pe,Te) wrt Te
+    dbdte=None #derivative of Pb(Pt,Pe,Te,ue) wrt Te
+    ustar=None #new velocity for the finite difference
+    dqdu=None #derivative of q(Pt,Tt,ue) wrt ue
+    dbdu=None #derivative of Pb(Pt,Pe,Te,ue) wrt ue
+    Ttstar=None #new total temperature for the finite difference
+    dqdtt=None #derivative of q(Pt,Tt,ue) wrt Tt
+    dhtdtt=None #derivative of ht(Pt,Tt) wrt Tt
+    dstdtt=None #derivative of st(Pt,Tt) wrt Tt
+    Ptstar=None #new value for the total pressure for the finite difference
+    dqdpt=None #derivative of q(Pt,Tt,ue) wrt Pt
+    dhtdpt=None #derivative of ht(Pt,Tt) wrt Pt
+    dstdpt=None #derivative of st(Pt,Tt) wrt Pt
+    dbdpt=None #derivative of Pb(Pt,Pe,Te,ue) wrt Pt
+    hstar=None #new value for the enthalpy
+    htstar=None #new value for the total enthalpy
+    sstar=None #new value for the entropy
+    ststar=None #new value for the total entropy
+    Pbstar=None #new value for the barker pressure
+    qstar=None #new value for the heat flux
+    # we retrieve some settings:
+    findiff=settings.findiff #we get the finite difference epsilon
+    barker=probes.barker #we get the barker correction
+    # we start the computation of the jacobian matrix
+    #.................................................
+    # DERIVATIVE WRT Te:
+    delta=Te*findiff #we compute the delta for the finite difference
+    Tstar=Te+delta #we compute the new temperature
+    # we compute the new enthalpy and entropy
+    hstar=enthalpy_file.enthalpy(settings,Pe,Tstar)
+    sstar=entropy_file.entropy(settings,Pe,Tstar)
+    # If the barker correction is enabled, we compute the new barker pressure
+    if(barker!=0):
+        Pbstar=barker_effect_file.barker_effect(probes,settings,Pt,Pe,Tstar,ue)[0]
+    else:
+        Pbstar=Pt #Dummy value, we don't really need it
+    # Now we compute the derivative using the forward finite difference method
+    dhdte=(hstar-he)/delta #derivative of h(Pe,Te) wrt Te
+    dsdte=(sstar-se)/delta #derivative of s(Pe,Te) wrt Te
+    dbdte=(Pbstar-Pb)/delta #derivative of Pb(Pt,Pe,Te,ue) wrt Te
+    #.................................................
+    # DERIVATIVE WRT ue:
+    delta=ue*findiff #we compute the delta for the finite difference
+    ustar=ue+delta #we compute the new velocity
+    # we compute the new heat flux
+    qstar=heat_flux_file.heat_flux(probes,settings,Pt,Tt,ustar)
+    # If the barker correction is enabled, we compute the new barker pressure
+    if(barker!=0):
+        Pbstar=barker_effect_file.barker_effect(probes,settings,Pt,Pe,Te,ustar)[0]
+    else:
+        Pbstar=Pt #Dummy value, we don't really need it
+    # Now we compute the derivative using the forward finite difference method
+    dqdu=(qstar-q)/delta #derivative of q(Pt,Tt,ue) wrt ue
+    dbdu=(Pbstar-Pb)/delta #derivative of Pb(Pt,Pe,Te,ue) wrt ue
+    #.................................................
+    # DERIVATIVE WRT Tt:
+    delta=Tt*findiff #we compute the delta for the finite difference
+    Ttstar=Tt+delta #we compute the new temperature for the finite difference
+    # we compute the new heat flux
+    qstar=heat_flux_file.heat_flux(probes,settings,Pt,Ttstar,ue)
+    # we compute the new total enthalpy and entropy
+    htstar=enthalpy_file.enthalpy(settings,Pt,Ttstar) #we compute the enthalpy at the start
+    ststar=entropy_file.entropy(settings,Pt,Ttstar) #we compute the entropy at the start
+    # Now we compute the derivative using the forward finite difference method
+    dqdtt=(qstar-q)/delta #derivative of q(Pt,Tt,ue) wrt Tt
+    dhtdtt=(htstar-ht)/delta  #derivative of ht(Pt,Tt) wrt Tt
+    dstdtt=(ststar-st)/delta  #derivative of st(Pt,Tt) wrt Tt
+    #.................................................
+    # DERIVATIVE WRT Pt: ONLY IF BARKER CORRECTION IS ENABLED
+    if(barker!=0):
+        delta=Pt*findiff
+        Ptstar=Pt+delta
+        # we compute the new heat flux:
+        qstar=heat_flux_file.heat_flux(probes,settings,Ptstar,Tt,ue)
+        # we copmute the new total enthalpy and entropy
+        htstar=enthalpy_file.enthalpy(settings,Ptstar,Tt)
+        ststar=entropy_file.entropy(settings,Ptstar,Tt)
+        # we compute the new barker pressure
+        Pbstar=barker_effect_file.barker_effect(probes,settings,Ptstar,Pe,Te,ue)[0]
+        # we compute the derivative using the forward finite difference method
+        dqdpt=(qstar-q)/delta
+        dhtdpt=(htstar-ht)/delta
+        dstdpt=(ststar-st)/delta
+        dbdpt=(Pbstar-Pb)/delta
+    else:
+        dqdpt=0
+        dhtdpt=0
+        dstdpt=0
+        dbdpt=0
+    #.................................................
+    # we now create the jacobian matrix:
+    # we inizialize a 4x4 matrix with zeros
+    jac=[[0.0 for i in range(4)] for j in range(4)]
+    # we fill the matrix with the derivatives according to the theory
+    jac[0][0]=0
+    jac[0][1]=dqdu
+    jac[0][2]=dqdtt
+    jac[1][0]=-dhdte
+    jac[1][1]=-ue
+    jac[1][2]=dhtdtt
+    jac[2][0]=-dsdte
+    jac[2][1]=0
+    jac[2][2]=dstdtt
+    jac[0][3]=dqdpt
+    jac[1][3]=dhtdpt
+    jac[2][3]=dstdpt
+    jac[3][0]=dbdte 
+    jac[3][1]=dbdu
+    jac[3][2]=0
+    jac[3][3]=dbdpt
+    return jac #we return the jacobian matrix
+#.................................................
+#   Possible improvements:
+#   -Change to a central finite diffence method
+#   -Improve order of the derivatives
+#.................................................
+# EXECUTION TIME: fast
+#.................................................
+#   KNOW PROBLEMS:
+#   None.
+#.................................................
