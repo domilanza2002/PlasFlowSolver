@@ -104,14 +104,35 @@ def heat_flux_hflaw0(probes,settings,Pt,Tt,ue): #function to compute the heat fl
         y=y.tolist() # we convert the array to a list
         z=z.tolist() # we convert the array to a list
     ###### TIMER_END:INITIALIZATION ###### 0.00019288063049316406 s, very good
+    # we print the vectors x,y,z to the user
+    # print("x:")
+    # print(x)   
+    # print("y:")
+    # print(y)
+    # print("z:")
+    # print(z)    
     mixture=mpp.Mixture(settings.mixture_name) #we create the mixture object
+    #we print Te, Pe, Tw, ue
+    # print("Te: "+str(Te))
+    # print("Pe: "+str(Pe))
+    # print("Tw: "+str(Tw))
+    # print("ue: "+str(ue))
     # now we need to compute the flow properties at the edge
     ###### TIMER:FLOW_EDGE_PROPERTIES ######
     rhoe,cpe,mue=heat_flux_hflaw0_edge_file.heat_flux_hflaw0_edge(Pe,Te,mixture)
+    # we print the edge properties to the user
+    # print("Edge properties:")
+    # print("rhoe: "+str(rhoe))
+    # print("cpe: "+str(cpe))
+    # print("mue: "+str(mue))
     ###### TIMER_END:FLOW_EDGE_PROPERTIES ###### 0.01839923858642578 s,acceptable
     # now we need to compute the flow properties at wall:
     ###### TIMER:FLOW_WALL_PROPERTIES ######
     rhow,kwt=heat_flux_hflaw0_wall_file.heat_flux_hflaw0_wall(Pe,Tw,mixture)
+    # we print the wall properties to the user
+    # print("Wall properties:")
+    # print("rhow: "+str(rhow))
+    # print("kwt: "+str(kwt))
     ###### TIMER_END:FLOW_WALL_PROPERTIES ###### 0.025792837142944336 s, acceptable
     # now we can start the convergence loop to find the solution
     iter=0 # we initialize the iteration counter
@@ -119,6 +140,7 @@ def heat_flux_hflaw0(probes,settings,Pt,Tt,ue): #function to compute the heat fl
     while(True): # we start the convergence loop
         #There is no stopping condition since that we check it inside the loop(if convergence is reached or the max number of iterations is reached)
         iter+=1 # we increase the iteration counter
+        #print("Iteration number: "+str(iter))
         #print("Iteration number: "+str(iter))
         # we start by getting the properties across the BL grid
         # we reset some vectors:
@@ -130,9 +152,13 @@ def heat_flux_hflaw0(probes,settings,Pt,Tt,ue): #function to compute the heat fl
         ###### TIMER:FLOW_PROPERTIES_ACROSS_GRID ######
         for i in range(0,p):
             T=Te*z[i] # we compute the temperature. This is because g=z=T/Te
+            #print("T: "+str(T))
             if(T<=0): #this should never happen, but we check it anyway
                 print("ERROR: T<=0") # it does not make sense to have a negative temperature
+                # print("T: "+str(T)) # we print the temperature
                 exit() # we exit the program
+                # T=abs(T) # we set the temperature to the absolute value, temporary solution
+                # z[i]=T/Te # we set the g value to the new value
             # now we retrive the flow properties:
             ###### TIMER:FLOW_PROPERTIES ######
             rho,cp,mu,k=heat_flux_hflaw0_flow_file.heat_flux_hflaw0_flow(Pe,T,mixture)
@@ -148,6 +174,8 @@ def heat_flux_hflaw0(probes,settings,Pt,Tt,ue): #function to compute the heat fl
             e_i=pow(ue,2)/(cpe*Te) # we compute the e value
             e.append(e_i) # we append the e value to the array
         ###### TIMER_END:FLOW_PROPERTIES_ACROSS_GRID ###### 0.01 FAST!
+        # if(iter==4):
+        #     exit()  
         #since that the code is fast, we stop documenting the time here
         # now we need to solve the continuity equation to find V
         # we compute the aa vector. This is because dV/deta=-f'=y

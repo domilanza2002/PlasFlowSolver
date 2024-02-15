@@ -5,9 +5,11 @@ Nitrogen2 reactions mechanism
 
     <arrhenius_units A="mol,cm,s,K" E="kcal,mol,K" />
     
-    <reaction formula="N2+M=2N+M">
-        <arrhenius A="1.0E+21" n="-1.6" T="113200.0" />
-        <M>N:3</M>
+    <reaction formula="N2+N=2N+N">
+        <arrhenius A="4.085E+22" n="-1.5" T="113000.0" />
+    </reaction>
+    <reaction formula="N2+N2=2N+N2">
+        <arrhenius A="4.7E+17" n="-0.5" T="113000.0" />
     </reaction>
 </mechanism>
 

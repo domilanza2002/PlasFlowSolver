@@ -193,6 +193,12 @@ while(True): #this is the main loop of the program
     # The unknowns are: Tt,u,Te,Pt. Pe is constant
     # Now we start the newton loop to obtain the flow parameters from the probes.
     # This procedure is described in Bottin, Ph.D. Thesis, 136-137
+    # we print the initials conditions to the user:
+    # print("Initial conditions:")
+    # print("Te: "+str(Te)+" K")
+    # print("Tt: "+str(Tt)+" K")
+    # print("Ue: "+str(ue)+" m/s")
+    # print("Pt: "+str(Pt)+" Pa")
     print("Executing Newton loop...")
     while(True): #this is the Newton loop
         #   The loop does not have a stop conditions since that it is performed inside the loop.
@@ -211,13 +217,19 @@ while(True): #this is the main loop of the program
         #   If no barker effect is considered, then the last equation is not needed, since that Pt=Pstag, so we have 3 unknowns: Te,ue,Tt
         #   while Pe=static pressure, Pstag=stagnation pressure read,q_target=heat flux read; are known
         # We start by computing the heat flux in order to solve the first equation:
+        #print("------------------------------------")
         q=heat_flux_file.heat_flux(probes_object,settings_object,Pt,Tt,ue) #we compute the heat flux
+        #print("Heat flux: "+str(q)+" W/m^2")
         # now we compute the enthalpy:
         he=enthalpy_file.enthalpy(settings_object,Pe,Te) #we compute the enthalpy at the edge
+        #print("Enthalpy at the edge: "+str(he)+" J/kg")
         ht=enthalpy_file.enthalpy(settings_object,Pt,Tt) #we compute the enthalpy at the stagnation point
+        #print ("Enthalpy at the stagnation point: "+str(ht)+" J/kg")
         # now we compute the entropy:
         se=entropy_file.entropy(settings_object,Pe,Te) #we compute the entropy at the edge
+        #print("Entropy at the edge: "+str(se)+" J/kg K")
         st=entropy_file.entropy(settings_object,Pt,Tt) #we compute the entropy at the stagnation point
+        #print("Entropy at the stagnation point: "+str(st)+" J/kg K")
         # now we compute the barker effect:
         if(probes_object.barker!=0): #we check if we need to compute the barker effect
             # we compute the barker effect:
@@ -243,7 +255,7 @@ while(True): #this is the main loop of the program
             cnv=math.sqrt(cnv)/cnvref #we compute the convergence criteria
         #.................................................
         #   We can now check if the iteration has converged:
-        print("Iteration "+str(iter)+" convergence criteria: "+str(cnv))
+        print("Case:"+str(ncase)+", Iteration "+str(iter)+", convergence criteria: "+str(cnv))
         if(iter>settings_object.iterlim): #we check if we reached the maximum number of iterations
             break #we break the loop
         if(cnv<settings_object.cnvlim): #we check if we reached the convergence criteria
@@ -299,7 +311,11 @@ while(True): #this is the main loop of the program
     rhoe=mix.density() #we compute the density
     ae=mix.equilibriumSoundSpeed() #we compute the sound speed
     Me=ue/ae #we compute the mach number
-    he=mix.mixtureHMass() #we compute the mixture enthalpy
+    he=mix.mixtureHMass()#we compute the mixture enthalpy
+    mix.equilibrate(298.15,Pe)
+    #h_shift=mix.mixtureHMinusH0Mass() #we compute the enthalpy shift
+    h_shift=mix.mixtureHMinusH0Mass() #we compute the enthalpy shift
+    he=he+h_shift #we subtract the enthalpy shift
     ht=he+0.5*pow(ue,2) #we compute the total enthalpy
     # The Reynold number is taken from the barker effect computation in the loop
     # now we need to write on the output file:
