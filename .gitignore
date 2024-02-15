@@ -1,2 +1,4 @@
 src/__pycache__/*.pyc
 src/__pycache__/read_settings.cpython-310.pyc
+src/__pycache__/enthalpy.cpython-310.pyc
+src/__pycache__/heat_flux_hflaw0.cpython-310.pyc
