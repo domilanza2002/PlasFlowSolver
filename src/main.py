@@ -279,7 +279,7 @@ while(True): #this is the main loop of the program
         # we check if the new values are negative:
         while( (Tstar<0) or (ustar<0) or (Ttstar<0) or (Ptstar<0) ): 
             relax=relax/2 #we decrease the relaxation factor
-            print("Relaxing the solution...")
+            #print("Relaxing the solution...")
             # we relax the new values
             Tstar=Te+dvar[0]*relax
             ustar=ue+dvar[1]*relax
@@ -288,7 +288,7 @@ while(True): #this is the main loop of the program
         # we check if the new values are too high:
         while( (Tstar>settings_object.max_value_T) or (Ttstar>settings_object.max_value_T)):
             relax=relax/2 #we decrease the relaxation factor
-            print("Relaxing the solution...")
+            #print("Relaxing the solution...")
             # we relax the new values
             Tstar=Te+dvar[0]*relax
             ustar=ue+dvar[1]*relax
