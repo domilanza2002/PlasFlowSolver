@@ -1,6 +1,7 @@
 src/__pycache__/
-src/x.var
-src/y.var
-src/z.var
-src/q_first.var
-src/test_file.test.py
+*.test.py
+src/inputs/
+*.xlsx
+*.in
+*.srun
+*.pfs
