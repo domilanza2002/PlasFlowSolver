@@ -88,23 +88,32 @@ def retrieve_data(df,ncase):
     comment = df.comment[ncase] #Comment, string
     inputs_object.comment = comment #Comment, string
     # Pressure:
-    P = df.P[ncase] #Pressure, float
+    try:
+        P = float(df.P[ncase]) #Pressure, float
+    except:
+        raise ValueError("Error: The pressure value is not valid")
     if (P<=0):
         raise ValueError("Error: The pressure value is not valid")
     else:
-        inputs_object.P = df.P[ncase] #Pressure, float
+        inputs_object.P = P #Pressure, float
     # Dynamic pressure:
-    Pdyn = df.Pdyn[ncase] #Dynamic pressure, float
+    try:
+        Pdyn = float(df.Pdyn[ncase]) #Dynamic pressure, float
+    except:
+        raise ValueError("Error: The dynamic pressure value is not valid")
     if (Pdyn<=0):
         raise ValueError("Error: The dynamic pressure value is not valid")
     else:
-        inputs_object.Pdyn = df.Pdyn[ncase]
+        inputs_object.Pdyn = Pdyn
     # Heat flux:
-    q = df.q[ncase] #Heat flux, float
+    try:
+        q = float(df.q[ncase]) #Heat flux, float
+    except: 
+        raise ValueError("Error: The heat flux value is not valid")
     if(q<=0):
         raise ValueError("Error: The heat flux value is not valid")
     else:
-        inputs_object.q = df.q[ncase] #Heat flux, float
+        inputs_object.q = q #Heat flux, float
     # Plasma gas:
     plasma_gas = df.plasma_gas #Plasma gas, string
     inputs_object.plasma_gas = plasma_gas #Plasma gas, string

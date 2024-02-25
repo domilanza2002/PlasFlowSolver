@@ -129,7 +129,7 @@ def read_filerun():
             file.close() #I close the file
             continue
         except:
-            print("Error: the file does not exist or is not an .srun file")
+            print("Error: the file does not exist or is not an .in file")
             continue
     #I set the output filename
     output_filename = input_filename[:-3]+".out" #we set the output filename
@@ -376,9 +376,9 @@ def read_filerun():
     while (line != "" and line!="\n"): #I read the file until the end
         # the first 20 characters of the line are the comment, then 20 for the pressure, 20 for the dynamic pressure, 20 for the heat flux
         comment.append(line[:20].strip()) #I save the comment
-        P.append(float(line[20:40].strip().replace("d","e"))) #I save the pressure
-        Pdyn.append(float(line[40:60].strip().replace("d","e"))) #I save the dynamic pressure
-        q.append(float(line[60:80].strip().replace("d","e"))) #I save the heat flux
+        P.append(line[20:40].strip().replace("d","e")) #I save the pressure
+        Pdyn.append(line[40:60].strip().replace("d","e")) #I save the dynamic pressure
+        q.append(line[60:80].strip().replace("d","e")) #I save the heat flux
         line = input_file.readline() #I read the line
     input_file.close() #I close the file
     n = len(comment) #I save the number of cases
