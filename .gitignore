@@ -6,3 +6,4 @@ src/inputs/
 *.out
 *.srun
 *.pfs
+*.var
