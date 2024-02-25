@@ -34,12 +34,13 @@ def prompt_program_mode():
     
     # We prompt the user to select the program mode
     print("Please select the program mode:")
-    print("1: Single run")
-    print("2: File run")
+    print("1: Single run (.srun file)")
+    print("2: Excel run (.xlsx file)")
+    print("3: File run (.in file + .pfs file)")
     program_mode=input("Please enter your choice: ")
     # We check if the input is valid
-    while ( (is_int(program_mode) == False) or (int(program_mode)!=1 and int(program_mode)!=2)):
-        print("Invalid choice. Please enter 1 or 2.")
+    while ( (is_int(program_mode) == False) or (int(program_mode)!=1 and int(program_mode)!=2 and int(program_mode)!=3)):
+        print("Invalid choice. Please enter 1, 2 or 3.")
         program_mode=input("Please enter your choice: ")
     # We return the program mode
     program_mode=int(program_mode)
