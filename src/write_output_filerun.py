@@ -3,6 +3,7 @@
 #.................................................
 #   This file is needed to write the output file
 #.................................................
+import time
 def write_output_filerun(df,output_filename,has_converged_out,rho_out,T_out,h_out,u_out,a_out,M_out,ht_out,Pt_out,Tt_out,Re_out,res_out):
     #.................................................
     #   This function writes the output file
@@ -32,10 +33,10 @@ def write_output_filerun(df,output_filename,has_converged_out,rho_out,T_out,h_ou
         #if the file exits, we append the date and time in the file
         output_file=open(output_filename,"a") #we open the output file in append mode
         # we retrieve date and time
-        date=time.strftime("%d/%m/%Y")
-        time=time.strftime("%H:%M:%S")
+        c_date = time.strftime("%d/%m/%Y")
+        c_time = time.strftime("%H:%M:%S")
         # we write the date and time in the file
-        output_file.write("----- Data appended at: "+time+" on "+date+" -----\n")
+        output_file.write("----- Data appended at: "+c_time+" on "+c_date+" -----\n")
     except: #if the file does not exist, we just create it
         output_file=open(output_filename,"w")
     # we write the header of the file
@@ -46,10 +47,20 @@ def write_output_filerun(df,output_filename,has_converged_out,rho_out,T_out,h_ou
     for i in range(len(has_converged_out)):
         while (len(comment[i])<20):
             comment[i]=comment[i]+" "
-        if(has_converged_out[i]):
-            # i want each data to occupy exactly 20 characters, in order to have a nice output file
-            output_file.write
-            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(Pdyn[i])+'{:20.10e}'.format(q[i])+'{:20.10e}'.format(rho_out[i])+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i])+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(ht_out[i])+'{:20.10e}'.format(Pt_out[i])+'{:20.10e}'.format(Tt_out[i])+'{:20.10e}'.format(Re_out[i])+"\n")
+        if (rho_out[i] != -1):
+            P[i]=float(P[i])*df.P_CF
+            Pdyn[i]=float(Pdyn[i])*df.PD_CF
+            q[i]=float(q[i])*df.Q_CF
         else:
+            P[i] = -1
+            Pdyn[i] = -1
+            q[i] = -1
+        if (has_converged_out[i] == "yes"):
+            # i want each data to occupy exactly 20 characters, in order to have a nice output file
+            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(Pdyn[i])+'{:20.10e}'.format(q[i])+'{:20.10e}'.format(rho_out[i])+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i])+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(ht_out[i])+'{:20.10e}'.format(Pt_out[i])+'{:20.10e}'.format(Tt_out[i])+'{:20.10e}'.format(Re_out[i])+"\n")
+        elif (has_converged_out[i] == "no"):
             output_file.write("WARNING: the next set of data has not converged: residual= "+str(res_out[i])+"\n")
             output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(Pdyn[i])+'{:20.10e}'.format(q[i])+'{:20.10e}'.format(rho_out[i])+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i])+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(ht_out[i])+'{:20.10e}'.format(Pt_out[i])+'{:20.10e}'.format(Tt_out[i])+'{:20.10e}'.format(Re_out[i])+"\n")
+        else: #invalid data
+            output_file.write("WARNING: the next set of data is invalid:\n")
+            output_file.write(comment[i]+": Invalid input data detected\n")
