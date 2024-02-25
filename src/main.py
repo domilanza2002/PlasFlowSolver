@@ -20,8 +20,10 @@ import presentation as presentation_file #Module to print the presentation of th
 import prompt_program_mode as prompt_program_mode_file #Module to prompt the program mode to the user
 import read_srun as read_srun_file #Module to read the .srun file
 import read_dataframe as read_dataframe_file #Module to read the dataframe from the xlsx file
+import read_filerun as read_filerun_file #Module to read the .in and .pfs files
 import retrieve_data_srun as retrieve_data_srun_file #Module to retrieve the data from the .srun file
 import retrieve_data_xlsx as retrieve_data_xlsx_file #Module to retrieve the data from the dataframe
+import retrieve_data_filerun as retrieve_data_filerun_file #Module to retrieve the data from the .in and .pfs files
 import heat_flux as heat_flux_file #Module to compute the heat flux
 import enthalpy as enthalpy_file #Module to compute the enthalpy
 import entropy as entropy_file #Module to compute the entropy
@@ -31,6 +33,7 @@ import system_solve as system_solve_file #Module to solve the system
 import out_properties as out_properties_file #Module to compute the final properties
 import write_output_srun as write_output_srun_file #Module to write the output file
 import write_output_xlsx as write_output_xlsx_file #Module to write the output file
+import write_output_filerun as write_output_filerun_file #Module to write the output file
 #.................................................
 #       PROGRAM VARIABLES:
 #   I declare here all the variables I will use in the program, in particular in the file main.py
@@ -120,7 +123,7 @@ if (program_mode == 1): #Single run
         print("The program will now terminate")
         exit()
 elif (program_mode == 2): #File run
-    print("File run selected")
+    print("Excel run selected")
     #   In this case, I want to read the dataframe from a file
     try:
         df_object, output_filename = read_dataframe_file.read_dataframe() #note: never edit this object
@@ -129,6 +132,19 @@ elif (program_mode == 2): #File run
         print("Please check your excel file format and try again")
         print("The program will now terminate")
         exit()
+elif (program_mode == 3): #File run
+    print("File run selected")
+    try:
+        df_object, output_filename = read_filerun_file.read_filerun() #note: never edit this object
+    except Exception as e:
+        print("Error while reading the .in and .pfs files: "+str(e))
+        print("Please check your .in and .pfs file format and try again")
+        print("The program will now terminate")
+        exit()
+else:
+    print("ERROR: Invalid program mode. You should never see this message...")
+    print("The program will now terminate")
+    exit()
 #.................................................
 #   MAIN PROGRAM LOOP:
 #   Here the main program loop starts
@@ -148,6 +164,7 @@ Pt_out = []
 Tt_out = []
 Re_out = []
 warnings_out=[]
+res_out = []
 print("Starting main program loop...")
 while(ncase<n_lines): #this is the main loop of the program. The loop will stop when the end of the dataframe is reached
     print("--------------------------------------------------")
@@ -177,10 +194,36 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
             Tt_out.append(-1)
             Re_out.append(-1)
             warnings_out.append("Error: invalid data")
+            res_out.append(-1)
             ncase+=1 #we increase the number of cases
             continue
-    print("Executing case number "+str(ncase)+"...")
+    elif (program_mode == 3): #File run
+        try:
+            inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_filerun_file.retrieve_data(df_object, ncase)
+        except Exception as e:
+            print("Error while retrieving the data from the dataframe: "+str(e))
+            print("We skip the case number "+str(ncase))
+            has_converged_out.append("Error: invalid data")
+            rho_out.append(-1)
+            T_out.append(-1)
+            h_out.append(-1)
+            u_out.append(-1)
+            a_out.append(-1)
+            M_out.append(-1)
+            ht_out.append(-1)
+            Pt_out.append(-1)
+            Tt_out.append(-1)
+            Re_out.append(-1)
+            warnings_out.append("Error: invalid data")
+            res_out.append(-1)
+            ncase+=1 #we increase the number of cases
+            continue
+    else:
+        print("ERROR: Invalid program mode. You should never see this message...")
+        print("The program will now terminate")
+        exit()
     ncase += 1 #we increase the number of cases
+    print("Executing case number "+str(ncase)+"...")
     #We save the important variables in the variables we will use in the main loop
     comment = inputs_object.comment #we store the comment
     Pe = inputs_object.P #Static pressure at the edge
@@ -219,7 +262,7 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
     # Now we start the newton loop to obtain the flow parameters from the probes.
     print("Executing Newton loop...")
     to_exit = False #we reset the variable to exit
-    max_newton_iter = settings_object.max_hf_iter #we set the maximum number of iterations for the newton loop
+    max_newton_iter = settings_object.max_newton_iter #we set the maximum number of iterations for the newton loop
     newton_conv = settings_object.newton_conv #we set the convergence criteria for the newton loop
     while(iter<max_newton_iter): #this is the Newton loop
         #   The loop has a stop condition for safety reason, but inside the loop there is also a convergence condition
@@ -350,6 +393,7 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
         Tt_out.append(-1)
         Re_out.append(-1)
         warnings_out.append("Error detected during the computation")
+        res_out.append(-1)
         continue
     if (to_exit == True and program_mode==1): #we check if we have skipped the case and if we are in single run
         print("Error detected during the computation of the case. The program will now terminate")
@@ -376,17 +420,21 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
     Tt_out.append(Tt)
     Re_out.append(Re)
     warnings_out.append(warnings)
+    res_out.append(cnv)
     print("Executing case number "+str(ncase)+"...done")
 print("--------------------------------------------------")
+print("Writing output file...")
 if (program_mode == 1): #Single run
-    print("Writing output file...")
     write_output_srun_file.write_output_srun(output_filename,has_converged_out,rho_out,T_out,h_out,u_out,a_out,M_out,ht_out,Pt_out,Tt_out,Re_out,warnings_out)
-    print("Writing output file...done")
 elif (program_mode == 2): #File run
-    print("Writing output file...")
-    # We now write the output file:
     write_output_xlsx_file.write_output_xlsx(output_filename,has_converged_out,rho_out,T_out,h_out,u_out,a_out,M_out,ht_out,Pt_out,Tt_out,Re_out,warnings_out)
-    print("Writing output file...done")
+elif (program_mode == 3): #File run
+    write_output_filerun_file.write_output_filerun(df_object,output_filename,has_converged_out,rho_out,T_out,h_out,u_out,a_out,M_out,ht_out,Pt_out,Tt_out,Re_out,res_out)
+else:
+    print("ERROR: Invalid program mode. You should never see this message...")
+    print("The program will now terminate")
+    exit()
+print("Writing output file...done")
 # We clean the temporary files:
 try:
     os.remove("q_first.var") #we remove the temporary file

@@ -3,5 +3,6 @@ src/__pycache__/
 src/inputs/
 *.xlsx
 *.in
+*.out
 *.srun
 *.pfs
