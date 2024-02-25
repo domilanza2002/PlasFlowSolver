@@ -2,7 +2,7 @@
 #   SYSTEM_SOLVE.PY, v3.0.0, February 2024, Domenico Lanza.
 #.................................................
 #   This file is needed to solve the linear system
-#   in order to use the Newton-Raphson method
+#   in order to use the Newton-Raphson method.
 #.................................................
 import numpy as np #library to solve linear systems
 def system_solve(n,A,b): #we define the function system_solve
