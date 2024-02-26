@@ -402,7 +402,7 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
         exit()
     print("Executing Newton loop...done")
     # Now we need to compute the flow properties useful for data rebuilding
-    rhoe, ae, Me, he, ht = out_properties_file.out_properties(mixture_name, Te, Pe, ue) #we compute the final properties
+    rhoe, ae, Me, he, ht = out_properties_file.out_properties(mixture_object, Te, Pe, ue) #we compute the final properties
     # The Reynold number is taken from the barker effect computation in the loop
     # Now we append the results to the output vectors:
     if (has_converged ):

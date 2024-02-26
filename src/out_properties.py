@@ -5,11 +5,11 @@
 #   properties of the gas
 #.................................................
 import mutationpp as mpp #library to compute the final properties of the gas
-def out_properties(mixture_name,Te,Pe,ue):
+def out_properties(mixture_object,Te,Pe,ue):
     """Computes the final properties of the gas
 
     Args:
-        mixture_name (string): name of the mixture
+        mixture_object (mpp.Mixture): the mixture object
         Te (float): temperature
         Pe (float): pressure
         ue (float): velocity
@@ -24,7 +24,7 @@ def out_properties(mixture_name,Te,Pe,ue):
     #   This function computes the final properties of the gas
     #.................................................
     #   INPUTS:
-    #   mixture_name: name of the mixture
+    #   mixture_object: the mixture object
     #   Te: temperature
     #   Pe: pressure
     #   ue: velocity
@@ -42,14 +42,13 @@ def out_properties(mixture_name,Te,Pe,ue):
     he = None #enthalpy
     ht = None #total enthalpy
     #Compute the final properties of the gas
-    mix = mpp.Mixture(mixture_name) #we create the mixture
-    mix.equilibrate(Te,Pe) #we equilibrate the mixture
-    rhoe = mix.density() #we compute the density
-    ae = mix.equilibriumSoundSpeed() #we compute the sound speed
+    mixture_object.equilibrate(Te,Pe) #we equilibrate the mixture
+    rhoe = mixture_object.density() #we compute the density
+    ae = mixture_object.equilibriumSoundSpeed() #we compute the sound speed
     Me = ue/ae #we compute the mach number
-    he = mix.mixtureHMass()#we compute the mixture enthalpy
-    mix.equilibrate(298.15,Pe)
-    h_shift = mix.mixtureHMinusH0Mass() #we compute the enthalpy shift
+    he = mixture_object.mixtureHMass()#we compute the mixture enthalpy
+    mixture_object.equilibrate(298.15,Pe)
+    h_shift = mixture_object.mixtureHMinusH0Mass() #we compute the enthalpy shift
     he = he+h_shift #we subtract the enthalpy shift
     ht = he+0.5*pow(ue,2) #we compute the total enthalpy
     return rhoe,ae,Me,he,ht

@@ -43,8 +43,6 @@ def retrieve_data(df,ncase):
     comment = None #Comment, string
     P = None #Pressure, float
     Pdyn = None #Dynamic pressure, float
-    Pstag = None #Stagnation pressure, float
-    P_used = None #Pressure used, string
     q = None #Heat flux, float
     plasma_gas = None #Plasma gas, string
     #   -Conversion factors
