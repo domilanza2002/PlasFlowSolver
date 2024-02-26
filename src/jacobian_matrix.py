@@ -8,7 +8,7 @@ import enthalpy as enthalpy_file #we import the enthalpy file
 import entropy as entropy_file #we import the entropy file
 import barker_effect as barker_effect_file #we import the barker effect file
 import heat_flux as heat_flux_file #we import the heat flux file
-def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_name): #we define the function jacobian_matrix
+def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_object): #we define the function jacobian_matrix
     """This function returns the jacobian matrix of the system in order to use the newton-raphson method
 
     Args:
@@ -25,7 +25,7 @@ def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_name
         se (float): entropy at the exit
         st (float): entropy at the turbine
         ue (float): velocity at the exit
-        mixture_name (str): mixture of the case
+        mixture_object (mpp.Mixture): mixture of the case
 
     Returns:
         jac (matrix float): jacobian matrix
@@ -50,7 +50,7 @@ def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_name
     #   se: entropy at the exit
     #   st: entropy at the turbine
     #   ue: velocity at the exit
-    #   mixture_name: mixture of the case
+    #   mixture_object: mixture of the case
     #   OUTPUTS:
     #   jac: jacobian matrix
     #.................................................
@@ -82,17 +82,16 @@ def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_name
     # we retrieve some settings:
     jac_diff = settings.jac_diff #we get the finite difference epsilon
     barker = probes.barker #we get the barker correction
-    Tw = probes.Tw #we get the wall temperature
     # we start the computation of the jacobian matrix
     #.................................................
     # DERIVATIVE WRT Te:
     delta = Te*jac_diff #we compute the delta for the finite difference
     Tstar = Te+delta #we compute the new temperature
     # we compute the new enthalpy and entropy
-    hstar = enthalpy_file.enthalpy(mixture_name, Pe, Tstar)
-    sstar = entropy_file.entropy(mixture_name, Pe, Tstar)
+    hstar = enthalpy_file.enthalpy(mixture_object, Pe, Tstar)
+    sstar = entropy_file.entropy(mixture_object, Pe, Tstar)
     #We compute the barker pressure:
-    Pbstar = barker_effect_file.barker_effect(probes, mixture_name, Pt, Pe, Tstar, ue)[0]
+    Pbstar = barker_effect_file.barker_effect(probes, mixture_object, Pt, Pe, Tstar, ue)[0]
     # Now we compute the derivative using the forward finite difference method
     dhdte = (hstar-he)/delta #derivative of h(Pe,Te) wrt Te
     dsdte = (sstar-se)/delta #derivative of s(Pe,Te) wrt Te
@@ -102,9 +101,9 @@ def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_name
     delta = ue*jac_diff #we compute the delta for the finite difference
     ustar = ue+delta #we compute the new velocity
     # we compute the new heat flux
-    qstar = heat_flux_file.heat_flux(probes,settings,Pt,Tt,ustar,mixture_name)
+    qstar = heat_flux_file.heat_flux(probes,settings,Pt,Tt,ustar,mixture_object)
     #We compute the new barker pressure
-    Pbstar=barker_effect_file.barker_effect(probes,mixture_name,Pt,Pe,Te,ustar)[0]
+    Pbstar=barker_effect_file.barker_effect(probes,mixture_object,Pt,Pe,Te,ustar)[0]
     # Now we compute the derivative using the forward finite difference method
     dqdu = (qstar-q)/delta #derivative of q(Pt,Tt,ue) wrt ue
     dbdu = (Pbstar-Pb)/delta #derivative of Pb(Pt,Pe,Te,ue) wrt ue
@@ -113,10 +112,10 @@ def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_name
     delta = Tt*jac_diff #we compute the delta for the finite difference
     Ttstar = Tt+delta #we compute the new temperature for the finite difference
     # we compute the new heat flux
-    qstar = heat_flux_file.heat_flux(probes,settings,Pt,Ttstar,ue,mixture_name)
+    qstar = heat_flux_file.heat_flux(probes,settings,Pt,Ttstar,ue,mixture_object)
     # we compute the new total enthalpy and entropy
-    htstar = enthalpy_file.enthalpy(mixture_name, Pt, Ttstar) #we compute the enthalpy at the start
-    ststar = entropy_file.entropy(mixture_name, Pt, Ttstar) #we compute the entropy at the start
+    htstar = enthalpy_file.enthalpy(mixture_object, Pt, Ttstar) #we compute the enthalpy at the start
+    ststar = entropy_file.entropy(mixture_object, Pt, Ttstar) #we compute the entropy at the start
     # Now we compute the derivative using the forward finite difference method
     dqdtt = (qstar-q)/delta #derivative of q(Pt,Tt,ue) wrt Tt
     dhtdtt = (htstar-ht)/delta  #derivative of ht(Pt,Tt) wrt Tt
@@ -127,12 +126,12 @@ def jacobian_matrix(probes,settings,Te,Tt,Pe,Pt,Pb,q,he,ht,se,st,ue,mixture_name
         delta = Pt*jac_diff
         Ptstar = Pt+delta
         # we compute the new heat flux:
-        qstar = heat_flux_file.heat_flux(probes, settings, Ptstar, Tt, ue, mixture_name)
+        qstar = heat_flux_file.heat_flux(probes, settings, Ptstar, Tt, ue, mixture_object)
         # we copmute the new total enthalpy and entropy
-        htstar = enthalpy_file.enthalpy(mixture_name, Ptstar, Tt)
-        ststar = entropy_file.entropy(mixture_name, Ptstar, Tt)
+        htstar = enthalpy_file.enthalpy(mixture_object, Ptstar, Tt)
+        ststar = entropy_file.entropy(mixture_object, Ptstar, Tt)
         # we compute the new barker pressure
-        Pbstar = barker_effect_file.barker_effect(probes, mixture_name, Ptstar, Pe, Te, ue)[0]
+        Pbstar = barker_effect_file.barker_effect(probes, mixture_object, Ptstar, Pe, Te, ue)[0]
         # we compute the derivative using the forward finite difference method
         dqdpt = (qstar-q)/delta
         dhtdpt = (htstar-ht)/delta

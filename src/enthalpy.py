@@ -5,11 +5,11 @@
 #   given the pressure and the temperature
 #.................................................
 import mutationpp as mpp #Library for thermodynamic computations
-def enthalpy(mixture_name, P, T): #we define the function enthalpy
+def enthalpy(mixture_object, P, T): #we define the function enthalpy
     """This function returns the enthalpy of the fluid given the pressure and the temperature
 
     Args:
-        mixture_name (str): the mixture of the case
+        mixture_object (mpp.Mixture): the mixture of the case
         P (float): pressure
         T (float): temperature
 
@@ -21,7 +21,7 @@ def enthalpy(mixture_name, P, T): #we define the function enthalpy
     #   given the pressure and the temperature
     #.................................................
     #   INPUTS:
-    #   mixture_name: the mixture of the case
+    #   mixture_object: the mixture of the case
     #   P: pressure
     #   T: temperature
     #   OUTPUTS:
@@ -30,9 +30,8 @@ def enthalpy(mixture_name, P, T): #we define the function enthalpy
     #we define some variables:
     h = None #enthalpy
     #we compute the enthalpy:
-    mix = mpp.Mixture(mixture_name) #we create the mixture
-    mix.equilibrate(T,P) #we equilibrate the mixture
-    h = mix.mixtureHMass() #we compute the enthalpy
+    mixture_object.equilibrate(T,P) #we equilibrate the mixture
+    h = mixture_object.mixtureHMass() #we compute the enthalpy
     return h #we return the enthalpy
 #.................................................
 #   Possible improvements:

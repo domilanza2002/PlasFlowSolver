@@ -37,7 +37,7 @@ def reset_vars(deta, Te, Tw, p): #function to reset the x,y,z arrays
         z.append(g_i) # we append the g value to the array
     return y,z
 
-def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name): #function to compute the heat flux for the hflaw=0 case
+def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_object): #function to compute the heat flux for the hflaw=0 case
     """Function to compute the heat flux for the hflaw=0 case
 
     Args:
@@ -46,7 +46,7 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name): #function to c
         Pt (float) : the total pressure
         Tt (float) : the total temperature
         ue (float) : the edge velocity
-        mixture_name (string) : the mixture of the case
+        mixture_object (mpp.Mixture) : the mixture of the case
     
     Raises:
         Exception: if the temperature is negative, nan or greater than the max temperature
@@ -63,7 +63,7 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name): #function to c
     #   Pt: the total pressure
     #   Tt: the total temperature
     #   ue: the edge velocity
-    #   mixture_name: the mixture of the case
+    #   mixture_object: the mixture of the case
     #.................................................
     #   OUTPUTS:
     #   q: the heat flux
@@ -76,7 +76,6 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name): #function to c
     Te = Tt # To compute the heat flux at the stagnation point, we use the total temperature(measured OUTSIDE the boundary layer)
     ue = ue # To compute the heat flux at the stagnation point, we use the edge velocity(measured OUTSIDE the boundary layer)
     Tw = probes.Tw # To compute the heat flux at the stagnation point, we use the wall temperature(constant)
-    mixture_name = mixture_name # To compute the heat flux at the stagnation point, we use the mixture of the case
     p = settings.p # Number of points for the boundary layer eta discretization
     q = None #variable to store the heat flux
     eta = None #variable to store the eta_i-th value
@@ -139,11 +138,10 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name): #function to c
         x = x.tolist() # we convert the array to a list
         y = y.tolist() # we convert the array to a list
         z = z.tolist() # we convert the array to a list
-    mixture=mpp.Mixture(mixture_name) #we create the mixture object
     # now we need to compute the flow properties at the edge
-    rhoe, cpe,mue=heat_flux_hflaw0_edge_file.heat_flux_hflaw0_edge(Pe,Te,mixture)
+    rhoe, cpe,mue=heat_flux_hflaw0_edge_file.heat_flux_hflaw0_edge(Pe,Te,mixture_object)
     # now we need to compute the flow properties at wall:
-    rhow, kwt=heat_flux_hflaw0_wall_file.heat_flux_hflaw0_wall(Pe,Tw,mixture)
+    rhow, kwt=heat_flux_hflaw0_wall_file.heat_flux_hflaw0_wall(Pe,Tw,mixture_object)
     # now we can start the convergence loop to find the solution
     iter = 0 # we initialize the iteration counter
     while (iter<max_iter): # we start the convergence loop
@@ -169,7 +167,7 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name): #function to c
                 y, z = reset_vars(deta, Te, Tw, p)
                 redo = True
                 break
-            rho, cp, mu, k=heat_flux_hflaw0_flow_file.heat_flux_hflaw0_flow(Pe, T, mixture)
+            rho, cp, mu, k=heat_flux_hflaw0_flow_file.heat_flux_hflaw0_flow(Pe, T, mixture_object)
             khi_i = rho*mu/(rhoe*mue) # we compute the khi value
             khi.append(khi_i) # we append the khi value to the array
             rr_i = rhoe/rho # we compute the rr value
@@ -189,7 +187,7 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name): #function to c
             for i in range(0,p):
                 T = Te*z[i] # we compute the temperature. This is because g=z=T/Te
                 # now we retrive the flow properties:
-                rho, cp, mu, k = heat_flux_hflaw0_flow_file.heat_flux_hflaw0_flow(Pe, T, mixture)
+                rho, cp, mu, k = heat_flux_hflaw0_flow_file.heat_flux_hflaw0_flow(Pe, T, mixture_object)
                 khi_i = rho*mu/(rhoe*mue) # we compute the khi value
                 khi.append(khi_i)   # we append the khi value to the array
                 rr_i = rhoe/rho   # we compute the rr value
