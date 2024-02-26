@@ -1,5 +1,5 @@
 <!-- Nitrogen 2 mixture -->
-<mixture mechanism="nitrogen2_std" use_transport="yes" state_model="EquilTP" thermo_db="NASA-7" thermal_conductivity="Wilke" viscosity="Gupta-Yos">
+<mixture mechanism="nitrogen2_std" use_transport="yes" state_model="EquilTP" thermo_db="RRHO" thermal_conductivity="Chapmann-Enskog_LDLT" viscosity="Chapmann-Enskog_LDLT">
     <species>
         N N2 
     </species>
