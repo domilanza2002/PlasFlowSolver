@@ -6,7 +6,7 @@
 #   At the moment, only the exact heat flux law is implemented.
 #.................................................
 import heat_flux_hflaw0 as heat_flux_hflaw0_file #file with the function to compute the heat flux with hflaw=0
-def heat_flux(probes,settings,Pt,Tt,ue,mixture_name): #function to compute the heat flux
+def heat_flux(probes,settings,Pt,Tt,ue,mixture_object): #function to compute the heat flux
     """This function computes the heat flux of the flux with different heat flux laws.
 
     Args:
@@ -15,7 +15,7 @@ def heat_flux(probes,settings,Pt,Tt,ue,mixture_name): #function to compute the h
         Pt (float): the total pressure at the stagnation point
         Tt (float): the total temperature at the stagnation point
         ue (float): the velocity of the flow
-        mixture_name (str): the mixture of the case
+        mixture_object (mpp.Mixture): the mixture of the case
 
     Returns:
         q (float): the heat flux
@@ -31,7 +31,7 @@ def heat_flux(probes,settings,Pt,Tt,ue,mixture_name): #function to compute the h
     #   Pt: the total pressure at the stagnation point
     #   Tt: the total temperature at the stagnation point
     #   ue: the velocity of the flow
-    #   mixture_name: the mixture of the case
+    #   mixture_object: the mixture of the case
     #.................................................
     #   OUTPUTS:
     #   q: the heat flux
@@ -42,7 +42,7 @@ def heat_flux(probes,settings,Pt,Tt,ue,mixture_name): #function to compute the h
     hflaw = probes.hflaw #heat flux law to use
     match(hflaw): # we check which heat flux law to use
         case 0: #exact heat flux law
-            q = heat_flux_hflaw0_file.heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_name) #we compute the heat flow for hflaw=0
+            q = heat_flux_hflaw0_file.heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_object) #we compute the heat flow for hflaw=0
             return q #we return the heat flux
         case _: #heat flux law not implemented
             raise ValueError("The heat flux law is not implemented") #we raise an error

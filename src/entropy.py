@@ -5,11 +5,11 @@
 #   given the pressure and the temperature
 #.................................................
 import mutationpp as mpp #useful library for thermodynamic computations
-def entropy(mixture_name, P, T): #we define the function entropy
+def entropy(mixture_object, P, T): #we define the function entropy
     """This function returns the entropy of the fluid given the pressure and the temperature
 
     Args:
-        mixture_name (str): the mixture of the case
+        mixture_object (mpp.Mixture): the mixture of the case
         P (float): pressure
         T (float): temperature
     Returns:
@@ -20,7 +20,7 @@ def entropy(mixture_name, P, T): #we define the function entropy
     #   given the pressure and the temperature
     #.................................................
     #   INPUTS:
-    #   mixture_name: the mixture of the case
+    #   mixture_object: the mixture of the case
     #   P: pressure
     #   T: temperature
     #   OUTPUTS:
@@ -29,9 +29,8 @@ def entropy(mixture_name, P, T): #we define the function entropy
     #we define some variables:
     s = None #entropy
     #we compute the entropy:
-    mix = mpp.Mixture(mixture_name) #we create the mixture
-    mix.equilibrate(T, P) #we equilibrate the mixture
-    s = mix.mixtureSMass() #we compute the entropy
+    mixture_object.equilibrate(T, P) #we equilibrate the mixture
+    s = mixture_object.mixtureSMass() #we compute the entropy
     return s #we return the entropy
 #.................................................
 #   Possible improvements:

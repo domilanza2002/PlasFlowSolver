@@ -62,6 +62,7 @@ cnv = None #Convergence criteria
 cnvref = None #Reference convergence criteria
 jac = None #Jacobian matrix
 #   Loop thermodynamic variables:
+mixture_object = None #Mixture object
 q = None #Heat flux
 Pt = None #Total pressure
 Pb = None #Barker pressure
@@ -259,11 +260,12 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
     ue = initials_object.u_0 #u_e is the velocity
     Pt = initials_object.Pt_0 #P_t is the total pressure
     # The unknowns are: Tt,u,Te,Pt. Pe is constant
-    # Now we start the newton loop to obtain the flow parameters from the probes.
-    print("Executing Newton loop...")
+    # Now we start the newton loop to obtain the flow parameters from the probes
     to_exit = False #we reset the variable to exit
     max_newton_iter = settings_object.max_newton_iter #we set the maximum number of iterations for the newton loop
     newton_conv = settings_object.newton_conv #we set the convergence criteria for the newton loop
+    print("Executing Newton loop...")
+    mixture_object = mpp.Mixture(mixture_name) #we create the mixture object
     while(iter<max_newton_iter): #this is the Newton loop
         #   The loop has a stop condition for safety reason, but inside the loop there is also a convergence condition
         #   The loop will stop when the end newton computation converges or when the maximum number of iterations is reached
@@ -282,20 +284,20 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
         #   while Pe=static pressure, Pstag=stagnation pressure read,q_target=heat flux read; are known
         # We start by computing the heat flux in order to solve the first equation:
         try:
-            q = heat_flux_file.heat_flux(probes_object, settings_object, Pt, Tt, ue, mixture_name) #we compute the heat flux
+            q = heat_flux_file.heat_flux(probes_object, settings_object, Pt, Tt, ue, mixture_object) #we compute the heat flux
         except Exception as e:
             print("Error encountered during the heat flux computation: "+str(e))
             print("Skipping case...")
             to_exit = True
             break
         # now we compute the enthalpy:
-        he = enthalpy_file.enthalpy(mixture_name, Pe, Te) #we compute the enthalpy at the edge
-        ht = enthalpy_file.enthalpy(mixture_name, Pt, Tt) #we compute the enthalpy at the stagnation point
+        he = enthalpy_file.enthalpy(mixture_object, Pe, Te) #we compute the enthalpy at the edge
+        ht = enthalpy_file.enthalpy(mixture_object, Pt, Tt) #we compute the enthalpy at the stagnation point
         # now we compute the entropy:
-        se = entropy_file.entropy(mixture_name,Pe,Te) #we compute the entropy at the edge
-        st = entropy_file.entropy(mixture_name,Pt,Tt) #we compute the entropy at the stagnation point
+        se = entropy_file.entropy(mixture_object,Pe,Te) #we compute the entropy at the edge
+        st = entropy_file.entropy(mixture_object,Pt,Tt) #we compute the entropy at the stagnation point
         # now we compute the barker effect:
-        Pb, Re = barker_effect_file.barker_effect(probes_object, mixture_name, Pt, Pe, Te, ue) #we compute the barker pressure
+        Pb, Re = barker_effect_file.barker_effect(probes_object, mixture_object, Pt, Pe, Te, ue) #we compute the barker pressure
         # Note: if barker==0 then Pb=Pstag, but the function can handle this case
         #.................................................
         #   We can now compute the residuals:
@@ -324,7 +326,7 @@ while(ncase<n_lines): #this is the main loop of the program. The loop will stop 
         #.................................................
         #   We can now compute the jacobian:
         try:
-            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, Te, Tt, Pe, Pt, Pb, q, he, ht, se, st, ue, mixture_name) #we compute the jacobian matrix
+            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, Te, Tt, Pe, Pt, Pb, q, he, ht, se, st, ue, mixture_object) #we compute the jacobian matrix
         except Exception as e:
             print("Error encountered during the jacobian computation: "+str(e))
             to_exit = True
