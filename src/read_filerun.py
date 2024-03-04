@@ -6,6 +6,7 @@
 #   dataframe object.
 #.................................................
 import classes as classes_file #Module that contains the classes of the program
+import bash_run as bash_run_file #Module that contains the functions to detect if a bashrun must be executed
 
 def prompt_input_file(): #function to prompt the input file
     """This function prompts the input file and returns the input filename
@@ -57,9 +58,10 @@ def prompt_settings_file(): #function to prompt the input file
         settings_file_name = settings_file_name+".pfs"
     return settings_file_name #we return the input filename
 
-def read_filerun():
+def read_filerun(bash_run):
     """This function reads the dataframe from the .in file
-
+    Inputs:
+        bash_run: bool, True if the program is in bash run mode
     Returns:
         string: df_object, the dataframe from the xlsx file
         string: output_filename, the name of the output file
@@ -68,7 +70,7 @@ def read_filerun():
     #   This function reads the dataframe from the xlsx file
     #.................................................
     #   INPUTS:
-    #   None.
+    #   bash_run: bool, True if the program is in bash run mode 
     #.................................................
     #   OUTPUTS:
     #   df:the dataframe from the xlsx file
@@ -120,6 +122,17 @@ def read_filerun():
     output_filename = None #Name of the output file
     #I set the file_found variable to False
     file_found = False
+    #I check if the program is in bash run mode
+    if (bash_run == True): #If the program is in bash run mode
+        input_filename = bash_run_file.retrieve_filename() #I retrieve the filename from the bash.pfs file
+        try: #I try to read the file
+            file = open(input_filename, "r") #I try to open the file
+            file_found = True #If the file is found, we set the variable to True
+            file.close() #I close the file
+        except:
+            print("Error: the file in bash.pfs does not exist or is not an .in file")
+            print("The program will continue in manual mode")
+            bash_run = False #I set the bash_run variable to False
     #I ask for the input file
     while (file_found == False):
         input_filename = prompt_input_file() #I prompt the input file
@@ -135,6 +148,17 @@ def read_filerun():
     output_filename = input_filename[:-3]+".out" #we set the output filename
     #I read the settings filename
     file_found = False #I set the file_found variable to False
+    #I check if the program is in bash run mode
+    if (bash_run == True): #If the program is in bash run mode
+        settings_filename = bash_run_file.retrieve_settings() #I retrieve the filename from the bash.pfs file
+        try: #I try to read the file
+            file = open(settings_filename, "r") #I try to open the file
+            file_found = True #If the file is found, we set the variable to True
+            file.close() #I close the file
+        except:
+            print("Error: the settings file in bash.pfs does not exist or is not an .pfs file")
+            print("The program will continue in manual mode")
+            bash_run = False #I set the bash_run variable to False
     while (file_found == False):
         settings_filename = prompt_settings_file()
         try:

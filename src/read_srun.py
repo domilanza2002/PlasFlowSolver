@@ -6,6 +6,7 @@
 #   dataframe object.
 #.................................................
 import classes as classes_file #Module that contains the classes of the program
+import bash_run as bash_run_file #Module that contains the bash run functions
 
 def prompt_input_file(): #function to prompt the input file
     """This function prompts the input file and returns the input filename
@@ -32,9 +33,12 @@ def prompt_input_file(): #function to prompt the input file
         input_file_name = input_file_name+".srun"
     return input_file_name #we return the input filename
 
-def read_srun():
+def read_srun(bash_run):
     """This function reads the dataframe from the srun file
 
+    Inputs:
+        bash_run: bool, True if the program is in bash mode, False otherwise
+    
     Returns:
         string: df_object, the dataframe from the xlsx file
         string: output_filename, the name of the output file
@@ -43,7 +47,7 @@ def read_srun():
     #   This function reads the dataframe from the xlsx file
     #.................................................
     #   INPUTS:
-    #   None.
+    #   bash_run: bool, True if the program is in bash mode, False otherwise
     #.................................................
     #   OUTPUTS:
     #   df:the dataframe from the xlsx file
@@ -98,6 +102,16 @@ def read_srun():
     output_filename = None #Name of the output file
     #I set the file_found variable to False
     file_found = False
+    # we check if the program is in bash mode
+    if (bash_run == True):
+        input_filename = bash_run_file.retrieve_filename() #I retrieve the filename from the bash.pfs file
+        try: #I try to read the file
+            file = open(input_filename, "r") #I try to open the file
+            file_found = True #If the file is found, we set the variable to True
+            file.close() #I close the file
+        except:
+            print("Error: the file in bash.pfs does not exist or is not an .srun file")
+            print("The program will continue in manual mode")
     #I ask for the input file
     while (file_found == False):
         input_filename = prompt_input_file() #I prompt the input file
