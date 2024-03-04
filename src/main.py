@@ -18,6 +18,7 @@ import mutationpp as mpp #Third party library for thermodynamic computations
 import classes as classes_file #Module with the classes that I use in the program
 import presentation as presentation_file #Module to print the presentation of the program
 import prompt_program_mode as prompt_program_mode_file #Module to prompt the program mode to the user
+import bash_run as bash_run_file #Module to run a bashrun
 import read_srun as read_srun_file #Module to read the .srun file
 import read_dataframe as read_dataframe_file #Module to read the dataframe from the xlsx file
 import read_filerun as read_filerun_file #Module to read the .in and .pfs files
@@ -39,6 +40,7 @@ import write_output_filerun as write_output_filerun_file #Module to write the ou
 #   I declare here all the variables I will use in the program, in particular in the file main.py
 #   Variables for the program mode:
 program_mode = None #Variable to store the program mode
+bash_run = None #Variable to store the result of the bashrun
 #   Variables for the output file:
 output_filename = None #Name of the output file
 #   Dataframe variables:
@@ -110,14 +112,27 @@ df_object = classes_file.dataframe_xlsx_class() #Object with the dataframe varia
 #       Here the program starts
 t1 = time.time() #We store the time at the beginning of the program, to keep track of the execution time
 presentation_file.presentation() #We call the presentation function, to present the program to the user
+#   We try to run a bashrun
+bash_run = bash_run_file.bash_file_detected() #We check if a bashrun must be executed
 #   We prompt the user to select the program mode. 1: Single run. 2: File run
-program_mode = prompt_program_mode_file.prompt_program_mode() #We prompt the program mode to the user
+if (bash_run == False):
+    print("The program is in manual mode, since that a valid bashrun file bash.pfs has not been detected")
+    program_mode = prompt_program_mode_file.prompt_program_mode() #We prompt the program mode to the user
+else: #if a bashrun must be executed
+    print("Bash mode detected")
+    try:
+        program_mode = bash_run_file.program_mode() #We read the program mode from the bashrun file
+    except Exception as e:
+        print("Invalid program mode: "+str(e))
+        print("The program will now work in normal mode")
+        program_mode = prompt_program_mode_file.prompt_program_mode() #We prompt the program mode to the user
+        bash_run = False
 #   We read the data according to the program mode:
 if (program_mode == 1): #Single run
     print("Single run selected")
     #   In this case, I want to read a .srun file, with only 1 case
     try:
-        df_object, output_filename = read_srun_file.read_srun() #note: never edit this object
+        df_object, output_filename = read_srun_file.read_srun(bash_run) #note: never edit this object
     except Exception as e:
         print("Error while reading the .srun file: "+str(e))
         print("Please check your .srun file format and try again")
@@ -127,7 +142,7 @@ elif (program_mode == 2): #File run
     print("Excel run selected")
     #   In this case, I want to read the dataframe from a file
     try:
-        df_object, output_filename = read_dataframe_file.read_dataframe() #note: never edit this object
+        df_object, output_filename = read_dataframe_file.read_dataframe(bash_run) #note: never edit this object
     except Exception as e:
         print("Error while reading the dataframe: "+str(e))
         print("Please check your excel file format and try again")
@@ -136,7 +151,7 @@ elif (program_mode == 2): #File run
 elif (program_mode == 3): #File run
     print("File run selected")
     try:
-        df_object, output_filename = read_filerun_file.read_filerun() #note: never edit this object
+        df_object, output_filename = read_filerun_file.read_filerun(bash_run) #note: never edit this object
     except Exception as e:
         print("Error while reading the .in and .pfs files: "+str(e))
         print("Please check your .in and .pfs file format and try again")
