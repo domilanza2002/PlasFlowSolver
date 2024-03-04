@@ -6,6 +6,7 @@
 #.................................................
 import pandas as pd #Library to read the xlsx file
 import classes as classes_file #Module that contains the classes of the program
+import bash_run as bash_run_file #Module to check if the bash.pfs file is present
 
 def prompt_input_file(): #function to prompt the input file
     """This function prompts the input file and returns the input filename
@@ -32,9 +33,10 @@ def prompt_input_file(): #function to prompt the input file
         input_file_name = input_file_name+".xlsx"
     return input_file_name #we return the input filename
 
-def read_dataframe():
+def read_dataframe(bash_run):
     """This function reads the dataframe from the xlsx file
-
+    Inputs:
+        bash_run: boolean, True if the bash.pfs file is present, False otherwise
     Returns:
         string: df_object, the dataframe from the xlsx file
         string: output_filename, the name of the output file
@@ -43,7 +45,7 @@ def read_dataframe():
     #   This function reads the dataframe from the xlsx file
     #.................................................
     #   INPUTS:
-    #   None.
+    #   bash_run: boolean, True if the bash.pfs file is present, False otherwise
     #.................................................
     #   OUTPUTS:
     #   df:the dataframe from the xlsx file
@@ -102,6 +104,15 @@ def read_dataframe():
     output_filename = None #Name of the output file
     #I set the file_found variable to False
     file_found = False
+    #I check if the bash.pfs file is present
+    if (bash_run == True): #If the bash.pfs file is present
+        input_filename = bash_run_file.retrieve_filename() #I retrieve the filename from the bash.pfs file
+        try: #I try to read the file
+            df = pd.read_excel(input_filename, engine="openpyxl",header=[0,1]) #I read the excel file
+            file_found = True #If the file is found, we set the variable to True
+        except:
+            print("Error: the file in bash.pfs does not exist or is not an xlsx file")
+            print("The program will continue in manual mode")
     #I ask for the input file
     while (file_found == False):
         input_filename = prompt_input_file() #I prompt the input file
