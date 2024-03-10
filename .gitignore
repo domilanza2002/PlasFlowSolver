@@ -1,9 +1,9 @@
 src/__pycache__/
-*.test.py
+src/*.test.py
 src/inputs/
-*.xlsx
-*.in
-*.out
-*.srun
-*.pfs
-*.var
+src/*.xlsx
+src/*.in
+src/*.out
+src/*.srun
+src/*.pfs
+src/*.var
