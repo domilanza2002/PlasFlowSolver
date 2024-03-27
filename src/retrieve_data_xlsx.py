@@ -49,6 +49,8 @@ def generate_std_file(FILENAME):
     file.write("jac_diff = 1e-2\n") #Main newton jacobian finite difference epsilon, float
     file.write("max_T_relax = 18000\n") #Maximum value for the temperature used for relaxation, float
     file.write("min_T_relax = 200\n") #Minimum value for the temperature used for relaxation, float
+    file.write("log_warning_hf = 1\n") #Log warning for the heat flux, string
+    file.write("eta_max = 6\n") #Maximum value for the boundary layer eta, float
     file.close() #Close the file
     return None
 def read_file(FILENAME):
@@ -120,6 +122,10 @@ def read_file(FILENAME):
     df.max_T_relax = float(line.split(" = ")[1].strip()) #Maximum value for the temperature used for relaxation, float
     line = file.readline() #Read the line
     df.min_T_relax = float(line.split(" = ")[1].strip()) #Minimum value for the temperature used for relaxation, float
+    line = file.readline() #Read the line
+    df.log_warning_hf = int(line.split(" = ")[1].strip()) #Log warning for the heat flux, string
+    line = file.readline() #Read the line
+    df.eta_max = float(line.split(" = ")[1].strip()) #Maximum value for the boundary layer eta, float
     file.close() #Close the file
     return df
 def read_std_values():
@@ -240,6 +246,8 @@ def retrieve_data(df,ncase):
     jac_diff = None #Main newton jacobian finite difference epsilon, float
     max_T_relax = None #Maximum value for the temperature used for relaxation, float
     min_T_relax = None #Minimum value for the temperature used for relaxation, float
+    log_warning_hf = None #Log warning for the heat flux, string
+    eta_max = None #Maximum value for the boundary layer eta, float
     # Variables to return
     inputs_object = classes_file.inputs_class() #create the inputs object
     initials_object = classes_file.initials_class() #create the initials object
@@ -442,6 +450,8 @@ def retrieve_data(df,ncase):
                 probes_object.barker = 0
             case "homann":
                 probes_object.barker = 1
+            case "carleton":
+                probes_object.barker = 2
             case _:
                 probes_object.barker = std_values.barker
                 warnings += "barker invalid or not yet implemented, set to STD|"
@@ -535,6 +545,26 @@ def retrieve_data(df,ncase):
         warnings += "min_T_relax invalid, set to STD|"
     else:
         settings_object.min_T_relax=df.min_T_relax[ncase] #Minimum value for the temperature used for relaxation
+    log_warning_hf = df.log_warning_hf[ncase] #Log warning for the heat flux
+    if (pd.isna(log_warning_hf)):
+        settings_object.log_warning_hf = std_values.log_warning_hf
+        warnings += "log_warning_hf invalid, set to STD|"
+    else:
+        log_warning_hf = log_warning_hf.lower() #We convert the string to lower case
+        match log_warning_hf:
+            case "yes":
+                settings_object.log_warning_hf = 1
+            case "no":
+                settings_object.log_warning_hf = 0
+            case _:
+                settings_object.log_warning_hf = std_values.log_warning_hf
+                warnings += "log_warning_hf invalid, set to STD|"
+    eta_max = df.eta_max[ncase] #Maximum value for the boundary layer eta
+    if (is_valid_data(eta_max) == False):
+        settings_object.eta_max = std_values.eta_max
+        warnings += "eta_max invalid, set to STD|"
+    else:
+        settings_object.eta_max=df.eta_max[ncase] #Minimum value for the temperature used for relaxation
     # Return the objects
     return inputs_object, initials_object, probes_object, settings_object, warnings
 #.................................................
