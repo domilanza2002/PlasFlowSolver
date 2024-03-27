@@ -38,11 +38,13 @@ class settings_class: #class to store all the settings of the program
         max_hf_iter = None #Maximum number of iterations for the heat flux, integer
         hf_conv = None #Convergence criteria for the heat flux, float
         use_prev_ite = None #Use previous iteration for the heat transfer, string
+        log_warning_hf = None #Log warning for when the heat flux does not converge, string
+        eta_max = None #Maximum value for the boundary layer eta, float
         newton_conv = None #Convergence criteria for the newton solver, float
         max_newton_iter = None #Maximum number of iterations for the newton solver, integer
         jac_diff = None #Main newton jacobian finite difference epsilon, float
-        max_T_relax = None #Maximum value for the temperature used for relaxation, float
         min_T_relax = None #Minimum value for the temperature used for relaxation, float
+        max_T_relax = None #Maximum value for the temperature used for relaxation, float
 #.................................................
 class probes_class: #class to store all the probes properties
     """This class contains the properties of the probe
@@ -114,6 +116,8 @@ class dataframe_xlsx_class: #class to store the dataframe variables from the xls
         jac_diff = None #Main newton jacobian finite difference epsilon, float
         max_T_relax = None #Maximum value for the temperature used for relaxation, float
         min_T_relax = None #Minimum value for the temperature used for relaxation, float
+        log_warning_hf = None #Log warning for when the heat flux does not converge, string
+        eta_max = None #Maximum value for the boundary layer eta, float
 #.................................................
 #   Possible improvements:
 #   -Add getters and setters and make all the variable private

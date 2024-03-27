@@ -97,6 +97,8 @@ def read_srun(bash_run):
     jac_diff = None #Main newton jacobian finite difference epsilon, float
     max_T_relax = None #Maximum value for the temperature used for relaxation, float
     min_T_relax = None #Minimum value for the temperature used for relaxation, float
+    log_warning_hf = None #Log warning for when the heat flux does not converge, string
+    eta_max = None #Maximum value for the boundary layer eta, float
     #Variables to return
     df_object = classes_file.dataframe_xlsx_class() #I create the dataframe object to be returned
     output_filename = None #Name of the output file
@@ -261,6 +263,8 @@ def read_srun(bash_run):
             barker = 0
         case "homann":
             barker = 1
+        case "carleton":
+            barker = 2
         case _:
             raise Exception("ERROR: Barker correction not recognized")
     #Settings:
@@ -299,6 +303,21 @@ def read_srun(bash_run):
     #Minimum value for the temperature used for relaxation:
     line = file.readline() #I read the line
     min_T_relax = float(line.split("=")[1].strip()) #I save the minimum value for the temperature used for relaxation
+    #log warning for when the heat flux does not converge:
+    line = file.readline() #I read the line
+    log_warning_hf = line.split("=")[1].strip()
+    match log_warning_hf:
+        case "yes":
+            log_warning_hf = 1
+        case "no":
+            log_warning_hf = 0
+        case _:
+            raise Exception("ERROR: Log warning for when the heat flux does not converge not recognized")
+    #Maximum value for the boundary layer eta:
+    line = file.readline() #I read the line
+    eta_max = float(line.split("=")[1].strip()) #I save the maximum value for the boundary layer eta
+    #I close the file
+    file.close()    
     #I now save the variables in the dataframe object
     df_object.n = 1 #Number of cases, integer
     df_object.comment = comment #Comment, string
@@ -331,6 +350,8 @@ def read_srun(bash_run):
     df_object.jac_diff = jac_diff #Main newton jacobian finite difference epsilon, float
     df_object.max_T_relax = max_T_relax #Maximum value for the temperature used for relaxation, float
     df_object.min_T_relax = min_T_relax #Minimum value for the temperature used for relaxation, float
+    df_object.log_warning_hf = log_warning_hf #Log warning for when the heat flux does not converge, string
+    df_object.eta_max = eta_max #Maximum value for the boundary layer eta, float
     return df_object,output_filename #return the dataframe class object and the output filename
 #.................................................
 #   Possible improvements:

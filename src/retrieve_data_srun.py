@@ -74,5 +74,7 @@ def retrieve_data(df):
     settings_object.jac_diff = df.jac_diff
     settings_object.max_T_relax = df.max_T_relax
     settings_object.min_T_relax = df.min_T_relax
+    settings_object.log_warning_hf= df.log_warning_hf
+    settings_object.eta_max= df.eta_max
     # we return the result
     return inputs_object, initials_object, probes_object, settings_object, warnings

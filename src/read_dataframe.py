@@ -99,6 +99,8 @@ def read_dataframe(bash_run):
     jac_diff = None #Main newton jacobian finite difference epsilon, float
     max_T_relax = None #Maximum value for the temperature used for relaxation, float
     min_T_relax = None #Minimum value for the temperature used for relaxation, float
+    log_warning_hf = None #Log warning heat flux, string
+    eta_max = None #Eta max, float
     #Variables to return
     df_object = classes_file.dataframe_xlsx_class() #I create the dataframe object to be returned
     output_filename = None #Name of the output file
@@ -197,6 +199,10 @@ def read_dataframe(bash_run):
     max_T_relax = df_settings['Max T relax'] #Maximum value for the temperature used for relaxation
     #Minimum value for the temperature used for relaxation:
     min_T_relax = df_settings['Min T relax'] #Minimum value for the temperature used for relaxation
+    #Log warning heat flux:
+    log_warning_hf = df_settings['Log warning hf'] #Log warning heat flux
+    #Eta max:
+    eta_max = df_settings['Eta max'] #Eta max
     #I now save the variables in the dataframe object
     df_object.n = n #Number of the test, integer
     df_object.comment = comment #Comment, string
@@ -229,6 +235,8 @@ def read_dataframe(bash_run):
     df_object.jac_diff = jac_diff #Main newton jacobian finite difference epsilon, float
     df_object.max_T_relax = max_T_relax #Maximum value for the temperature used for relaxation, float
     df_object.min_T_relax = min_T_relax #Minimum value for the temperature used for relaxation, float
+    df_object.log_warning_hf = log_warning_hf #Log warning heat flux, string
+    df_object.eta_max = eta_max #Eta max, float
     return df_object,output_filename #return the dataframe class object and the output filename
 #.................................................
 #   Possible improvements:

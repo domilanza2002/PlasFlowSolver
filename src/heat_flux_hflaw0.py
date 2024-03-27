@@ -72,6 +72,8 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_object): #function to
     ORDER = 4 #order for the central,backward and forward finite difference method for the derivatives.
     max_iter = settings.max_hf_iter #maximum number of iterations for the heat flux computations
     hf_conv = settings.hf_conv #convergence criteria for the heat flux computation
+    log_warning_hf = settings.log_warning_hf #log warning for when the heat flux does not converge
+    eta_max = settings.eta_max #maximum value for the boundary layer eta
     Pe = Pt # To compute the heat flux at the stagnation point, we use the total pressure(measured OUTSIDE the boundary layer)
     Te = Tt # To compute the heat flux at the stagnation point, we use the total temperature(measured OUTSIDE the boundary layer)
     ue = ue # To compute the heat flux at the stagnation point, we use the edge velocity(measured OUTSIDE the boundary layer)
@@ -116,7 +118,7 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_object): #function to
     #START OF THE CODE:
     # Now we define the eta array used to distretize eta:
     # we go from eta=0 to eta=6(we should go to infinity, but we stop at 6. It is a good approximation)
-    deta = 6/(p-1) #step of eta. We use p-1 because we need p points, not p+1(we start from 0 and we end at 6)
+    deta = eta_max/(p-1) #step of eta. We use p-1 because we need p points, not p+1(we start from 0 and we end at 6)
     # now we check if the x,y,z exist, so if the heat flux has been computed previously
     # we need to read the q_first variable from the q_first.var file using numpy
     q_first=np.loadtxt('q_first.var',dtype=int) # we read the q_first variable from the file
@@ -245,7 +247,9 @@ def heat_flux_hflaw0(probes, settings, Pt, Tt, ue, mixture_object): #function to
             if(abs(newf[i]-y[i])>hf_conv or abs(newg[i]-z[i])>hf_conv): # if the convergence is not reached
                 stop = False # we set the stop variable to False, we do not stop
         # we also stop the loop if the max number of iterations is reached
-        if(stop or iter>max_iter): # if the convergence is reached or the max number of iterations is reached
+        if(stop or iter>=max_iter): # if the convergence is reached or the max number of iterations is reached
+            if(stop == False and log_warning_hf==True): # if we didn't converge but we reached the max number of iterations and we want to log the warning
+                print("Warning: an heat flux computation did not converge for the current iteration") # we print the warning
             break # we exit the loop
         # If we do not stop, now we need to update the f and g arrays
         for i in range(0, p):

@@ -55,6 +55,8 @@ def barker_effect(probe, mixture_object, Pt, P, T, u):
             Cp = 0 #we set the barker pressure to 0
         case 1: #homann barker effect
             Cp = 6/(Re+0.455*math.sqrt(Re))
+        case 2: #Carleton correction
+            Cp = 1 + 8/(Re+0.5576*math.sqrt(Re))
         case _:
             print("Error: barker effect not yet implemented. But you should not be there... check retrieve_data.py")
             exit()

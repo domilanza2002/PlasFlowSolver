@@ -74,6 +74,8 @@ def retrieve_data(df,ncase):
     jac_diff = None #Main newton jacobian finite difference epsilon, float
     max_T_relax = None #Maximum value for the temperature used for relaxation, float
     min_T_relax = None #Minimum value for the temperature used for relaxation, float
+    log_warning_hf = None #Log warning for when the heat flux does not converge, string
+    eta_max = None #Maximum value for the boundary layer eta, float
     # Variables to return
     inputs_object = classes_file.inputs_class() #create the inputs object
     initials_object = classes_file.initials_class() #create the initials object
@@ -197,7 +199,13 @@ def retrieve_data(df,ncase):
     settings_object.max_T_relax = max_T_relax #Maximum value for the temperature used for relaxation, float
     # Minimum value for the temperature used for relaxation
     min_T_relax = df.min_T_relax #Minimum value for the temperature used for relaxation, float
-    settings_object.min_T_relax = min_T_relax #Minimum value for the temperature used for relaxation, float    
+    settings_object.min_T_relax = min_T_relax #Minimum value for the temperature used for relaxation, float   
+    # Log warning for when the heat flux does not converge
+    log_warning_hf = df.log_warning_hf #Log warning for when the heat flux does not converge, string
+    settings_object.log_warning_hf = log_warning_hf #Log warning for when the heat flux does not converge, string
+    # Maximum value for the boundary layer eta
+    eta_max = df.eta_max #Maximum value for the boundary layer eta, float
+    settings_object.eta_max = eta_max #Maximum value for the boundary layer eta, float   
     # Return the objects
     return inputs_object, initials_object, probes_object, settings_object, warnings
 #.................................................
