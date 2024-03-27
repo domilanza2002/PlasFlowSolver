@@ -35,18 +35,23 @@ def write_output_xlsx(output_filename,has_converged_out,rho_out,T_out,h_out,u_ou
     #we retrieve the dataframe from the input file
     df=pd.read_excel(input_filename, header=[0,1]) #we read the dataframe from the input file
     #we add the new columns to the dataframe
+    #We multiply by 1000 the density, and divide by 1000 the enthalpies
+    for i in range(0,len(rho_out)):
+        rho_out[i] = rho_out[i]*1000
+        h_out[i] = h_out[i]/1000
+        ht_out[i] = ht_out[i]/1000
     # HAS CONVERGED
     n_col=len(df.columns) #we retrieve the number of columns
     df.insert(n_col,("Output","has converged"),has_converged_out,False) #we add the new column to the dataframe
     # DENSITY
     n_col=len(df.columns) #we retrieve the number of columns
-    df.insert(n_col,("Output","density [kg/m^3]"),rho_out,False) #we add the new column to the dataframe
+    df.insert(n_col,("Output","density [g/m^3]"),rho_out,False) #we add the new column to the dataframe
     # TEMPERATURE
     n_col=len(df.columns) #we retrieve the number of columns
     df.insert(n_col,("Output","temperature [K]"),T_out,False) #we add the new column to the dataframe
     # ENTHALPY
     n_col=len(df.columns) #we retrieve the number of columns
-    df.insert(n_col,("Output","enthalpy [J/Kg]"),h_out,False) #we add the new column to the dataframe
+    df.insert(n_col,("Output","enthalpy [kJ/Kg]"),h_out,False) #we add the new column to the dataframe
     # VELOCITY
     n_col=len(df.columns) #we retrieve the number of columns
     df.insert(n_col,("Output","velocity [m/s]"),u_out,False) #we add the new column to the dataframe
@@ -58,7 +63,7 @@ def write_output_xlsx(output_filename,has_converged_out,rho_out,T_out,h_out,u_ou
     df.insert(n_col,("Output","mach number"),M_out,False) #we add the new column to the dataframe
     # TOTAL ENTHALPY
     n_col=len(df.columns) #we retrieve the number of columns
-    df.insert(n_col,("Output","total enthalpy [J/kg]"),ht_out,False) #we add the new column to the dataframe
+    df.insert(n_col,("Output","total enthalpy [kJ/kg]"),ht_out,False) #we add the new column to the dataframe
     # TOTAL PRESSURE
     n_col=len(df.columns) #we retrieve the number of columns
     df.insert(n_col,("Output","total pressure [Pa]"),Pt_out,False) #we add the new column to the dataframe

@@ -385,7 +385,7 @@ def retrieve_data(df,ncase):
     Pt_0 = df.Pt_0[ncase] #Initial total pressure, float
     if (is_valid_data(Pt_0) == False):
         if (Pt_0 == 0):
-            inputs_object.Pt_0 = inputs_object.Pstag
+            initials_object.Pt_0 = inputs_object.Pstag
         else:
             initials_object.Pt_0 = std_values.Pt_0
             if (initials_object.Pt_0 == 0):
