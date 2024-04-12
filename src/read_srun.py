@@ -1,46 +1,39 @@
 #.................................................
-#   READ_SRUN.PY, v3.0.0, February 2024, Domenico Lanza.
+#   READ_SRUN.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This project file is needed to read the
-#   SRUN(Single Run) file and to create the the
+#   This module is needed to read the
+#   .srun (Single Run) file and to create the the
 #   dataframe object.
 #.................................................
-import classes as classes_file #Module that contains the classes of the program
-import bash_run as bash_run_file #Module that contains the bash run functions
+import classes as classes_file  # Module that contains the classes of the program
+import bash_run as bash_run_file  # Module that contains the bash run functions
 
-def prompt_input_file(): #function to prompt the input file
-    """This function prompts the input file and returns the input filename
+def prompt_input_file():
+    """This function prompts the user for the
+    input filename
 
     Returns:
-        string: input_filename, the name of the input file
+        input_filename (string): the name of the input file
     """
-    #.................................................
-    #   This function prompts the input file and returns the input filename
-    #.................................................
-    #   INPUTS:
-    #   None
-    #.................................................
-    #   OUTPUTS:
-    #   input_filename: the name of the input file
-    #.................................................
-    #Variables:
-    input_file_name = None #name of the input file
-    print("Please input the name of the .srun file with the data:") #we ask the user to choose an input file
+    # Variables:
+    input_file_name = None  #Name of the input file
+    
+    print("Input the name of the .srun file to read.")
     input_file_name = input("Filename: ") 
-    # we check if the extension is .xlsx, otherwise we throw an error
-    if (input_file_name[-5:] != ".srun"): #if the extension is not .xlsx
-        #We add the extension to the file name
-        input_file_name = input_file_name+".srun"
-    return input_file_name #we return the input filename
+    # I check if the extension is .srun, otherwise I add it
+    if (input_file_name.endswith(".srun") == False):
+        input_file_name = input_file_name + ".srun"
+    return input_file_name
 
 def read_srun(bash_run):
-    """This function reads the dataframe from the srun file
+    """This function create a dataframe object
+    from a srun file
 
     Inputs:
-        bash_run: bool, True if the program is in bash mode, False otherwise
+        bash_run (bool): True if the program is in bash mode, False otherwise
     
     Returns:
-        string: df_object, the dataframe from the xlsx file
+        df_object : the dataframe from the xlsx file
         string: output_filename, the name of the output file
     """
     #.................................................
@@ -64,7 +57,7 @@ def read_srun(bash_run):
     #Variables to be read from the file
     #   -Inputs
     comment = None #Comment, string
-    P = None #Pressure, float
+    P_e = None #Pressure, float
     Pdyn = None #Dynamic pressure, float
     Pstag = None #Stagnation pressure, float
     q = None #Heat flux, float
@@ -136,7 +129,7 @@ def read_srun(bash_run):
     comment = line.split("=")[1].strip() #I save the comment
     #Pressure:
     line = file.readline() #I read the line
-    P = float(line.split("=")[1].strip()) #I save the pressure
+    P_e = float(line.split("=")[1].strip()) #I save the pressure
     #Dynamic pressure:
     p_dyn_used = False #I set the dynamic pressure used to False
     line = file.readline() #I read the line
@@ -188,22 +181,22 @@ def read_srun(bash_run):
     #Heat flux conversion factor:
     line = file.readline() #I read the line
     Q_CF = float(line.split("=")[1].strip()) #I save the heat flux conversion factor
-    # P, Pdyn and Pstag:
-    P *= P_CF
+    # P_e, Pdyn and Pstag:
+    P_e *= P_CF
     if (p_dyn_used == True and p_stag_used == False):
         Pdyn = Pdyn*PD_CF
-        Pstag = P+Pdyn
+        Pstag = P_e+Pdyn
     elif (p_dyn_used == False and p_stag_used == True):
         Pstag = Pstag*PS_CF
-        Pdyn = Pstag-P
+        Pdyn = Pstag-P_e
     elif (p_dyn_used == True and p_stag_used == True):
         Pdyn = Pdyn*PD_CF
         Pstag = Pstag*PS_CF
-        if (abs(Pstag-P-Pdyn)>P_TOL):
+        if (abs(Pstag-P_e-Pdyn)>P_TOL):
             raise Exception("ERROR: The pressure are inconsistent")
     else: 
         raise Exception("ERROR: The dynamic and stagnation pressure are not missing")
-    if (P<=0 or Pdyn<=0 or Pstag<=0 or q<=0):
+    if (P_e<=0 or Pdyn<=0 or Pstag<=0 or q<=0):
         raise Exception("ERROR: The inputs are invalid")
     #Initial conditions:
     line = file.readline() #I skip the line
@@ -321,7 +314,7 @@ def read_srun(bash_run):
     #I now save the variables in the dataframe object
     df_object.n = 1 #Number of cases, integer
     df_object.comment = comment #Comment, string
-    df_object.P = P #Pressure, float
+    df_object.P_e = P_e #Pressure, float
     df_object.Pdyn = Pdyn #Dynamic pressure, float
     df_object.Pstag = Pstag #Stagnation pressure, float
     df_object.q = q #Heat flux, float
