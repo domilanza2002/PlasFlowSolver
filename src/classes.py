@@ -103,10 +103,8 @@ class probes_class:
 #..................................................
 class settings_class:
     """This class contains the settings of the program
+    for the current case.
     """
-    #.................................................
-    #   This class contains the settings of the program
-    #.................................................
     def __init__(self): #basic constructor
         N_p = None #Number of point for the boundary layer eta discretization, integer
         max_hf_iter = None #Maximum number of iterations for the heat flux, integer
@@ -124,7 +122,6 @@ class settings_class:
 #   Possible improvements:
 #   -Add getters and setters and make all the variable private
 #   -Add more constructors
-#   -Write better docstrings
 #.................................................
 # EXECUTION TIME: Not applicable.
 #.................................................
