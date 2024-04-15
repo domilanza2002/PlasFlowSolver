@@ -1,35 +1,37 @@
 INPUTS:
-comment = Case 1
+comment = Example
 P = 6e3
-Pdyn = 1.8e2
-Pstag = 
-q = 8.6e4
-plasma_gas = nitrogen2
+P_dyn = 1.8e2
+P_stag = 
+q_target = 50.6e4
+plasma_gas = air_11
 CONVERSION FACTORS:
 P_CF = 1e0
-PD_CF = 1e0
-PS_CF = 1e0
-Q_CF = 1e0
+P_dyn_CF = 1e0
+P_stag_CF = 1e0
+q_CF = 1e0
 INITIAL CONDITIONS:
-T_0 = 1000
-Tt_0 = 2000
-u_0 = 300
-Pt_0 = 0
-PROBES PROPERTIES:
-Tw = 400
-Rp = 4e-3
-Rm = 10.1e-3
-Rj = 50e-3
-stagtype = flat
-hflaw = exact
-barker = none
-PROGRAMS SETTINGS:
-p = 251
+T_0 = 4000
+T_t_0 = 5000
+u_0 = 600
+P_t_0 = 0
+PROBE PROPERTIES:
+T_w = 400
+R_p = 4e-3
+R_m = 10.1e-3
+R_j = 50e-3
+stag_type = flat
+hf_law = exact
+barker_type = none
+PROGRAM SETTINGS:
+N_p = 500
 max_hf_iter = 100
-hf_conv = 1e-4
+hf_conv = 1e-6
 use_prev_ite = yes
+eta_max = 6
+log_warning_hf = yes
 newton_conv = 1e-8
 max_newton_iter = 30
 jac_diff = 1e-2
-max_T_relax = 18000
 min_T_relax = 200
+max_T_relax = 18000
