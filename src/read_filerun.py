@@ -6,6 +6,12 @@
 #.................................................
 import classes as classes_file  # Module that contains the classes of the program
 import bash_run as bash_run_file  # Module that contains the functions to detect if a bashrun must be executed
+from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
+from retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
+from retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
+from retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
+from retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
+from retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
 
 def prompt_input_file():
     """This function prompts the user for the input file 
@@ -148,301 +154,268 @@ def read_filerun(bash_run):
             print("Error: the file does not exist or it is not an .pfs file.")
     # Now I read the settings file
     settings_file = open(settings_filename, "r")
-    # conversion factors
-    settings_file.readline()
-    #Static pressure conversion factor:
-    line = settings_file.readline() #I read the line
+    # Conversion factors:
+    settings_file.readline()  # I skip the first line, which is the title
+    # Static pressure conversion factor:
+    line = settings_file.readline()
     try:
-        P_CF = float(line.split("=")[1].strip()) #I save the static pressure conversion factor
+        P_CF = float(line.split("=")[1].strip())  # Static pressure conversion factor (float)
         if (P_CF <= 0):
-            raise ValueError("Error: the static pressure conversion factor is not positive")
-            
+            raise ValueError("Error: the static pressure conversion factor is not positive.")        
     except:
-        raise ValueError("Error: the static pressure conversion factor is not a number")
-    #Dynamic pressure conversion factor:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the static pressure conversion factor is not a number.")
+    # Dynamic pressure conversion factor:
+    line = settings_file.readline() 
     try:
-        PD_CF = float(line.split("=")[1].strip()) #I save the dynamic pressure conversion factor
-        if (PD_CF <= 0):
-            raise ValueError("Error: the dynamic pressure conversion factor is not positive")
+        P_dyn_CF = float(line.split("=")[1].strip())  # Dynamic pressure conversion factor (float)
+        if (P_dyn_CF <= 0):
+            raise ValueError("Error: the dynamic pressure conversion factor is not positive.")
     except:
-        raise ValueError("Error: the dynamic pressure conversion factor is not a number")
-    #Heat flux conversion factor:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the dynamic pressure conversion factor is not a number.")
+    # Heat flux conversion factor:
+    line = settings_file.readline() 
     try:
-        Q_CF = float(line.split("=")[1].strip()) #I save the heat flux conversion factor
-        if (Q_CF <= 0):
+        q_CF = float(line.split("=")[1].strip())  # Heat flux conversion factor (float)
+        if (q_CF <= 0):
             raise ValueError("Error: the heat flux conversion factor is not positive")
     except:
         raise ValueError("Error: the heat flux conversion factor is not a number")
-    #Initial conditions:
-    settings_file.readline()
-    #Initial static temperature:
-    line = settings_file.readline() #I read the line
+    # Initial conditions:
+    settings_file.readline()  # I skip the line, which is the title
+    # Initial static temperature:
+    line = settings_file.readline() 
     try:
-        T_0 = float(line.split("=")[1].strip()) #I save the initial static temperature
+        T_0 = float(line.split("=")[1].strip())  # Initial static temperature (float)
         if (T_0 <= 0):
-            raise ValueError("Error: the initial static temperature is not positive")
+            raise ValueError("Error: the initial static temperature is not positive.")
     except:
-        raise ValueError("Error: the initial static temperature is not a number")
-    #Initial total temperature:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the initial static temperature is not a number.")
+    # Initial total temperature:
+    line = settings_file.readline() 
     try:
-        Tt_0 = float(line.split("=")[1].strip()) #I save the initial total temperature
-        if (Tt_0 <= 0):
-            raise ValueError("Error: the initial total temperature is not positive")
+        T_t_0 = float(line.split("=")[1].strip()) 
+        if (T_t_0 <= 0):
+            raise ValueError("Error: the initial total temperature is not positive.")
     except:
-        raise ValueError("Error: the initial total temperature is not a number")
-    #Initial velocity:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the initial total temperature is not a number.")
+    # Initial velocity:
+    line = settings_file.readline() 
     try:
-        u_0 = float(line.split("=")[1].strip()) #I save the initial velocity
+        u_0 = float(line.split("=")[1].strip())  # Initial velocity (float)
         if (u_0 <= 0):
-            raise ValueError("Error: the initial velocity is not positive")
+            raise ValueError("Error: the initial velocity is not positive.")
     except:
-        raise ValueError("Error: the initial velocity is not a number")
-    #Initial total pressure:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the initial velocity is not a number.")
+    # Initial total pressure:
+    line = settings_file.readline() 
     try:
-        Pt_0 = float(line.split("=")[1].strip()) #I save the initial total pressure
-        if (Pt_0 < 0):
-            raise ValueError("Error: the initial total pressure is negative")
+        P_t_0 = float(line.split("=")[1].strip())  # Initial total pressure (float)
+        if (P_t_0 < 0):
+            raise ValueError("Error: the initial total pressure is negative.")
     except:
-        raise ValueError("Error: the initial total pressure is not a number")
-    #Probes properties:
-    settings_file.readline()
-    #Wall temperature:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the initial total pressure is not a number.")
+    # Probes properties:
+    settings_file.readline()  # I skip the line, which is the title
+    # Wall temperature:
+    line = settings_file.readline() 
     try:
-        Tw = float(line.split("=")[1].strip()) #I save the wall temperature
-        if (Tw <= 0):
-            raise ValueError("Error: the wall temperature is not positive")
+        T_w = float(line.split("=")[1].strip())  # Wall temperature (float)
+        if (T_w <= 0):
+            raise ValueError("Error: the wall temperature is not positive.")
     except:
-        raise ValueError("Error: the wall temperature is not a number")
-    #Pitot external radius:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the wall temperature is not a number.")
+    # Pitot external radius:
+    line = settings_file.readline() 
     try:
-        Rp = float(line.split("=")[1].strip()) #I save the pitot external radius
-        if (Rp <= 0):
-            raise ValueError("Error: the pitot external radius is not positive")
+        R_p = float(line.split("=")[1].strip())  # Pitot external radius (float)
+        if (R_p <= 0):
+            raise ValueError("Error: the Pitot external radius is not positive.")
     except:
-        raise ValueError("Error: the pitot external radius is not a number")
-    #Flux probe external radius:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the Pitot external radius is not a number.")
+    # Flux probe external radius:
+    line = settings_file.readline()  # I read the line
     try:
-        Rm = float(line.split("=")[1].strip()) #I save the flux probe external radius
-        if (Rm <= 0):
-            raise ValueError("Error: the flux probe external radius is not positive")
+        R_m = float(line.split("=")[1].strip())  # Flux probe external radius (float)
+        if (R_m <= 0):
+            raise ValueError("Error: the flux probe external radius is not positive.")
     except:
-        raise ValueError("Error: the flux probe external radius is not a number")
-    #Plasma jet radius:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the flux probe external radius is not a number.")
+    # Plasma jet radius:
+    line = settings_file.readline() 
     try:
-        Rj = float(line.split("=")[1].strip()) #I save the plasma jet radius
-        if (Rj <= 0):
+        R_j = float(line.split("=")[1].strip())  # Plasma jet radius (float)
+        if (R_j <= 0):
             raise ValueError("Error: the plasma jet radius is not positive")
     except:
         raise ValueError("Error: the plasma jet radius is not a number")
-    #Stagnation type:
-    line = settings_file.readline() #I read the line
-    stagtype = line.split("=")[1].strip() #I save the stagnation type
-    match stagtype:
-        case "flat":
-            stagtype = 0
-        case _:
-            raise ValueError("Error: the stagnation type is not valid")
-    #Heat flux law:
-    line = settings_file.readline() #I read the line
-    hflaw = line.split("=")[1].strip() #I save the heat flux law
-    match hflaw:
-        case "exact":
-            hflaw = 0
-        case _:
-            raise ValueError("Error: the heat flux law is not valid")
-    #Barker correction:
-    line = settings_file.readline() #I read the line
-    barker = line.split("=")[1].strip() #I save the barker correction
-    match barker:
-        case "none":
-            barker = 0
-        case "homann":
-            barker = 1
-        case "carleton":
-            barker = 2
-        case _:
-            raise ValueError("Error: the barker correction is not valid")
-    #Settings:
-    settings_file.readline()
-    #Plasma gas:
-    line = settings_file.readline() #I read the line
-    plasma_gas = line.split("=")[1].strip().lower() #I save the plasma gas
-    match plasma_gas:
-        case "air":
-            plasma_gas = "air_13"
-        case "n2":
-            plasma_gas = "nitrogen2"
-        case "air_13":
-            plasma_gas = "air_13"
-        case "nitrogen2":
-            plasma_gas = "nitrogen2"
-        case "air_11":
-            plasma_gas = "air_11"
-        case _:
-            raise ValueError("Error: the plasma gas is not valid")
-    #Number of point for the boundary layer eta discretization:
-    line = settings_file.readline() #I read the line
+    # Stagnation type:
+    line = settings_file.readline() 
+    stag_type = line.split("=")[1].strip().lower()  # Stagnation type (string)
+    stag_type = retrieve_stag_type(stag_type)  # Stagnation type (integer)
+    # Note: since that the properties are the same for all the cases,
+    # I retrieve them here and not in the retrieve_data_filerun.py module
+    # Heat flux law:
+    line = settings_file.readline() 
+    hf_law = line.split("=")[1].strip().lower()  # Heat flux law (string)
+    hf_law = retrieve_hf_law(hf_law)  # Heat flux law (integer)
+    # Barker's correction type:
+    line = settings_file.readline() 
+    barker_type = line.split("=")[1].strip().lower()  # Barker's correction type (string)
+    barker_type = retrieve_barker_type(barker_type)  # Barker's correction type (integer)
+    # Program settings:
+    settings_file.readline()  # I skip the line, which is the title
+    # Plasma gas:
+    line = settings_file.readline() 
+    plasma_gas = line.split("=")[1].strip()  # Plasma gas (string)
+    plasma_gas = retrieve_mixture_name(plasma_gas)  # Plasma gas (string)
+    # Number of point for the boundary layer eta discretization:
+    line = settings_file.readline()
     try:
-        p = int(line.split("=")[1].strip()) #I save the number of point for the boundary layer eta discretization
-        if (p <= 0):
+        N_p = float(line.split("=")[1].strip())  # Number of point for the boundary layer eta discretization (integer)
+        if (N_p <= 0):
             raise ValueError("Error: the number of point for the boundary layer eta discretization is not positive")
+        if (int(N_p) != N_p):
+            raise ValueError("Error: the number of point for the boundary layer eta discretization is not an integer.")
     except:
         raise ValueError("Error: the number of point for the boundary layer eta discretization is not an integer")
-    #Maximum number of iterations for the heat flux:
-    line = settings_file.readline() #I read the line
+    N_p = int(N_p)
+    # Maximum number of iterations for the heat flux:
+    line = settings_file.readline() 
     try:
-        max_hf_iter = int(line.split("=")[1].strip()) #I save the maximum number of iterations for the heat flux
+        max_hf_iter = float(line.split("=")[1].strip())  # Maximum number of iterations for the heat flux (integer)
         if (max_hf_iter <= 0):
-            raise ValueError("Error: the maximum number of iterations for the heat flux is not positive")
+            raise ValueError("Error: the maximum number of iterations for the heat flux is not positive.")
+        if(int(max_hf_iter) != max_hf_iter):
+            raise ValueError("Error: the maximum number of iterations for the heat flux is not an integer.")
     except:
-        raise ValueError("Error: the maximum number of iterations for the heat flux is not an integer")
-    #Convergence criteria for the heat flux:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the maximum number of iterations for the heat flux is not an integer.")
+    max_hf_iter = int(max_hf_iter)
+    # Convergence criteria for the heat flux:
+    line = settings_file.readline() 
     try:
-        hf_conv = float(line.split("=")[1].strip()) #I save the convergence criteria for the heat flux
+        hf_conv = float(line.split("=")[1].strip())  # Convergence criteria for the heat flux (float)
         if (hf_conv <= 0):
-            raise ValueError("Error: the convergence criteria for the heat flux is not positive")
+            raise ValueError("Error: the convergence criteria for the heat flux is not positive.")
     except:
-        raise ValueError("Error: the convergence criteria for the heat flux is not a number")
-    #Use previous iteration for the heat transfer:
-    line = settings_file.readline() #I read the line
-    use_prev_ite = line.split("=")[1].strip() #I save the use previous iteration for the heat transfer
-    match use_prev_ite:
-        case "yes":
-            use_prev_ite = 1
-        case "no":
-            use_prev_ite = 0
-        case 1:
-            use_prev_ite = 1
-        case 0:
-            use_prev_ite = 0
-        case _:
-            raise ValueError("Error: the use previous iteration for the heat transfer is not valid")
-    #Convergence criteria for the newton solver:
-    line = settings_file.readline() #I read the line
+        raise ValueError("Error: the convergence criteria for the heat flux is not a number.")
+    # Use previous iteration for the heat transfer:
+    line = settings_file.readline() 
+    use_prev_ite = line.split("=")[1].strip().lower()  # Use previous iteration for the heat transfer (string)
+    use_prev_ite = retrieve_use_prev_ite(use_prev_ite)  # Use previous iteration for the heat transfer (integer)
+    # Upper integration boundary for the normal coordinate of the boundary layer:
+    line = settings_file.readline() 
     try:
-        newton_conv = float(line.split("=")[1].strip()) #I save the convergence criteria for the newton solver
-        if (newton_conv <= 0):
-            raise ValueError("Error: the convergence criteria for the newton solver is not positive")
-    except:
-        raise ValueError("Error: the convergence criteria for the newton solver is not a number")
-    #Maximum number of iterations for the newton solver:
-    line = settings_file.readline() #I read the line
-    try:
-        max_newton_iter = int(line.split("=")[1].strip()) #I save the maximum number of iterations for the newton solver
-        if (max_newton_iter <= 0):
-            raise ValueError("Error: the maximum number of iterations for the newton solver is not positive")
-    except:
-        raise ValueError("Error: the maximum number of iterations for the newton solver is not an integer")
-    #Main newton jacobian finite difference epsilon:
-    line = settings_file.readline() #I read the line
-    try:
-        jac_diff = float(line.split("=")[1].strip()) #I save the main newton jacobian finite difference epsilon
-        if (jac_diff <= 0):
-            raise ValueError("Error: the main newton jacobian finite difference epsilon is not positive")
-    except:
-        raise ValueError("Error: the main newton jacobian finite difference epsilon is not a number")
-    #Maximum value for the temperature used for relaxation:
-    line = settings_file.readline() #I read the line
-    try:
-        max_T_relax = float(line.split("=")[1].strip()) #I save the maximum value for the temperature used for relaxation
-        if (max_T_relax <= 0):
-            raise ValueError("Error: the maximum value for the temperature used for relaxation is not positive")
-    except:
-        raise ValueError("Error: the maximum value for the temperature used for relaxation is not a number")
-    #Minimum value for the temperature used for relaxation:
-    line = settings_file.readline() #I read the line
-    try:
-        min_T_relax = float(line.split("=")[1].strip()) #I save the minimum value for the temperature used for relaxation
-        if (min_T_relax <= 0):
-            raise ValueError("Error: the minimum value for the temperature used for relaxation is not positive")
-    except:
-        raise ValueError("Error: the minimum value for the temperature used for relaxation is not a number")
-    #Log warning for when the heat flux does not converge:
-    line = settings_file.readline() #I read the line
-    match line:
-        case "yes":
-            log_warning_hf = True
-        case "no":
-            log_warning_hf = False
-        case _:
-            raise ValueError("Error: the log warning for when the heat flux does not converge is not valid")
-    #eta_max:
-    line = settings_file.readline() #I read the line
-    try:
-        eta_max = float(line.split("=")[1].strip()) #I save the maximum value for the boundary layer eta
+        eta_max = float(line.split("=")[1].strip())  # Upper integration boundary for the normal coordinate of the boundary layer (float)
         if (eta_max <= 0):
-            raise ValueError("Error: the maximum value for the boundary layer eta is not positive")
+            raise ValueError("Error: the maximum value for the boundary layer eta is not positive.")
     except:
-        raise ValueError("Error: the maximum value for the boundary layer eta is not a number")
-    #I close the settings file
+        raise ValueError("Error: the maximum value for the boundary layer eta is not a number.")
+    # Log warning for when the heat flux does not converge:
+    line = settings_file.readline() 
+    log_warning_hf = line.split("=")[1].strip().lower()  # Log warning for when the heat flux does not converge (string)
+    log_warning_hf = retrieve_log_warning_hf(log_warning_hf)  # Log warning for when the heat flux does not converge (integer)
+    # Convergence criteria for the Newton solver:
+    line = settings_file.readline() 
+    try:
+        newton_conv = float(line.split("=")[1].strip())  # Convergence criteria for the newton solver (float)
+        if (newton_conv <= 0):
+            raise ValueError("Error: the convergence criteria for the newton solver is not positive.")
+    except:
+        raise ValueError("Error: the convergence criteria for the newton solver is not a number.")
+    # Maximum number of iterations for the Newton solver:
+    line = settings_file.readline()
+    try:
+        max_newton_iter = float(line.split("=")[1].strip())  # Maximum number of iterations for the newton solver (integer)
+        if (max_newton_iter <= 0):
+            raise ValueError("Error: the maximum number of iterations for the newton solver is not positive.")
+        if (int(max_newton_iter) != max_newton_iter):
+            raise ValueError("Error: the maximum number of iterations for the newton solver is not an integer.")
+    except:
+        raise ValueError("Error: the maximum number of iterations for the newton solver is not an integer.")
+    max_newton_iter = int(max_newton_iter)
+    # Jacobian finite difference epsilon:
+    line = settings_file.readline() 
+    try:
+        jac_diff = float(line.split("=")[1].strip()) 
+        if (jac_diff <= 0):
+            raise ValueError("Error: the Jacobian finite difference epsilon is not positive.")
+    except:
+        raise ValueError("Error: the Jacobian finite difference epsilon is not a number.")
+    # Minimum value for the temperature used for relaxation:
+    line = settings_file.readline() 
+    try:
+        min_T_relax = float(line.split("=")[1].strip())  # Minimum value for the temperature used for relaxation (float)
+        if (min_T_relax <= 0):
+            raise ValueError("Error: the minimum value for the temperature used for relaxation is not positive.")
+    except:
+        raise ValueError("Error: the minimum value for the temperature used for relaxation is not a number.")
+    # Maximum value for the temperature used for relaxation:
+    line = settings_file.readline() 
+    try:
+        max_T_relax = float(line.split("=")[1].strip())  # Maximum value for the temperature used for relaxation (float)
+        if (max_T_relax <= 0):
+            raise ValueError("Error: the maximum value for the temperature used for relaxation is not positive.")
+    except:
+        raise ValueError("Error: the maximum value for the temperature used for relaxation is not a number.")
+    # I close the settings file
     settings_file.close()
-    #Now I read the input file
-    input_file = open(input_filename, "r") #I open the file
-    line = input_file.readline() #I read the line
+    # Now I read the input file
+    input_file = open(input_filename, "r")
+    line = input_file.readline() 
     comment = []
     P = []
-    Pdyn = []
-    q = []
-    while (line != "" and line!="\n"): #I read the file until the end
+    P_dyn = []
+    q_target = []
+    while (line != "" and line != "\n"):  # I read the file until the end
         # the first 20 characters of the line are the comment, then 20 for the pressure, 20 for the dynamic pressure, 20 for the heat flux
-        comment.append(line[:20].strip()) #I save the comment
-        P.append(line[20:40].strip().replace("d","e")) #I save the pressure
-        Pdyn.append(line[40:60].strip().replace("d","e")) #I save the dynamic pressure
-        q.append(line[60:80].strip().replace("d","e")) #I save the heat flux
-        line = input_file.readline() #I read the line
-    input_file.close() #I close the file
-    n = len(comment) #I save the number of cases
-    #I now save the variables in the dataframe object
-    df_object.n = n #Number of cases, integer
-    df_object.comment = comment #Comment, string
-    df_object.P = P #Pressure, float
-    df_object.Pdyn = Pdyn #Dynamic pressure, float
-    df_object.Pstag = None
-    df_object.q = q #Heat flux, float
-    df_object.plasma_gas = plasma_gas #Plasma gas, string
-    df_object.P_CF = P_CF #Static pressure conversion factor, float
-    df_object.PD_CF = PD_CF #Dynamic pressure conversion factor, float
-    df_object.PS_CF = None
-    df_object.Q_CF = Q_CF #Heat flux conversion factor, float
-    df_object.T_0 = T_0 #Initial static temperature, float
-    df_object.Tt_0 = Tt_0 #Initial total temperature, float
-    df_object.u_0 = u_0 #Initial velocity, float
-    df_object.Pt_0 = Pt_0 #Initial total pressure, float
-    df_object.Tw = Tw #Wall temperature, float
-    df_object.Rp = Rp #Pitot external radius, float
-    df_object.Rm = Rm #Flux probe external radius, float
-    df_object.Rj = Rj #Plasma jet radius, float
-    df_object.stagtype = stagtype #Stagnation type, string->integer
-    df_object.hflaw = hflaw #Heat flux law, string->integer
-    df_object.barker = barker #Barker correct, string->integer
-    df_object.p = p #Number of point for the boundary layer eta discretization, integer
-    df_object.max_hf_iter = max_hf_iter #Maximum number of iterations for the heat flux, integer
-    df_object.hf_conv = hf_conv #Convergence criteria for the heat flux, float
-    df_object.use_prev_ite = use_prev_ite #Use previous iteration for the heat transfer, string
-    df_object.newton_conv = newton_conv #Convergence criteria for the newton solver, float
-    df_object.max_newton_iter = max_newton_iter #Maximum number of iterations for the newton solver, integer
-    df_object.jac_diff = jac_diff #Main newton jacobian finite difference epsilon, float
-    df_object.max_T_relax = max_T_relax #Maximum value for the temperature used for relaxation, float
-    df_object.min_T_relax = min_T_relax #Minimum value for the temperature used for relaxation, float
-    df_object.log_warning_hf = log_warning_hf #Log warning for when the heat flux does not converge, string
-    df_object.eta_max = eta_max #Maximum value for the boundary layer eta, float
-    return df_object,output_filename #return the dataframe class object and the output filename
+        comment.append(line[:20].strip()) 
+        P.append(line[20:40].strip().replace("d","e")) 
+        P_dyn.append(line[40:60].strip().replace("d","e")) 
+        q_target.append(line[60:80].strip().replace("d","e")) 
+        line = input_file.readline() 
+        # The "replace" is order to accept format in the Fortran style
+    # I close the input file
+    input_file.close() 
+    n = len(comment)  # Number of cases
+    # I now save the variables in the dataframe object
+    df_object.n = n
+    df_object.comment = comment
+    df_object.P = P
+    df_object.P_dyn = P_dyn
+    df_object.q_target = q_target
+    df_object.plasma_gas = plasma_gas   
+    df_object.P_CF = P_CF
+    df_object.P_dyn_CF = P_dyn_CF
+    df_object.q_CF = q_CF
+    df_object.T_0 = T_0
+    df_object.T_t_0 = T_t_0
+    df_object.u_0 = u_0
+    df_object.P_t_0 = P_t_0
+    df_object.T_w = T_w
+    df_object.R_p = R_p
+    df_object.R_m = R_m
+    df_object.R_j = R_j
+    df_object.stag_type = stag_type
+    df_object.hf_law = hf_law
+    df_object.barker_type = barker_type
+    df_object.N_p = N_p
+    df_object.max_hf_iter = max_hf_iter
+    df_object.hf_conv = hf_conv
+    df_object.use_prev_ite = use_prev_ite
+    df_object.eta_max = eta_max
+    df_object.log_warning_hf = log_warning_hf
+    df_object.newton_conv = newton_conv
+    df_object.max_newton_iter = max_newton_iter
+    df_object.jac_diff = jac_diff
+    df_object.min_T_relax = min_T_relax
+    df_object.max_T_relax = max_T_relax
+    # I return the dataframe object and the output filename
+    return df_object, output_filename
 #.................................................
 #   Possible improvements:
 #   -Add getter and setter for the dataframe object
-#   -Throw specific exceptions for each read error
 #.................................................
-# EXECUTION TIME: Not relevant
+#   EXECUTION TIME: Not relevant
 #.................................................
 #   Known problems:
 #   - None

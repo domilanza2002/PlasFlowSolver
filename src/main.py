@@ -18,12 +18,8 @@ import classes as classes_file  # Module with all the classes that I will use in
 import presentation as presentation_file  # Module to print the presentation of the program
 import prompt_program_mode as prompt_program_mode_file  # Module to prompt the program mode to the user
 import bash_run as bash_run_file  # Module to execute a bashrun
-import read_srun as read_srun_file  # Module to read a .srun file
-import read_xlsx as read_xlsx_file  # Module to read a .xlsx file
-import read_filerun as read_filerun_file  # Module to read a .in and .pfs file
-import retrieve_data_srun as retrieve_data_srun_file  # Module to retrieve the data from a .srun file
-import retrieve_data_xlsx as retrieve_data_xlsx_file  # Module to retrieve the data from a xlsx file
-import retrieve_data_filerun as retrieve_data_filerun_file  # Module to retrieve the data a .in and .pfs file
+import read_data as read_data_file  # Module to read the data from the input file
+import retrieve_data as retrieve_data_file  # Module to retrieve the data from the dataframe
 import heat_flux as heat_flux_file  # Module to compute the stagnation heat flux
 import enthalpy as enthalpy_file  # Module to compute the flow enthalpy
 import entropy as entropy_file  # Module to compute the flow entropy
@@ -132,39 +128,12 @@ else:  # If the program is in bash mode
         print("The program will continue in normal mode")
         program_mode = prompt_program_mode_file.prompt_program_mode()  # I prompt the program mode to the user
         bash_run = False  # I set the program to manual mode
-# Now I read the inputs, depending on the program mode
-if (program_mode == 1):  # Single run
-    print("Mode selected: Single run.")
-    # In this case, I want to read a .srun file, with only 1 case
-    try:
-        df_object, output_filename = read_srun_file.read_srun(bash_run)
-    except Exception as e:
-        print("Error while reading the .srun file: "+str(e))
-        print("Please check your .srun file format and try again.")
-        print("The program will now terminate.")
-        exit_program()
-elif (program_mode == 2):  # Xlsx run
-    print("Mode selected: xlsx run.")
-    # In this case, I want to read an xlsx file with multiple cases
-    try:
-        df_object, output_filename = read_xlsx_file.read_xlsx(bash_run)
-    except Exception as e:
-        print("Error while reading the xlsx file: "+str(e))
-        print("Please check your .xlsx file format and try again.")
-        print("The program will now terminate.")
-        exit_program()
-elif (program_mode == 3):  # File run
-    print("Mode selected: .in and .pfs file run.")
-    try:
-        df_object, output_filename = read_filerun_file.read_filerun(bash_run)
-    except Exception as e:
-        print("Error while reading the .in and .pfs files: "+str(e))
-        print("Please check your .in and .pfs file format and try again.")
-        print("The program will now terminate.")
-        exit_program()
-else:
-    print("ERROR: Invalid program mode (you shouln't be able to see this message. Please check your retrieve_program_mode function.)")
-    print("The program will now terminate")
+# Now I read the data:
+try:
+    df_object, output_filename = read_data_file.read_data(program_mode, bash_run)
+except Exception as e:
+    print(e)
+    print("The program will now terminate.")
     exit_program()
     
 #.................................................
@@ -190,20 +159,15 @@ res_out = []
 print("Starting main program loop...")
 while (n_case < n_lines):  # I loop through all the cases
     print("--------------------------------------------------")
-    # I extract the data from the dataframe:
-    if (program_mode == 1):  # .srun run
-        try:
-            inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_srun_file.retrieve_data(df_object)
-        except Exception as e:
-            print("Error while retrieving the data from the .srun file: "+str(e))
+    # Now I retrieve the data
+    try:
+        inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_file.retrieve_data(df_object, program_mode, n_case)
+    except Exception as e:
+        if (program_mode == 1):
+            print("Error while retrieving the data from the .srun file: " + str(e))
             print("The program will now terminate.")
             exit_program()
-    elif (program_mode == 2):  # .xlsx run
-        try:
-            inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_xlsx_file.retrieve_data(df_object, n_case)
-        except Exception as e:
-            print("Error while retrieving the data from the dataframe: "+str(e))
-            print("The case number " + str(n_case+1) + " will be skipped.")
+        elif (program_mode == 2 or program_mode == 3):
             has_converged_out.append("Error: invalid data")
             rho_out.append(-1)
             T_out.append(-1)
@@ -219,31 +183,6 @@ while (n_case < n_lines):  # I loop through all the cases
             res_out.append(-1)
             n_case += 1
             continue
-    elif (program_mode == 3):  # File run
-        try:
-            inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_filerun_file.retrieve_data(df_object, n_case)
-        except Exception as e:
-            print("Error while retrieving the data from the dataframe: "+str(e))
-            print("We skip the case number "+str(n_case+1))
-            has_converged_out.append("Error: invalid data")
-            rho_out.append(-1)
-            T_out.append(-1)
-            h_out.append(-1)
-            u_out.append(-1)
-            a_out.append(-1)
-            M_out.append(-1)
-            T_t_out.append(-1)
-            h_t_out.append(-1)
-            P_t_out.append(-1)
-            Re_out.append(-1)
-            warnings_out.append("Error: invalid data")
-            res_out.append(-1)
-            n_case += 1
-            continue
-    else:
-        print("ERROR: Invalid program mode. You should never see this message...")
-        print("The program will now terminate")
-        exit_program()
     n_case += 1 #we increase the number of cases
     print("Executing case number "+str(n_case)+"...")
     # I store the data from the inputs object

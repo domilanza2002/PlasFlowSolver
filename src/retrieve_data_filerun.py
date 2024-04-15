@@ -6,6 +6,7 @@
 #   iteration using the filerun mode.
 #.................................................
 import classes as classes_file  # Module with the classes
+from retrieve_helper import retrieve_stag_var  # Function to retrieve the stagnation variable
 
 def retrieve_data(df, n_case):
     """This function retrieves the needed data 
@@ -24,17 +25,18 @@ def retrieve_data(df, n_case):
     """
     
     # Variables:
-    ratio_L = None # Ratio between the flux probe external radius and the plasma jet radius (float)
-    den_sv = None  # Denominator for the stagnation variable (float)
-    mixture_name = None  # Mixture name (string)
     warnings = None  # Warnings for the reading process (string)
+    inputs_object = None  # Inputs object
+    initials_object = None  # Initials object
+    probes_object = None  # Probes object
+    settings_object = None  # Settings object
     # Inputs:
     comment = None  # Comment (string)
     P = None  # Pressure (float)
     P_dyn = None  # Dynamic pressure (float)
     P_stag = None  # Stagnation pressure (float)
     q_target = None  # Target heat flux (float)
-    plasma_gas = None  # Plasma gas (string)
+    mixture_name = None  # Plasma gas (string)
     # Initial conditions:
     T_0 = None  # Initial static temperature (float)
     T_t_0 = None  # Initial total temperature (float)
@@ -48,6 +50,7 @@ def retrieve_data(df, n_case):
     stag_type = None  # Stagnation type (string)
     hf_law = None  # Heat flux law (string)
     barker_type = None  # Barker's correction type (string)
+    stag_var = None  # Stagnation variable (float)
     # Program settings:
     N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
     max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
@@ -68,130 +71,122 @@ def retrieve_data(df, n_case):
     probes_object = classes_file.probes_class() 
     settings_object = classes_file.settings_class()
     warnings = [] 
-    # Inputs:
     warnings = "None|"
-    # Comment: no checks needed
-    comment = df.comment[n_case] #Comment, string
-    inputs_object.comment = comment #Comment, string
+    # INPUTS:
+    # Comment:
+    comment = df.comment[n_case]  # comment (string)
+    inputs_object.comment = comment
     # Pressure:
     try:
-        P = float(df.P[n_case]) #Pressure, float
+        P = float(df.P[n_case])  # Pressure (float)
     except:
-        raise ValueError("Error: The pressure value is not valid")
+        raise ValueError("Error: The static pressure value is not valid.")
     if (P<=0):
-        raise ValueError("Error: The pressure value is not valid")
+        raise ValueError("Error: The pressure value is negative or zero.")
     else:
-        inputs_object.P = P #Pressure, float
+        inputs_object.P = P 
     # Dynamic pressure:
     try:
-        Pdyn = float(df.Pdyn[n_case]) #Dynamic pressure, float
+        P_dyn = float(df.P_dyn[n_case])  # Dynamic pressure (float)
     except:
-        raise ValueError("Error: The dynamic pressure value is not valid")
-    if (Pdyn<=0):
-        raise ValueError("Error: The dynamic pressure value is not valid")
+        raise ValueError("Error: The dynamic pressure value is not valid.")
+    if (P_dyn<=0):
+        raise ValueError("Error: The dynamic pressure value is negative or zero.")
     else:
-        inputs_object.Pdyn = Pdyn
+        inputs_object.P_dyn = P_dyn
     # Heat flux:
     try:
-        q = float(df.q[n_case]) #Heat flux, float
+        q_target = float(df.q_target[n_case])  # Heat flux (float)
     except: 
-        raise ValueError("Error: The heat flux value is not valid")
-    if(q<=0):
-        raise ValueError("Error: The heat flux value is not valid")
+        raise ValueError("Error: The heat flux value is not valid.")
+    if(q_target<=0):
+        raise ValueError("Error: The heat flux value is negative or zero.")
     else:
-        inputs_object.q = q #Heat flux, float
+        inputs_object.q_target = q_target
     # Plasma gas:
-    plasma_gas = df.plasma_gas #Plasma gas, string
-    inputs_object.plasma_gas = plasma_gas #Plasma gas, string
+    plasma_gas = df.plasma_gas  # Plasma gas (string)
+    inputs_object.mixture_name = plasma_gas  # Already managed in read_filerun.py
     # Conversion factors:
-    P_CF = df.P_CF #Static pressure conversion factor, float
-    inputs_object.P_CF = P_CF #Static pressure conversion factor, float
-    inputs_object.P *= inputs_object.P_CF #We convert the pressure to the right unit
-    PD_CF = df.PD_CF #Dynamic pressure conversion factor, float
-    inputs_object.PD_CF = PD_CF #Dynamic pressure conversion factor, float
-    inputs_object.Pdyn *= inputs_object.PD_CF #We convert the dynamic pressure to the right unit
-    inputs_object.Pstag = inputs_object.P + inputs_object.Pdyn #Stagnation pressure, float
-    Q_CF = df.Q_CF #Heat flux conversion factor, float
-    inputs_object.Q_CF = Q_CF #Heat flux conversion factor, float
-    inputs_object.q *= inputs_object.Q_CF #We convert the heat flux to the right unit
+    P_CF = df.P_CF  # Static pressure conversion factor (float)
+    inputs_object.P *= P_CF  # Static pressure to Pascal
+    P_dyn_CF = df.P_dyn_CF  # Dynamic pressure conversion factor (float)
+    inputs_object.P_dyn *= P_dyn_CF  # Dynamic pressure to Pascal
+    inputs_object.P_stag = inputs_object.P + inputs_object.P_dyn  # Stagnation pressure (float)
+    q_CF = df.q_CF  # Heat flux conversion factor (float)
+    inputs_object.q_target *= q_CF  # Heat flux to W/m^2
     # Initials:
-    T_0 = df.T_0 #Initial temperature, float
-    initials_object.T_0=T_0 #Initial temperature, float
-    Tt_0 = df.Tt_0 #Initial total temperature, float
-    initials_object.Tt_0=Tt_0 #Initial total temperature, float
-    u_0 = df.u_0 #Initial velocity, float
-    initials_object.u_0=u_0 #Initial velocity, float
-    Pt_0 = df.Pt_0 #Initial total pressure, float
-    if (Pt_0 == 0):
-        Pt_0 = inputs_object.Pstag
-    initials_object.Pt_0=Pt_0 #Initial total pressure, float
-    # Probes:
-    # Wall temperature
-    Tw = df.Tw #Wall temperature, float
-    probes_object.Tw = Tw #Wall temperature, float
-    # Pitot probe
-    Rp = df.Rp #Pitot external radius, float
-    probes_object.Rp = Rp #Pitot external radius, float
-    # Flux probe
-    Rm = df.Rm #Flux probe external radius, float
-    probes_object.Rm = Rm #Flux probe external radius, float
-    # Plasma jet
-    Rj = df.Rj #Plasma jet radius, float
-    probes_object.Rj = Rj #Plasma jet radius, float
-    # Stagnation type
-    stagtype = df.stagtype #Stagnation type, string->integer
-    probes_object.stagtype = stagtype #Stagnation type, string->integer
-    # Heat flux law
-    hflaw = df.hflaw #Heat flux law, string->integer
-    probes_object.hflaw = hflaw #Heat flux law, string->integer
-    # Barker correct
-    barker = df.barker #Barker correct, string->integer
-    probes_object.barker = barker #Barker correct, string->integer
-    # Stagnation variable
-    match stagtype:
-        case 0:
-            ratio_L=Rm/Rj
-            if(ratio_L<=1):
-                den_sv=2-ratio_L-1.68*pow((ratio_L-1),2)-1.28*pow((ratio_L-1),3)
-                stagvar=1/den_sv
-            else:
-                stagvar=ratio_L
-        case _:
-            raise ValueError("Error: Check the code, you should not be here")
-    probes_object.stagvar = stagvar
+    T_0 = df.T_0  # Initial temperature (float)
+    initials_object.T_0 = T_0 
+    T_t_0 = df.T_t_0  # Initial total temperature (float)
+    initials_object.T_t_0=T_t_0 
+    u_0 = df.u_0  # Initial velocity (float)
+    initials_object.u_0 = u_0  # Initial velocity (float)
+    P_t_0 = df.P_t_0  # Initial total pressure (float)
+    if (P_t_0 == 0):  # If the initial total pressure is zero we set it as the stagnation pressure
+        P_t_0 = inputs_object.P_stag
+    initials_object.P_t_0=P_t_0 
+    # Probe properties:
+    # Wall temperature:
+    T_w = df.T_w  # Wall temperature, float
+    probes_object.T_w = T_w
+    # Pitot probe external radius:
+    R_p = df.R_p  #Pitot probe external radius (float)
+    probes_object.R_p = R_p 
+    # Flux probe external radius:
+    R_m = df.R_m  #Flux probe external radius (float)
+    probes_object.R_m = R_m  #Flux probe external radius (float)
+    # Plasma jet radius:
+    R_j = df.R_j  #Plasma jet radius (float)
+    probes_object.R_j = R_j  
+    # Stagnation type:
+    stag_type = df.stag_type  #Stagnation type (integer)
+    # Not saved in any object
+    # Heat flux law:
+    hf_law = df.hf_law  #Heat flux law (integer)
+    probes_object.hf_law = hf_law  # Already managed in read_filerun.py
+    # Barker's correction type:
+    barker_type = df.barker_type  #Barker's correction type (integer)
+    probes_object.barker_type = barker_type  # Already managed in read_filerun.py
+    # Stagnation variable:
+    stag_var = retrieve_stag_var(stag_type, R_m, R_j)  #Stagnation variable (float)
+    probes_object.stag_var = stag_var
     # Settings:
-    p = df.p #Number of point for the boundary layer eta discretization, integer
-    settings_object.p = p #Number of point for the boundary layer eta discretization, integer
-    # Maximum number of iterations for the heat flux
-    max_hf_iter = df.max_hf_iter #Maximum number of iterations for the heat flux, integer
-    settings_object.max_hf_iter = max_hf_iter #Maximum number of iterations for the heat flux, integer
-    # Convergence criteria for the heat flux
-    hf_conv = df.hf_conv #Convergence criteria for the heat flux, float
-    settings_object.hf_conv = hf_conv #Convergence criteria for the heat flux, float
-    # Use previous iteration for the heat transfer
-    use_prev_ite = df.use_prev_ite #Use previous iteration for the heat transfer, string
-    settings_object.use_prev_ite = use_prev_ite #Use previous iteration for the heat transfer, string
-    # Convergence criteria for the newton solver
-    newton_conv = df.newton_conv #Convergence criteria for the newton solver, float
-    settings_object.newton_conv = newton_conv #Convergence criteria for the newton solver, float
-    # Maximum number of iterations for the newton solver
-    max_newton_iter = df.max_newton_iter #Maximum number of iterations for the newton solver, integer
-    settings_object.max_newton_iter = max_newton_iter #Maximum number of iterations for the newton solver, integer
-    # Main newton jacobian finite difference epsilon
-    jac_diff = df.jac_diff #Main newton jacobian finite difference epsilon, float
-    settings_object.jac_diff = jac_diff #Main newton jacobian finite difference epsilon, float
-    # Maximum value for the temperature used for relaxation
-    max_T_relax = df.max_T_relax #Maximum value for the temperature used for relaxation, float
-    settings_object.max_T_relax = max_T_relax #Maximum value for the temperature used for relaxation, float
+    N_p = df.N_p  # Number of point for the boundary layer eta discretization (integer)
+    settings_object.N_p = N_p 
+    # Maximum number of iterations for the heat flux:
+    max_hf_iter = df.max_hf_iter  #Maximum number of iterations for the heat flux (integer)
+    settings_object.max_hf_iter = max_hf_iter 
+    # Convergence criteria for the heat flux:
+    hf_conv = df.hf_conv  #Convergence criteria for the heat flux (float)
+    settings_object.hf_conv = hf_conv 
+    # Use previous iteration for the heat transfer:
+    use_prev_ite = df.use_prev_ite  #Use previous iteration for the heat transfer (integer)
+    settings_object.use_prev_ite = use_prev_ite  # Already managed in read_filerun.py
+    # Maximum value for the boundary layer eta:
+    eta_max = df.eta_max  # Maximum value for the boundary layer eta (float)
+    settings_object.eta_max = eta_max 
+    # Log warning for when the heat flux does not converge:
+    log_warning_hf = df.log_warning_hf  # Log warning for when the heat flux does not converge (integer)
+    settings_object.log_warning_hf = log_warning_hf  # Already managed in read_filerun.py
+    # Convergence criteria for the Newton solver:
+    newton_conv = df.newton_conv  #Convergence criteria for the newton solver (float)
+    settings_object.newton_conv = newton_conv 
+    # Maximum number of iterations for the Newton solver:
+    max_newton_iter = df.max_newton_iter  #Maximum number of iterations for the newton solver (integer)
+    settings_object.max_newton_iter = max_newton_iter 
+    # Jacobian finite difference epsilon
+    jac_diff = df.jac_diff  # Jacobian finite difference epsilon (float)
+    settings_object.jac_diff = jac_diff 
     # Minimum value for the temperature used for relaxation
-    min_T_relax = df.min_T_relax #Minimum value for the temperature used for relaxation, float
-    settings_object.min_T_relax = min_T_relax #Minimum value for the temperature used for relaxation, float   
-    # Log warning for when the heat flux does not converge
-    log_warning_hf = df.log_warning_hf #Log warning for when the heat flux does not converge, string
-    settings_object.log_warning_hf = log_warning_hf #Log warning for when the heat flux does not converge, string
-    # Maximum value for the boundary layer eta
-    eta_max = df.eta_max #Maximum value for the boundary layer eta, float
-    settings_object.eta_max = eta_max #Maximum value for the boundary layer eta, float   
+    min_T_relax = df.min_T_relax  # Minimum value for the temperature used for relaxation (float)
+    settings_object.min_T_relax = min_T_relax 
+    # Maximum value for the temperature used for relaxation
+    max_T_relax = df.max_T_relax  # Maximum value for the temperature used for relaxation (float)
+    settings_object.max_T_relax = max_T_relax 
+    # Check Barker's effect and initial total pressure consistency:
+    if (probes_object.barker_type == 0 and initials_object.P_t_0 != inputs_object.P_stag):
+        initials_object.P_t_0 = inputs_object.P_stag
+        warnings += "P_t_0 not consistent with the Barker's correction, set to P_stag|"
     # Return the objects
     return inputs_object, initials_object, probes_object, settings_object, warnings
 #.................................................
