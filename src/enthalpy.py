@@ -1,12 +1,14 @@
 #.................................................
-#   ENTHALPY.PY, v3.0.0, February 2024, Domenico Lanza.
+#   ENTHALPY.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This file is needed to compute the enthalpy of the fluid
-#   given the pressure and the temperature
+#   This module is needed to compute the enthalpy of the fluid
+#   given the pressure and the temperature.
 #.................................................
-import mutationpp as mpp #Library for thermodynamic computations
-def enthalpy(mixture_object, P, T): #we define the function enthalpy
-    """This function returns the enthalpy of the fluid given the pressure and the temperature
+import mutationpp as mpp  # Thermodynamic library
+
+def enthalpy(mixture_object, P, T):
+    """This function returns the enthalpy of the fluid 
+    given the pressure and the temperature.
 
     Args:
         mixture_object (mpp.Mixture): the mixture of the case
@@ -16,28 +18,17 @@ def enthalpy(mixture_object, P, T): #we define the function enthalpy
     Returns:
         h (float): enthalpy
     """
-    #.................................................
-    #   This function returns the enthalpy of the fluid
-    #   given the pressure and the temperature
-    #.................................................
-    #   INPUTS:
-    #   mixture_object: the mixture of the case
-    #   P: pressure
-    #   T: temperature
-    #   OUTPUTS:
-    #   h: enthalpy
-    #.................................................
-    #we define some variables:
-    h = None #enthalpy
-    #we compute the enthalpy:
-    mixture_object.equilibrate(T,P) #we equilibrate the mixture
-    h = mixture_object.mixtureHMass() #we compute the enthalpy
-    return h #we return the enthalpy
+    # Variable to return:
+    h = None
+    # Compute the enthalpy:
+    mixture_object.equilibrate(T, P)  # I equilibrate the mixture
+    h = mixture_object.mixtureHMass() # I compute the enthalpy
+    return h
 #.................................................
 #   Possible improvements:
-#   -Implement h_shift
+#   None.
 #.................................................
-# EXECUTION TIME: fast
+# EXECUTION TIME: TBD
 #.................................................
 #   KNOW PROBLEMS:
 #   None.
