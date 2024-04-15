@@ -49,7 +49,7 @@ def reset_vars(deta, T_e, T_w, N_p, eta_max):
         z.append(g_i)
     return x, y, z
 
-def properties_across_BL(T_e, T_w, P_e, mu_e, rho_e, C_p_e, deta, z, N_p, mixture_object, max_T_relax, eta_max):
+def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax):
     # Variables:
     Khi = None  # Vector to store the Khi values, Khi = rho*mu/(rho_e*mu_e)
     rr = None  # Vector to store the rr values, rr = rho_e/rho
@@ -72,6 +72,7 @@ def properties_across_BL(T_e, T_w, P_e, mu_e, rho_e, C_p_e, deta, z, N_p, mixtur
     redo = False  
     for i in range(0, N_p):
         T = T_e*z[i]  # Current temperature
+        print("T=",T)
         if (T<=4 or np.isnan(T) or T>max_T_relax):  #This should never happen
             redo = True
             return Khi, rr, kpr, C, redo
@@ -81,6 +82,8 @@ def properties_across_BL(T_e, T_w, P_e, mu_e, rho_e, C_p_e, deta, z, N_p, mixtur
         rr_i = rho_e/rho 
         rr.append(rr_i)
         kpr_i = lambda_eq/(mu_e*C_p*rr_i) 
+        print("lambda_eq="+str(lambda_eq))
+        print("kpr="+str(kpr_i))
         kpr.append(kpr_i) 
         c_i = C_p/C_p_e 
         C.append(c_i) 
@@ -146,6 +149,8 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     stop = None  # Variable to understand if we need to stop the loop
     dg_v = None  # Vector to store the derivative of g with respect to eta
     dg = None  # The derivative of g with respect to eta
+    redo = None  # Variable to understand if we need to reset the boundary layer variables
+    already_reset = None  # Variable to understand if we already reset the boundary layer variables
     #.................................................
     #START OF THE CODE:
     deta = eta_max/(N_p-1)  # Step of eta. We use N_p-1 because we need N_p points, not N_p+1 (we start from 0 and we end at eta_max)
@@ -169,18 +174,21 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     rho_w, lambda_eq_wall=heat_flux_hf_law0_wall_file.heat_flux_hf_law0_wall(P_e, T_w, mixture_object)  # Remember, dP/dy = 0
     # I start the convergence loop
     iter = 0
+    already_reset = False
     while (iter<max_iter):
         # For safety reason, the loop has a maximum number of iterations, but inside the loop there is also
         # a convergence criteria based on the succesive iteration method
         iter += 1
         # I reset some vectors:
-        Khi, rr, kpr, C, redo = properties_across_BL(T_e, T_w, P_e, mu_e, rho_e, C_p_e, deta, z, N_p, mixture_object, max_T_relax, eta_max)
+        Khi, rr, kpr, C, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax)
         if (redo == True):
-            print("ERROR: T<=0, nan or T>T_max, resetting BL vars...")
-            x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
-            Khi, rr, kpr, C, redo = properties_across_BL(T_e, T_w, P_e, mu_e, rho_e, C_p_e, deta, z, N_p, mixture_object, max_T_relax, eta_max)
-            if (redo == True):
+            if (already_reset == True):
                 raise ValueError("ERROR: T<=0, nan or T>T_max, resetting BL vars...FAILED")
+            print("ERROR: T<=0, nan or T>T_max, resetting BL vars...")
+            exit()
+            x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
+            Khi, rr, kpr, C, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax)
+            already_reset = True
         # Continuity equation:
         aa = []
         for i in range(0, N_p):
@@ -220,10 +228,10 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         # I check the convergence for each point of the grid, using the succesive iteration convergence criteria
         # If for every point of the grid, the following iteration criteria is reached, we stop the loop
         for i in range(0, N_p):
-            if( abs(new_f[i]-y[i])>hf_conv or abs(new_g[i]-z[i])>hf_conv ):  # If the convergence is not reached
+            if( abs(new_f[i]-y[i]) > hf_conv or abs(new_g[i]-z[i]) > hf_conv ):  # If the convergence is not reached
                 stop = False  # We do not stop the loop
                 break
-        if(stop or iter>=max_iter):  # If we converged or we reached the maximum number of iterations
+        if(stop or iter >= max_iter):  # If we converged or we reached the maximum number of iterations
             if(stop == False and log_warning_hf==True):  # If we did not converge and we want to log the warning
                 print("Warning: an heat flux computation did not converge for the current iteration.")
             break  # We stop the loop
