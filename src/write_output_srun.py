@@ -3,7 +3,7 @@
 #.................................................
 #   This Module is needed to write the output file.
 #.................................................
-def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out):
+def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out):
     """This function writes the output file for the srun mode of the program.
 
     Args:
@@ -20,6 +20,7 @@ def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out,
         P_t_out (float): the total pressure
         Re_out (float): the Reynolds number
         warnings_out (str): the warnings
+        res_out (float): the residual
     """
     # Variables:
     file = None # File object
@@ -37,4 +38,5 @@ def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out,
     file.write("P_t_out: " + str(P_t_out[0]) + " Pa\n")
     file.write("Re_out: " + str(Re_out[0]) + "\n")
     file.write("warnings_out: " + str(warnings_out[0]) + "\n")
+    file.write("res_out: " + str(res_out[0]) + "\n")
     file.close()

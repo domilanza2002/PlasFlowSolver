@@ -19,7 +19,7 @@ import presentation as presentation_file  # Module to print the presentation of 
 import prompt_program_mode as prompt_program_mode_file  # Module to prompt the program mode to the user
 import bash_run as bash_run_file  # Module to execute a bashrun
 import read_srun as read_srun_file  # Module to read a .srun file
-import read_dataframe as read_dataframe_file  # Module to read a .xlsx file
+import read_xlsx as read_xlsx_file  # Module to read a .xlsx file
 import read_filerun as read_filerun_file  # Module to read a .in and .pfs file
 import retrieve_data_srun as retrieve_data_srun_file  # Module to retrieve the data from a .srun file
 import retrieve_data_xlsx as retrieve_data_xlsx_file  # Module to retrieve the data from a xlsx file
@@ -143,11 +143,11 @@ if (program_mode == 1):  # Single run
         print("Please check your .srun file format and try again.")
         print("The program will now terminate.")
         exit_program()
-elif (program_mode == 2):  # Excel run
+elif (program_mode == 2):  # Xlsx run
     print("Mode selected: xlsx run.")
     # In this case, I want to read an xlsx file with multiple cases
     try:
-        df_object, output_filename = read_dataframe_file.read_dataframe(bash_run)
+        df_object, output_filename = read_xlsx_file.read_xlsx(bash_run)
     except Exception as e:
         print("Error while reading the xlsx file: "+str(e))
         print("Please check your .xlsx file format and try again.")
@@ -198,12 +198,12 @@ while (n_case < n_lines):  # I loop through all the cases
             print("Error while retrieving the data from the .srun file: "+str(e))
             print("The program will now terminate.")
             exit_program()
-    elif (program_mode == 2): #File run
+    elif (program_mode == 2):  # .xlsx run
         try:
             inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_xlsx_file.retrieve_data(df_object, n_case)
         except Exception as e:
             print("Error while retrieving the data from the dataframe: "+str(e))
-            print("We skip the case number "+str(n_case))
+            print("The case number " + str(n_case+1) + " will be skipped.")
             has_converged_out.append("Error: invalid data")
             rho_out.append(-1)
             T_out.append(-1)
@@ -217,14 +217,14 @@ while (n_case < n_lines):  # I loop through all the cases
             Re_out.append(-1)
             warnings_out.append("Error: invalid data")
             res_out.append(-1)
-            n_case+=1 #we increase the number of cases
+            n_case += 1
             continue
     elif (program_mode == 3): #File run
         try:
             inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_filerun_file.retrieve_data(df_object, n_case)
         except Exception as e:
             print("Error while retrieving the data from the dataframe: "+str(e))
-            print("We skip the case number "+str(n_case))
+            print("We skip the case number "+str(n_case+1))
             has_converged_out.append("Error: invalid data")
             rho_out.append(-1)
             T_out.append(-1)
@@ -238,7 +238,7 @@ while (n_case < n_lines):  # I loop through all the cases
             Re_out.append(-1)
             warnings_out.append("Error: invalid data")
             res_out.append(-1)
-            n_case+=1 #we increase the number of cases
+            n_case+=1
             continue
     else:
         print("ERROR: Invalid program mode. You should never see this message...")
@@ -274,10 +274,6 @@ while (n_case < n_lines):  # I loop through all the cases
     T_t = initials_object.T_t_0
     u = initials_object.u_0
     P_t = initials_object.P_t_0
-    if (probes_object.barker_type == 0 and P_stag != P_t):
-        print("Warning: the stagnation pressure is different from the total pressure, but the Barker's effect is not considered.")
-        print("The initial total pressure will be set to the stagnation pressure.")
-        P_t = P_stag
     # We start the Newton-Raphson loop to obtain the flow parameters from the probes
     exit_due_error = False  # Variable to exit the Newton loop if an error occurs during the computation
     max_newton_iter = settings_object.max_newton_iter  # I retrieve the maximum number of iterations for the Newton loop
@@ -366,7 +362,7 @@ while (n_case < n_lines):  # I loop through all the cases
             T_star = T + d_vars[0]*relax
             u_star = u + d_vars[1]*relax
             T_t_star = T_t + d_vars[2]*relax
-            if (probes_object.barker != 0):
+            if (probes_object.barker_type != 0):
                 P_t_star = P_t + d_vars[3]*relax
         # If the new values are too high, we relax them:
         while ( (T_star > settings_object.max_T_relax) or (T_t_star > settings_object.max_T_relax)):
@@ -386,7 +382,7 @@ while (n_case < n_lines):  # I loop through all the cases
             P_t = P_t_star
     #.................................................
     # The Newton's loop has ended
-    if (exit_due_error == True and program_mode!=1):  # If we have skipped the case and we are not in single run
+    if (exit_due_error == True and program_mode != 1):  # If we have skipped the case and we are not in single run
         # We only skip the case, but we do not exit the program
         print("The case number "+str(n_case)+" has encountered an error during the computation. The case will be skipped.")
         has_converged_out.append("Error detected during the computation.")
@@ -433,9 +429,9 @@ while (n_case < n_lines):  # I loop through all the cases
 print("--------------------------------------------------")
 print("Writing output file...")
 if program_mode == 1:  # Single run
-    write_output_srun_file.write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out)
-elif program_mode == 2:  # File run
-    write_output_xlsx_file.write_output_xlsx(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, h_t_out, P_t_out, T_t_out, Re_out, warnings_out)
+    write_output_srun_file.write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out)
+elif program_mode == 2:  # xlsx run
+    write_output_xlsx_file.write_output_xlsx(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out)
 elif program_mode == 3:  # File run
     write_output_filerun_file.write_output_filerun(df_object, output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, h_t_out, P_t_out, T_t_out, Re_out, res_out)
 else:
