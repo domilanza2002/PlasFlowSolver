@@ -1,11 +1,12 @@
 #.................................................
-#   EQ_DIFF_SOLVE.PY, v3.0.0, February 2024, Domenico Lanza.
+#   EQ_DIFF_SOLVE.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This project file is needed to solve
+#   This module is needed to solve
 #   the differential equation of the model.
 #.................................................
-def thomas(a,c,e,d): #Function to solve a tridiagonal system
-    """This function solves a tridiagonal system of equations.
+def thomas(a, c, e, d): 
+    """This function solves a tridiagonal system of equations
+    by using the Thomas algorithm.
 
     Args:
         a (float array): diagonal of the matrix
@@ -18,45 +19,37 @@ def thomas(a,c,e,d): #Function to solve a tridiagonal system
     Returns:
         x (float array): vector of the solution
     """
-    #.................................................
-    #   This function is the Thomas algorithm.
-    #.................................................
-    #   INPUTS:
-    #   a: diagonal of the matrix
-    #   c: upper diagonal of the matrix
-    #   e: lower diagonal of the matrix
-    #   d: vector of the solution
-    #   OUTPUTS:
-    #   x: vector of the solution
-    #.................................................
-    # we define some variables:
-    x = None # variable to return
-    y = None # variable to store the y values
-    n = None # number of points
-    beta = None # variable to store the beta values, lower diagonal of L
-    alpha = None # variable to store the alpha values, diagonal of U
-    # we compute the number of points
-    n = len(a) # number of points
-    if (len(c) != n-1 or len(e) != n-1 or len(d) != n): # we check the input
-        raise Exception('ERROR: wrong input size')
-    # we compute the values:
-    alpha = [0.0]*n # we initialize the alpha array
-    beta = [0.0]*(n-1) # we initialize the beta array
-    alpha[0] = a[0] # we compute the first alpha value
-    for i in range(0,n-1): # we compute the alpha and beta values
+    # Variables:
+    x = None  # Variable to return, the solution
+    y = None  # Intermediate variable
+    n = None  # Number of points
+    beta = None  # Variable to store the beta values, lower diagonal of L
+    alpha = None  # Variable to store the alpha values, diagonal of U
+    n = len(a) # Number of points
+    if (len(c) != n-1 or len(e) != n-1 or len(d) != n):  # Check the input length
+        raise Exception('ERROR: wrong input size.')
+    # Initialization:
+    alpha = [0.0]*n 
+    beta = [0.0]*(n-1)
+    y = [0.0]*n 
+    x = [0.0]*n 
+    alpha[0] = a[0] 
+    # Coefficients:
+    for i in range(0,n-1):
         beta[i] = e[i]/alpha[i]
         alpha[i+1] = a[i+1]-beta[i]*c[i]
-    y = [0.0]*n # we initialize the y array
-    y[0] = d[0] # we compute the first y value
-    for i in range(1,n): # we compute the y values
+    # Forward substitution:
+    y[0] = d[0] 
+    for i in range(1,n):
         y[i] = d[i]-beta[i-1]*y[i-1]
-    x = [0.0]*n # we initialize the x array
-    x[n-1] = y[n-1]/alpha[n-1] # we compute the last x value
-    for i in range(n-2,-1,-1): # we compute the x values
+    # Backward substitution:
+    x[n-1] = y[n-1]/alpha[n-1] 
+    for i in range(n-2,-1,-1): 
         x[i] = (y[i]-c[i]*x[i+1])/alpha[i]
-    return x # we return the result
+    return x 
+#..................................................
 
-def solver(a,b,d,f_init,f_final): #function to solve a tridiagonal system
+def solver(a,b,d,f_init,f_final):
     """This function solves the differential equation of the model.
 
     Args:
@@ -64,46 +57,35 @@ def solver(a,b,d,f_init,f_final): #function to solve a tridiagonal system
         b (float array): the b coefficients of the differential equation
         d (float array): the d coefficients of the differential equation
         f_init (float): the initial condition for eta=0
-        f_final (float): the final condition for eta=6
+        f_final (float): the final condition for eta=eta_max
     Raises:
-        Exception: wrong input size
+        Exception: wrong input size.
 
     Returns:
         res (float array): vector of the solution
     """
-    #.................................................
-    #   This function solves the differential equation of the model.
-    #.................................................
-    #   INPUTS:
-    #   a: the a coefficients of the differential equation
-    #   b: the b coefficients of the differential equation
-    #   d: the d coefficients of the differential equation
-    #   f_init: the initial condition for eta=0
-    #   f_final: the final condition for eta=6
-    #   OUTPUTS:
-    #   res: vector of the solution
-    #.................................................
-    # we define some variables:
-    res = None # variable to return
-    n = None # number of points
-    aa = None # vector to store the matrix values
-    bb = None # vector to store the matrix values
-    cc = None # vector to store the matrix values
-    dd = None # vector to store the matrix values
-    n = len(a) # number of points
-    if (len(b) != n or len(d) != n): # we check the input
-        raise Exception('ERROR: wrong input size')
+    # Variables:
+    res = None  # variable to return
+    n = None  # Number of points
+    aa = None  # Vector to store the matrix values
+    bb = None  # Vector to store the matrix values
+    cc = None  # Vector to store the matrix values
+    dd = None  # Vector to store the matrix values
+    n = len(a)  # Number of points
+    if (len(b) != n or len(d) != n):  # Check the input length
+        raise Exception('ERROR: wrong input size,')
     # Let us remember that we have n points, but:
     #   eta=0 has res=f_init
-    #   eta=6 has res=f_final
+    #   eta=eta_max has res=f_final
     #   so we have n-2 points to solve
-    ns = n-2 # number of points to solve
-    # now we compute the coefficients of the matrix
-    aa = [0.0]*ns # we initialize the aa array
-    bb = [0.0]*ns # we initialize the bb array
-    cc = [0.0]*ns # we initialize the cc array
-    dd = [0.0]*ns # we initialize the dd array
-    # in reality the aa and cc vectors have ns-1 points, because they are the upper and lower diagonals of the matrix
+    ns = n-2  # Number of points to solve
+    # Initialization:
+    aa = [0.0]*ns 
+    bb = [0.0]*ns 
+    cc = [0.0]*ns 
+    dd = [0.0]*ns 
+    # P.S. In reality the aa and cc vectors have ns-1 points, because they are the upper and lower diagonals of the matrix
+    # Coefficients:
     for i in range(1, ns+1):
         mnp1p1 = a[i+1] + 1.5*b[i+1]
         mnp10 = -2*( a[i+1] + b[i+1] )
@@ -120,31 +102,31 @@ def solver(a,b,d,f_init,f_final): #function to solve a tridiagonal system
         mnm1m1 = a[i-1] - 1.5*b[i-1]
         mnm1al = 6*a[i-1] - 2*b[i-1]
         mnm1be = -10*a[i-1] + 2*b[i-1]
-        #determinants to eliminate alfa and beta
+        # Determinants to eliminate alfa and beta
         delnp1 = mnal*mnp1be - mnp1al*mnbe
         deln = mnp1al*mnm1be - mnm1al*mnp1be
         delnm1 = mnm1al*mnbe - mnal*mnm1be
-        #coefficients of the system
+        # Coefficients of the system
         aa[i-1] = mnm1p1*delnp1 + mnp1*deln + mnp1p1*delnm1
         bb[i-1] = mnm10*delnp1 + mn0*deln + mnp10*delnm1
         cc[i-1] = mnm1m1*delnp1 + mnm1*deln + mnp1m1*delnm1
         dd[i-1] = d[i-1]*delnp1 + d[i]*deln + d[i+1]*delnm1
-    #making it really tridiagonal
+    # Making the matrix really tridiagonal
     dd[0] -= cc[0]*f_init
     dd[ns-1] -= aa[ns-1]*f_final
-    #solving with thomas algorithm:
-    res = [0.0]*n # we initialize the res array
-    res[0] = f_init # we compute the first res value
-    res[n-1] = f_final # we compute the last res value
-    cc = cc[1:ns] # we remove the first element of cc
-    aa = aa[0:ns-1] # we remove the last element of aa
-    res[1:n-1] = thomas(bb,aa,cc,dd) # we compute the res values
-    return res # we return the result
+    # We solve the system:
+    res = [0.0]*n 
+    res[0] = f_init  # First point
+    res[n-1] = f_final  # Last point
+    cc = cc[1:ns]  # Adjust cc vector for Thomas
+    aa = aa[0:ns-1]  # Adjust aa vector for Thomas
+    res[1:n-1] = thomas(bb,aa,cc,dd)  # Solve with Thomas
+    return res
 #.................................................
 #   Possible improvements:
 #   None
 #.................................................
-# EXECUTION TIME: fast
+# EXECUTION TIME: TBD
 #.................................................
 #   KNOW PROBLEMS:
 #   None.
