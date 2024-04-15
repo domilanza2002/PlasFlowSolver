@@ -72,7 +72,6 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, m
     redo = False  
     for i in range(0, N_p):
         T = T_e*z[i]  # Current temperature
-        print("T=",T)
         if (T<=4 or np.isnan(T) or T>max_T_relax):  #This should never happen
             redo = True
             return Khi, rr, kpr, C, redo
@@ -82,8 +81,6 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, m
         rr_i = rho_e/rho 
         rr.append(rr_i)
         kpr_i = lambda_eq/(mu_e*C_p*rr_i) 
-        print("lambda_eq="+str(lambda_eq))
-        print("kpr="+str(kpr_i))
         kpr.append(kpr_i) 
         c_i = C_p/C_p_e 
         C.append(c_i) 
