@@ -8,6 +8,24 @@
 #.................................................
 import mutationpp as mpp
 
+def pressure_consistency_check(P, P_dyn, P_stag):
+    """This function checks the consistency of the pressures.
+
+    Args:
+        P (float): the pressure
+        P_dyn (float): the dynamic pressure
+        P_stag (float): the stagnation pressure
+
+    Returns:
+        bool: True if the pressures are consistent, False otherwise
+    """
+    # Variables:
+    P_TOL = 1e-3  # Tolerance for the pressure difference, P_stag = P + P_dyn
+    if (abs(P_stag - P - P_dyn) > P_TOL):
+        return False
+    else:
+        return True
+
 def retrieve_mixture_name(plasma_gas):
     """This function retrieves the mixture name from the plasma gas.
 

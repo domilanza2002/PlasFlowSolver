@@ -1,571 +1,526 @@
 #.................................................
-#   RETRIEVE_DATA_XLSX.PY, v3.0.0, February 2024, Domenico Lanza.
+#   RETRIEVE_DATA_XLSX.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This project file is needed to retrieve the needed
+#   This module is needed to retrieve the needed
 #   data from the dataframe object from the current loop
-#   iteration
+#   iteration.
 #.................................................
-import numpy as np #Library for numerical operations
-import classes as classes_file #Module with classes
-import mutationpp as mpp #Library for the thermodynamic properties
-import pandas as pd #Library for the dataframe
+import numpy as np  # Library for the numerical operations
+import pandas as pd  # Library to read the xlsx file
+import mutationpp as mpp  # Thermodynamic library
+import classes as classes_file  # Module with the classes
+from retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
+from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
+from retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
+from retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
+from retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
+from retrieve_helper import retrieve_stag_var  # Function to retrieve the stag_var
+from retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
+from retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
+
 def generate_std_file(FILENAME):
     """This function generate the standard values file if it does not exist 
-    or is invalid.
+    or it is invalid.
+    
+    Args:
+        FILENAME (str): the filename for the standard values file
     """
-    #.................................................
-    #   This function generate the standard values file if it does not exist
-    #   or is invalid.
-    #.................................................
-    #   INPUTS:
-    #   FILENAME: the filename for the standard values
-    #.................................................
-    #   OUTPUTS:
-    #   None
-    #.................................................
-    file = open(FILENAME, "w") #Open the file
-    file.write("plasma_gas = air13\n") #Plasma gas, string
-    file.write("P_CF = 1e0\n") #Static pressure conversion factor, float
-    file.write("PD_CF = 1e0\n") #Dynamic pressure conversion factor, float
-    file.write("PS_CF = 1e0\n") #Stagnation pressure conversion factor, float
-    file.write("Q_CF = 1e3\n") #Heat flux conversion factor, float
-    file.write("T_0 = 1000\n") #Initial temperature, float
-    file.write("Tt_0 = 2000\n") #Initial total temperature, float
-    file.write("u_0 = 300\n") #Initial velocity, float
-    file.write("Pt_0 = 0\n") #Initial total pressure, float
-    file.write("Tw = 400\n") #Wall temperature, float
-    file.write("Rp = 4e-3\n") #Pitot external radius, float
-    file.write("Rm = 10.1e-3\n") #Flux probe external radius, float
-    file.write("Rj = 50e-3\n") #Plasma jet radius, float
-    file.write("stagtype = 0\n") #Stagnation type, string->integer
-    file.write("hflaw = 0\n") #Heat flux law, string->integer
-    file.write("barker = 0\n") #Barker correct, string->integer
-    file.write("p = 251\n") #Number of point for the boundary layer eta discretization, integer
-    file.write("max_hf_iter = 100\n") #Maximum number of iterations for the heat transfer, integer
-    file.write("hf_conv = 1e-4\n") #Convergence criteria for the heat transfer, float
-    file.write("use_prev_ite = 1\n") #Use previous iteration for the heat transfer, string
-    file.write("newton_conv = 1e-8\n") #Convergence criteria for the newton solver, float
-    file.write("max_newton_iter = 30\n") #Maximum number of iterations for the newton solver, integer
-    file.write("jac_diff = 1e-2\n") #Main newton jacobian finite difference epsilon, float
-    file.write("max_T_relax = 18000\n") #Maximum value for the temperature used for relaxation, float
-    file.write("min_T_relax = 200\n") #Minimum value for the temperature used for relaxation, float
-    file.write("log_warning_hf = 1\n") #Log warning for the heat flux, string
-    file.write("eta_max = 6\n") #Maximum value for the boundary layer eta, float
-    file.close() #Close the file
-    return None
+    # Variables:
+    file = None  # File object
+    # I generate the file:
+    file = open(FILENAME, "w")  # I open the file
+    file.write("plasma_gas = air_11\n")  # Plasma gas (string)
+    file.write("P_CF = 1e0\n")  # Static pressure conversion factor (float)
+    file.write("P_dyn_CF = 1e0\n")  # Dynamic pressure conversion factor (float)
+    file.write("P_stag_CF = 1e0\n")  # Stagnation pressure conversion factor (float)
+    file.write("q_CF = 1e3\n")  # Heat flux conversion factor (float)
+    file.write("T_0 = 4000\n")  # Initial temperature (float)
+    file.write("T_t_0 = 6000\n")  # Initial total temperature (float)
+    file.write("u_0 = 500\n")  # Initial velocity (float)
+    file.write("P_t_0 = 0\n")  # Initial total pressure (float)
+    file.write("T_w = 400\n")  # Wall temperature (float)
+    file.write("R_p = 4e-3\n")  # Pitot external radius (float)
+    file.write("R_m = 10.1e-3\n")  # Flux probe external radius (float)
+    file.write("R_j = 50e-3\n")  # Plasma jet radius (float)
+    file.write("stag_type = 0\n")  # Stagnation type (integer)
+    file.write("hf_law = 0\n")  # Heat flux law (integer)
+    file.write("barker_type = 0\n")  # Barker's correction (integer)
+    file.write("N_p = 251\n")  # Number of point for the boundary layer eta discretization (integer)
+    file.write("max_hf_iter = 100\n")  # Maximum number of iterations for the heat transfer (integer)
+    file.write("hf_conv = 1e-4\n")  # Convergence criteria for the heat transfer (float)
+    file.write("use_prev_ite = 1\n")  # Use previous iteration for the heat transfer (integer)
+    file.write("eta_max = 6\n")  # Maximum value for the boundary layer eta (float)
+    file.write("log_warning_hf = 1\n")  # Log warning for the heat flux (integer)
+    file.write("newton_conv = 1e-8\n")  # Convergence criteria for the newton solver (float)
+    file.write("max_newton_iter = 30\n")  # Maximum number of iterations for the newton solver (integer)
+    file.write("jac_diff = 1e-2\n")  # Jacobian finite difference epsilon (float)
+    file.write("min_T_relax = 200\n")  # Minimum value for the temperature used for relaxation (float)
+    file.write("max_T_relax = 18000\n")  # Maximum value for the temperature used for relaxation (float)
+    file.close()
+#.................................................
+
 def read_file(FILENAME):
-    """This function reads the standard values file and returns the dataframe object
+    """This function reads the standard values file and returns the dataframe object.
     Args:
         FILENAME (str): the filename for the standard values
 
     Returns:
-        df (dataframe_xlsx_class): the dataframe object
+        df (dataframe_class): the dataframe object
     """
-    #.................................................
-    #   This function reads the standard values file and returns the dataframe object
-    #.................................................
-    #   INPUTS:
-    #   FILENAME: the filename for the standard values
-    #.................................................
-    #   OUTPUTS:
-    #   df: the dataframe object
-    #.................................................
-    df = classes_file.dataframe_xlsx_class() #create the dataframe object
-    file = open(FILENAME, "r") #Open the file
-    line = file.readline() #Read the line
-    df.plasma_gas = line.split(" = ")[1].strip() #Plasma gas, string
-    line = file.readline() #Read the line
-    df.P_CF = float(line.split(" = ")[1].strip()) #Static pressure conversion factor, float
-    line = file.readline() #Read the line
-    df.PD_CF = float(line.split(" = ")[1].strip()) #Dynamic pressure conversion factor, float
-    line = file.readline() #Read the line
-    df.PS_CF = float(line.split(" = ")[1].strip()) #Stagnation pressure conversion factor, float
-    line = file.readline() #Read the line
-    df.Q_CF = float(line.split(" = ")[1].strip()) #Heat flux conversion factor, float
-    line = file.readline() #Read the line
-    df.T_0 = float(line.split(" = ")[1].strip()) #Initial temperature, float
-    line = file.readline() #Read the line
-    df.Tt_0 = float(line.split(" = ")[1].strip()) #Initial total temperature, float
-    line = file.readline() #Read the line
-    df.u_0 = float(line.split(" = ")[1].strip()) #Initial velocity, float
-    line = file.readline() #Read the line
-    df.Pt_0 = float(line.split(" = ")[1].strip()) #Initial total pressure, float
-    line = file.readline() #Read the line
-    df.Tw = float(line.split(" = ")[1].strip()) #Wall temperature, float
-    line = file.readline() #Read the line
-    df.Rp = float(line.split(" = ")[1].strip()) #Pitot external radius, float
-    line = file.readline() #Read the line
-    df.Rm = float(line.split(" = ")[1].strip()) #Flux probe external radius, float
-    line = file.readline() #Read the line
-    df.Rj = float(line.split(" = ")[1].strip()) #Plasma jet radius, float
-    line = file.readline() #Read the line
-    df.stagtype = int(line.split(" = ")[1].strip()) #Stagnation type, string->integer
-    line = file.readline() #Read the line
-    df.hflaw = int(line.split(" = ")[1].strip()) #Heat flux law, string->integer
-    line = file.readline() #Read the line
-    df.barker = int(line.split(" = ")[1].strip()) #Barker correct, string->integer
-    line = file.readline() #Read the line
-    df.p = int(line.split(" = ")[1].strip()) #Number of point for the boundary layer eta discretization, integer
-    line = file.readline() #Read the line
-    df.max_hf_iter = int(line.split(" = ")[1].strip()) #Maximum number of iterations for the heat transfer, integer
-    line = file.readline() #Read the line
-    df.hf_conv = float(line.split(" = ")[1].strip()) #Convergence criteria for the heat transfer, float
-    line = file.readline() #Read the line
-    df.use_prev_ite = int(line.split(" = ")[1].strip()) #Use previous iteration for the heat transfer, string
-    line = file.readline() #Read the line
-    df.newton_conv = float(line.split(" = ")[1].strip()) #Convergence criteria for the newton solver, float
-    line = file.readline() #Read the line
-    df.max_newton_iter = int(line.split(" = ")[1].strip()) #Maximum number of iterations for the newton solver, integer
-    line = file.readline() #Read the line
-    df.jac_diff = float(line.split(" = ")[1].strip()) #Main newton jacobian finite difference epsilon, float
-    line = file.readline() #Read the line
-    df.max_T_relax = float(line.split(" = ")[1].strip()) #Maximum value for the temperature used for relaxation, float
-    line = file.readline() #Read the line
-    df.min_T_relax = float(line.split(" = ")[1].strip()) #Minimum value for the temperature used for relaxation, float
-    line = file.readline() #Read the line
-    df.log_warning_hf = int(line.split(" = ")[1].strip()) #Log warning for the heat flux, string
-    line = file.readline() #Read the line
-    df.eta_max = float(line.split(" = ")[1].strip()) #Maximum value for the boundary layer eta, float
-    file.close() #Close the file
+    # Variables:
+    file = None  # File object
+    df = None  # Dataframe object
+    # Start:
+    df = classes_file.dataframe_class()
+    file = open(FILENAME, "r")  # I open the file
+    # Reading:
+    line = file.readline()
+    df.plasma_gas = line.split(" = ")[1].strip()  # Plasma gas (string)
+    line = file.readline()
+    df.P_CF = float(line.split(" = ")[1].strip())  # Static pressure conversion factor (float)
+    line = file.readline()
+    df.P_dyn_CF = float(line.split(" = ")[1].strip())  # Dynamic pressure conversion factor (float)
+    line = file.readline()
+    df.P_stag_CF = float(line.split(" = ")[1].strip())  # Stagnation pressure conversion factor (float)
+    line = file.readline()
+    df.q_CF = float(line.split(" = ")[1].strip())  # Heat flux conversion factor (float)
+    line = file.readline()
+    df.T_0 = float(line.split(" = ")[1].strip())  # Initial temperature (float)
+    line = file.readline() 
+    df.T_t_0 = float(line.split(" = ")[1].strip())  # Initial total temperature (float)
+    line = file.readline() 
+    df.u_0 = float(line.split(" = ")[1].strip())  # Initial velocity (float)
+    line = file.readline() 
+    df.P_t_0 = float(line.split(" = ")[1].strip())  # Initial total pressure (float)
+    line = file.readline() 
+    df.T_w = float(line.split(" = ")[1].strip())  # Wall temperature (float)
+    line = file.readline() 
+    df.R_p = float(line.split(" = ")[1].strip())  # Pitot external radius (float)
+    line = file.readline() 
+    df.R_m = float(line.split(" = ")[1].strip())  # Flux probe external radius (float)
+    line = file.readline() 
+    df.R_j = float(line.split(" = ")[1].strip())  # Plasma jet radius (float)
+    line = file.readline() 
+    df.stag_type = int(line.split(" = ")[1].strip())  # Stagnation type (integer)
+    line = file.readline() 
+    df.h_flaw = int(line.split(" = ")[1].strip())  # Heat flux law (integer)
+    line = file.readline() 
+    df.barker_type = int(line.split(" = ")[1].strip())  # Barker's correction (integer)
+    line = file.readline() 
+    df.N_p = int(line.split(" = ")[1].strip())  # Number of point for the boundary layer eta discretization (integer)
+    line = file.readline() 
+    df.max_hf_iter = int(line.split(" = ")[1].strip())  # Maximum number of iterations for the heat transfer (integer)
+    line = file.readline() 
+    df.hf_conv = float(line.split(" = ")[1].strip())  # Convergence criteria for the heat transfer (float)
+    line = file.readline() 
+    df.use_prev_ite = int(line.split(" = ")[1].strip())  # Use previous iteration for the heat transfer (integer)
+    line = file.readline() 
+    df.eta_max = float(line.split(" = ")[1].strip())  # Maximum value for the boundary layer eta (float)
+    line = file.readline() 
+    df.log_warning_hf = int(line.split(" = ")[1].strip())  # Log warning for the heat flux (integer)
+    line = file.readline() 
+    df.newton_conv = float(line.split(" = ")[1].strip())  # Convergence criteria for the newton solver (float)
+    line = file.readline() 
+    df.max_newton_iter = int(line.split(" = ")[1].strip())  # Maximum number of iterations for the newton solver (integer)
+    line = file.readline() 
+    df.jac_diff = float(line.split(" = ")[1].strip())  # Jacobian finite difference epsilon (float)
+    line = file.readline() 
+    df.min_T_relax = float(line.split(" = ")[1].strip())  # Minimum value for the temperature used for relaxation (float)
+    line = file.readline() 
+    df.max_T_relax = float(line.split(" = ")[1].strip())  # Maximum value for the temperature used for relaxation (float)
+    file.close()  # I close the file
     return df
+#.................................................
+
 def read_std_values():
-    """This function reads the standard values file and returns the dataframe object
+    """This function reads the standard values file and, if needed,
+    generate a new std values file.
 
     Returns:
-        df (dataframe_xlsx_class): the dataframe object
+        df (dataframe_class): the dataframe object
     """
-    #.................................................
-    #   This function reads the standard values file and returns the dataframe object
-    #.................................................
-    #   INPUTS:
-    #   None
-    #.................................................
-    #   OUTPUTS:
-    #   df: the dataframe object
-    #.................................................
     # Variables:
-    FILENAME = "std_values.pfs" #Filename for the standard values
-    file = None
-    df = classes_file.dataframe_xlsx_class() #create the dataframe object
-    #We check if the file exists
+    FILENAME = "std_values.pfs"  # Filename for the standard values
+    file = None  # File object
+    df = None  # Dataframe object to return
+    # Start:
+    df = classes_file.dataframe_class()
+    # I check if the std values file exists:
     try:
-        file = open(FILENAME, "r") #Open the file
-        file.close() #Close the file
-    except:
+        file = open(FILENAME, "r") 
+        file.close() 
+    except:  # If the file does not exist, I generate a new one
         generate_std_file(FILENAME) 
-    #We try read the file
+    # I read the file:
     try:
         df = read_file(FILENAME)
-    except: #If the file is not valid, we generate a new one
+    except:  # If the file is not valid, we generate a new one
         generate_std_file(FILENAME)
         df = read_file(FILENAME)
     return df
     
     
 def is_valid_data(x):
-    """Let us understand if the data is valid
+    """This function verifies if
+    the data passed is a valid numeric
+    data.
 
     Args:
-        x (float): the data to check
+        x (unknown): the data to check
 
     Returns:
         bool: true if the data is valid, false otherwise
     """
-    if (pd.isna(x) or ( (isinstance(x, np.int64) == False) and (isinstance(x, np.float64) == False) ) or x <= 0):
+    if (pd.isna(x) or ( (isinstance(x, np.int64) == False) and (isinstance(x, np.float64) == False) and (isinstance(x, float) == False) and (isinstance(x, int) == False )) or x <= 0):
         return False
     else:
         return True
 
-def retrieve_data(df,ncase):
-    """This function retrieves the needed data from the dataframe object from the current loop iteration
+def retrieve_data(df,n_case):
+    """This function retrieves the needed data from the dataframe object 
+    for the current loop iteration in the .xlsx mode
 
     Args:
-        df (dataframe_xlsx_class): the dataframe object
-        ncase (int): the number of the case
+        df (dataframe_class): the dataframe object
+        n_case (int): the case number
 
     Returns:
-        inputs_class: the inputs object containing the inputs
-        initials_class: the initials object containing the initials
-        probes_class: the probes object containing the probes
-        settings_class: the settings object containing the settings
+        inputs_object(inputs_class): the inputs object containing the inputs
+        initials_object (initials_class): the initials object containing the initials
+        probes_object (probes_class): the probes object containing the probes
+        settings_object (settings_class): the settings object containing the settings
     """
-    #.................................................
-    #   This function retrieves the needed data from the dataframe object from the current loop iteration
-    #   We retrieve the "ncase"-th line from the dataframe and we return the needed data
-    #.................................................
-    #   INPUTS:
-    #   df: the dataframe object
-    #   ncase: the number of the case
-    #.................................................
-    #   OUTPUTS:
-    #   -inputs_object: the inputs object containing the inputs
-    #   -initials_object: the initials object containing the initials
-    #   -probes_object: the probes object containing the probes
-    #   -settings_object: the settings object containing the settings
-    #.................................................
     # Variables:
-    std_values = classes_file.dataframe_xlsx_class() #create the dataframe object
-    MM_TO_M = 1e-3 #Conversion factor from mm to m, float
-    P_eps = 1e-3 #Pressure epsilon, float
-    l = None #Ratio between the flux probe external radius and the plasma jet radius, float
-    den = None #Denominator for the stagnation variable, float
-    #   -Inputs
-    comment = None #Comment, string
-    P = None #Pressure, float
-    Pdyn = None #Dynamic pressure, float
-    Pstag = None #Stagnation pressure, float
-    P_used = None #Pressure used, string
-    q = None #Heat flux, float
-    plasma_gas = None #Plasma gas, string
-    #   -Conversion factors
-    P_CF = None #Static pressure conversion factor, float
-    PD_CF = None #Dynamic pressure conversion factor, float
-    PS_CF = None #Stagnation pressure conversion factor, float  
-    Q_CF = None #Heat flux conversion factor, float
-    #   -Initial conditions
-    T_0 = None #Initial static temperature, float
-    Tt_0=None #Initial total temperature, float
-    u_0 = None #Initial velocity, float
-    Pt_0 = None #Initial total pressure, float
-    #   -Probes settings
-    Tw = None #Wall temperature, float
-    Rp = None #Pitot external radius, float
-    Rm = None #Flux probe external radius, float
-    Rj = None #Plasma jet radius, float
-    stagtype = None #Stagnation type, string->integer
-    hflaw = None #Heat flux law, string->integer
-    barker = None #Barker correct, string->integer
-    stagvar = None #Stagnation variable, float
-    #   -Settings
-    p = None #Number of point for the boundary layer eta discretization, integer
-    max_hf_iter = None #Maximum number of iterations for the heat flux, integer
-    hf_conv = None #Convergence criteria for the heat flux, float
-    use_prev_ite = None #Use previous iteration for the heat transfer, string
-    newton_conv = None #Convergence criteria for the newton solver, float
-    max_newton_iter = None #Maximum number of iterations for the newton solver, integer
-    jac_diff = None #Main newton jacobian finite difference epsilon, float
-    max_T_relax = None #Maximum value for the temperature used for relaxation, float
-    min_T_relax = None #Minimum value for the temperature used for relaxation, float
-    log_warning_hf = None #Log warning for the heat flux, string
-    eta_max = None #Maximum value for the boundary layer eta, float
-    # Variables to return
-    inputs_object = classes_file.inputs_class() #create the inputs object
-    initials_object = classes_file.initials_class() #create the initials object
-    probes_object = classes_file.probes_class() #create the probes object
-    settings_object = classes_file.settings_class() #create the settings object
-    warnings = []
+    std_values = None  # Standard values dataframe
+    warnings = None  # Warnings occurred during the reading
+    P_used = None  # Flag to indicate which pressure is used
+    mix_temp = None  # Temporary mixture object
     # Inputs:
+    comment = None  # Comment (string)
+    P = None  # Pressure (float)
+    P_dyn = None  # Dynamic pressure (float)
+    P_stag = None  # Stagnation pressure (float)
+    q_target = None  # Target heat flux (float)
+    plasma_gas = None  # Plasma gas (string)
+    # Conversion factors:
+    P_CF = None  # Static pressure conversion factor (float)
+    P_dyn_CF = None  # Dynamic pressure conversion factor (float)
+    P_stag_CF = None  # Stagnation pressure conversion factor (float)
+    q_CF = None  # Heat flux conversion factor (float)
+    # Initial conditions:
+    T_0 = None  # Initial static temperature (float)
+    T_t_0 = None  # Initial total temperature (float)
+    u_0 = None  # Initial flow velocity (float)
+    P_t_0 = None  # Initial total pressure (float)
+    # Probe settings:
+    T_w = None  # Probe wall temperature (float)
+    R_p = None  # Pitot external radius (float)
+    R_m = None  # External radius of the heat flux probe (float)
+    R_j = None  # Plasma jet radius (float)
+    stag_type = None  # Stagnation type (string)
+    hf_law = None  # Heat flux law (string)
+    barker_type = None  # Barker's correction type (string)
+    # Program settings:
+    N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
+    max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
+    hf_conv = None  # Convergence criteria for the heat flux computation (float)
+    use_prev_ite = None  # Flag to indicate if the previous iteration for the heat flux computation should be
+    # used as initial guess for the new iteration (string)
+    eta_max = None  # Upper integration boundary for the normal coordinate of the boundary layer (float)
+    log_warning_hf = None  # Flag to indicate if a warning should be logged when the heat flux computation does not converge (string)
+    newton_conv = None  # Convergence criteria for the Newton-Raphson method (float)
+    max_newton_iter = None  # Maximum number of iterations for Newton-Raphson method (integer)
+    jac_diff = None  # Finite difference epsilon for the Jacobian matrix (float)
+    min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
+    max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
+    # Variables to return
+    inputs_object = classes_file.inputs_class() 
+    initials_object = classes_file.initials_class() 
+    probes_object = classes_file.probes_class()
+    settings_object = classes_file.settings_class() 
+    warnings = []
     warnings = "None|"
-    # We read the std values:
+    # I read the std values:
     std_values = read_std_values()
-    # Comment
-    comment = df.comment[ncase] #Comment, string
+    # comment
+    comment = df.comment[n_case]  # comment, string
     if (pd.isna(comment) or comment==None or comment==""):
-        inputs_object.comment = "Case "+str(ncase) #We add the case number to the comment
+        inputs_object.comment = "Case "+str(n_case)  # We set the default value
     else:
         inputs_object.comment = comment
     # Pressure:
-    P = df.P[ncase] #Pressure, float
+    P = df.P[n_case]  # Pressure (float)
     if (is_valid_data(P) == False):
-        raise ValueError("Error: The pressure value is not valid")
+        raise ValueError("Error: The pressure value is not valid.")
     else:
-        inputs_object.P = df.P[ncase] #Pressure, float
+        inputs_object.P = df.P[n_case]  # To be converted to the right unit
     # Dynamic pressure:
-    Pdyn = df.Pdyn[ncase] #Dynamic pressure, float
+    P_dyn = df.P_dyn[n_case]  # Dynamic pressure (float)
     # Stagnation pressure:
-    Pstag = df.Pstag[ncase] #Stagnation pressure, float
-    if (is_valid_data(Pstag) == False):
-        if (is_valid_data(Pdyn) == False):
-            raise ValueError("Error: The stagnation pressure or dynamic value is not valid")
+    P_stag = df.P_stag[n_case]  # Stagnation pressure (float)
+    if (is_valid_data(P_stag) == False):
+        if (is_valid_data(P_dyn) == False):
+            raise ValueError("Error: The stagnation pressure or dynamic value is not valid.")
         else:
-            P_used = "Pdyn"
-    elif (is_valid_data(Pdyn) == False):
-        P_used = "Pstag"
+            P_used = "dyn"
+    elif (is_valid_data(P_dyn) == False):
+        P_used = "stag"
     else:
         P_used = "Both"
     # Heat flux:
-    q = df.q[ncase] #Heat flux, float
-    if(is_valid_data(q) == False):
-        raise ValueError("Error: The heat flux value is not valid")
+    q_target = df.q_target[n_case]  # Heat flux (float)
+    if(is_valid_data(q_target) == False):
+        raise ValueError("Error: The heat flux value is not valid.")
     else:
-        inputs_object.q = df.q[ncase] #Heat flux, float
+        inputs_object.q_target = df.q_target[n_case]  # To be converted to the right unit 
     # Plasma gas:
-    plasma_gas = df.plasma_gas[ncase] #Plasma gas, string
-    plasma_gas = plasma_gas.lower() #We convert the string to lower case
+    plasma_gas = df.plasma_gas[n_case]  # Plasma gas (string)
     if (pd.isna(plasma_gas) or plasma_gas==None or plasma_gas==""):
-        raise ValueError("Error: The plasma gas value is not valid")
-    match plasma_gas:
-        case "n2":
-            inputs_object.plasma_gas = "nitrogen2"
-        case "air":
-            inputs_object.plasma_gas = "air_13"
-        case "nitrogen2":
-            inputs_object.plasma_gas = "nitrogen2"
-        case "air_13":
-            inputs_object.plasma_gas = "air_13"
-        case "air_11":
-            inputs_object.plasma_gas = "air_11"
-        case _:
-            inputs_object.plasma_gas = std_values.plasma_gas #We set the default value
+        inputs_object.mixture_name = std_values.plasma_gas
+        warnings += "Plasma gas invalid, set to STD|"
+    else:
+        try:
+            inputs_object.mixture_name = retrieve_mixture_name(plasma_gas)  # Plasma gas (string)
+        except:
+            inputs_object.mixture_name = std_values.plasma_gas
             warnings += "Plasma gas invalid, set to STD|"
+    # Check if the mixture exists:
     try:
-        mpp.Mixture(inputs_object.plasma_gas) #We check if the mixture is valid
-    except:
-        raise ValueError("Error: The plasma gas value is not valid or is in an invalid folder")
+        mix_temp = mpp.Mixture(inputs_object.mixture_name)
+    except Exception as e:
+        raise ValueError("Error: Invalid plasma gas. Check std_value associated or retrieve_helper.py")
     # Conversion factors:
-    P_CF = df.P_CF[ncase] #Static pressure conversion factor, float
+    P_CF = df.P_CF[n_case]  # Static pressure conversion factor (float)
     if (is_valid_data(P_CF) == False):
-        inputs_object.P_CF = std_values.P_CF #We set the default value
+        P_CF = std_values.P_CF
         warnings += "P_CF invalid, set to STD|"
     else:
-        inputs_object.P_CF = df.P_CF[ncase] #Static pressure conversion factor, float
-    inputs_object.P *= inputs_object.P_CF #We convert the pressure to the right unit
+        P_CF = df.P_CF[n_case]
+    inputs_object.P *= P_CF  # I convert the pressure to Pascal
     match P_used:
-        case "Pdyn":
-            PD_CF = df.PD_CF[ncase] #Dynamic pressure conversion factor, float
-            if (is_valid_data(PD_CF) == False):
-                inputs_object.PD_CF = std_values.PD_CF #We set the default value
-                warnings += "PD_CF invalid, set to STD|"
-            else:
-                inputs_object.PD_CF = PD_CF #Dynamic pressure conversion factor, float
-            inputs_object.Pdyn = Pdyn*inputs_object.PD_CF #We convert the dynamic pressure to the right unit
-            inputs_object.Pstag = inputs_object.Pdyn + inputs_object.P #We calculate the stagnation pressure
-        case "Pstag":
-            PS_CF = df.PS_CF[ncase] #Stagnation pressure conversion factor, float
-            if (is_valid_data(PS_CF) == False):
-                inputs_object.PS_CF = std_values.PS_CF #We set the default value
-                warnings += "PS_CF invalid, set to STD|"
-            else:
-                inputs_object.PS_CF = PS_CF #Dynamic pressure conversion factor, float
-            inputs_object.Pstag = Pstag*inputs_object.PS_CF #We convert the dynamic pressure to the right unit
-            inputs_object.Pdyn = inputs_object.Pstag - inputs_object.P #We calculate the stagnation pressure
+        case "dyn":
+            P_dyn_CF = df.P_dyn_CF[n_case]  # Dynamic pressure conversion factor (float)
+            if (is_valid_data(P_dyn_CF) == False):
+                P_dyn_CF = std_values.P_dyn_CF
+                warnings += "P_dyn_CF invalid, set to STD|"
+            inputs_object.P_dyn = P_dyn*P_dyn_CF  # I convert the dynamic pressure to Pascal
+            inputs_object.P_stag = inputs_object.P_dyn + inputs_object.P  # I compute the stagnation pressure
+        case "stag":
+            P_stag_CF = df.P_stag_CF[n_case]  # Stagnation pressure conversion factor (float)
+            if (is_valid_data(P_stag_CF) == False):
+                P_stag_CF = std_values.P_stag_CF
+                warnings += "P_stag_CF invalid, set to STD|"
+            inputs_object.P_stag = P_stag*P_stag_CF  # I convert the stagnation pressure to Pascal
+            inputs_object.P_dyn = inputs_object.P_stag - inputs_object.P  # I compute the dynamic pressure
         case "Both":
-            PD_CF = df.PD_CF[ncase] #Dynamic pressure conversion factor, float
-            if (is_valid_data(PD_CF) == False):
-                inputs_object.PD_CF = std_values.PD_CF #We set the default value
-                warnings += "PD_CF invalid, set to STD|"
-            else:
-                inputs_object.PD_CF = PD_CF #Dynamic pressure conversion factor, float
-            PS_CF = df.PS_CF[ncase] #Stagnation pressure conversion factor, float
-            if (is_valid_data(PS_CF) == False):
-                inputs_object.PS_CF = std_values.PS_CF #We set the default value
-                warnings += "PS_CF invalid, set to STD|"
-            else:
-                inputs_object.PS_CF = PS_CF #Dynamic pressure conversion factor, float
-            inputs_object.Pdyn = Pdyn*inputs_object.PD_CF #We convert the dynamic pressure to the right unit
-            inputs_object.Pstag = Pstag*inputs_object.PS_CF #We convert the dynamic pressure to the right unit
-            if (abs(inputs_object.Pstag-inputs_object.P - inputs_object.Pdyn) > P_eps):
-                raise ValueError("Error: The stagnation pressure and dynamic pressure values are not consistent")
-    Q_CF = df.Q_CF[ncase] #Heat flux conversion factor, float
-    if (is_valid_data(Q_CF) == False):
-        inputs_object.Q_CF = std_values.Q_CF #We set the default value
-        warnings += "Q_CF invalid, set to STD|"
+            P_dyn_CF = df.P_dyn_CF[n_case]  # Dynamic pressure conversion factor (float)
+            if (is_valid_data(P_dyn_CF) == False):
+                P_dyn_CF = std_values.P_dyn_CF 
+                warnings += "P_dyn_CF invalid, set to STD|"
+            P_stag_CF = df.P_stag_CF[n_case]  # Stagnation pressure conversion factor (float)
+            if (is_valid_data(P_stag_CF) == False):
+                P_stag_CF = std_values.P_stag_CF 
+                warnings += "P_stag_CF invalid, set to STD|"
+            inputs_object.P_dyn = P_dyn*P_dyn_CF
+            inputs_object.P_stag = P_stag*P_stag_CF
+            if (pressure_consistency_check(inputs_object.P,inputs_object.P_dyn,inputs_object.P_stag) == False):
+                raise ValueError("Error: The stagnation pressure and dynamic pressure values are not consistent.")
+    q_CF = df.q_CF[n_case]  # Heat flux conversion factor (float)
+    if (is_valid_data(q_CF) == False):
+        q_CF = std_values.q_CF
+        warnings += "q_CF invalid, set to STD|"
     else:
-        inputs_object.Q_CF = df.Q_CF[ncase] #Heat flux conversion factor, float
-    inputs_object.q *= inputs_object.Q_CF #We convert the heat flux to the right unit
+        q_CF = df.q_CF[n_case]  # Heat flux conversion factor (float)
+    inputs_object.q_target *= q_CF  # I convert the heat flux to the right unit
     # Initials:
-    T_0 = df.T_0[ncase] #Initial temperature, float
+    T_0 = df.T_0[n_case]  # Initial temperature (float)
     if (is_valid_data(T_0) == False):
-        initials_object.T_0 = std_values.T_0 #We set the default value
+        initials_object.T_0 = std_values.T_0
         warnings += "T_0 invalid, set to STD|"
     else:
-        initials_object.T_0=df.T_0[ncase] #Initial temperature, float
-    Tt_0=df.Tt_0[ncase] #Initial total temperature, float
-    if (is_valid_data(Tt_0) == False):
-        initials_object.Tt_0 = std_values.Tt_0
-        warnings += "Tt_0 invalid, set to STD|"
+        initials_object.T_0=df.T_0[n_case] 
+    T_t_0 = df.T_t_0[n_case]  # Initial total temperature (float)
+    if (is_valid_data(T_t_0) == False):
+        initials_object.T_t_0 = std_values.T_t_0
+        warnings += "T_t_0 invalid, set to STD|"
     else:
-        initials_object.Tt_0=df.Tt_0[ncase] #Initial total temperature, float
-    u_0=df.u_0[ncase] #Initial velocity, float
+        initials_object.T_t_0=df.T_t_0[n_case] 
+    u_0 = df.u_0[n_case]  # Initial velocity (float)
     if (is_valid_data(u_0) == False):
         initials_object.u_0 = std_values.u_0
         warnings += "u_0 invalid, set to STD|"
     else:
-        initials_object.u_0=df.u_0[ncase] #Initial velocity, float
-    Pt_0 = df.Pt_0[ncase] #Initial total pressure, float
-    if (is_valid_data(Pt_0) == False):
-        if (Pt_0 == 0):
-            initials_object.Pt_0 = inputs_object.Pstag
+        initials_object.u_0 = df.u_0[n_case] 
+    P_t_0 = df.P_t_0[n_case]  # Initial total pressure (float)
+    if (is_valid_data(P_t_0) == False):
+        if (P_t_0 == 0):
+            initials_object.P_t_0 = inputs_object.P_stag
         else:
-            initials_object.Pt_0 = std_values.Pt_0
-            if (initials_object.Pt_0 == 0):
-                initials_object.Pt_0 = inputs_object.Pstag
-            warnings += "Pt_0 invalid, set to STD|"
+            initials_object.P_t_0 = std_values.P_t_0
+            if (initials_object.P_t_0 == 0):
+                initials_object.P_t_0 = inputs_object.P_stag
+            warnings += "P_t_0 invalid, set to STD|"
     else:
-        initials_object.Pt_0=df.Pt_0[ncase] #Initial total pressure, float
-    # Probes:
-    Tw = df.Tw[ncase] #Wall temperature, float
-    if (is_valid_data(Tw) == False):
-        probes_object.Tw = std_values.Tw
-        warnings += "Tw invalid, set to STD|"
+        initials_object.P_t_0 = df.P_t_0[n_case]
+    # Probe properties:
+    T_w = df.T_w[n_case]  # Wall temperature (float)
+    if (is_valid_data(T_w) == False):
+        probes_object.T_w = std_values.T_w
+        warnings += "T_w invalid, set to STD|"
     else:
-        probes_object.Tw=df.Tw[ncase] #Wall temperature, float
-    Rp = df.Rp[ncase] #Pitot external radius, float
-    if (is_valid_data(Rp) == False):
-        probes_object.Rp = std_values.Rp
-        warnings += "Rp invalid, set to STD|"
+        probes_object.T_w=df.T_w[n_case]
+    R_p = df.R_p[n_case]  # Pitot external radius (float)
+    if (is_valid_data(R_p) == False):
+        probes_object.R_p = std_values.R_p
+        warnings += "R_p invalid, set to STD|"
     else:
-        probes_object.Rp=df.Rp[ncase] * MM_TO_M #Pitot external radius, float
-    Rm = df.Rm[ncase] #Flux probe external radius, float
-    if (is_valid_data(Rm) == False):
-        probes_object.Rm = std_values.Rm
-        warnings += "Rm invalid, set to STD|"
+        probes_object.R_p = df.R_p[n_case] 
+    R_m = df.R_m[n_case]  # Flux probe external radius (float)
+    if (is_valid_data(R_m) == False):
+        probes_object.R_m = std_values.R_m
+        warnings += "R_m invalid, set to STD|"
     else:
-        probes_object.Rm=df.Rm[ncase] * MM_TO_M #Flux probe external radius, float
-    Rj = df.Rj[ncase] #Plasma jet radius, float
-    if (is_valid_data(Rj) == False):
-        probes_object.Rj = std_values.Rj
-        warnings += "Rj invalid, set to STD|"
+        probes_object.R_m = df.R_m[n_case]
+    R_j = df.R_j[n_case]  # Plasma jet radius (float)
+    if (is_valid_data(R_j) == False):
+        probes_object.R_j = std_values.R_j
+        warnings += "R_j invalid, set to STD|"
     else:
-        probes_object.Rj=df.Rj[ncase] * MM_TO_M #Plasma jet radius, float
-    stagtype = df.stagtype[ncase] #Stagnation type, string->integer
-    if (pd.isna(stagtype)):
-        probes_object.stagtype = std_values.stagtype
-        warnings += "stagtype invalid, set to STD|"
+        probes_object.R_j = df.R_j[n_case]
+    stag_type = df.stag_type[n_case]  # Stagnation type (string->integer)
+    if (pd.isna(stag_type)):
+        probes_object.stag_type = std_values.stag_type
+        warnings += "stag_type invalid, set to STD|"
     else:
-        match stagtype:
-            case "flat":
-                probes_object.stagtype = 0
-            case _:
-                probes_object.stagtype = std_values.stagtype
-                warnings += "stagtype invalid or not yet implemented, set to STD|"
-    hflaw = df.hflaw[ncase] #Heat flux law, string->integer
-    if (pd.isna(hflaw)):
-        probes_object.hflaw = std_values.hflaw
-        warnings += "hflaw invalid, set to STD|"
+        try:
+            stag_type = stag_type.lower()
+            stag_type = retrieve_stag_type(stag_type)  # (integer)
+            probes_object.stag_type = stag_type
+        except:
+            probes_object.stag_type = std_values.stag_type
+            warnings += "stag_type invalid or not yet implemented, set to STD|"
+    hf_law = df.hf_law[n_case]  # Heat flux law (string->integer)
+    if (pd.isna(hf_law)):
+        probes_object.hf_law = std_values.hf_law
+        warnings += "hf_law invalid, set to STD|"
     else:
-        match hflaw:
-            case "exact":
-                probes_object.hflaw = 0
-            case _:
-                probes_object.hflaw = std_values.hflaw
-                warnings += "hflaw invalid or not yet implemented, set to STD|"
-    barker = df.barker[ncase] #Barker correct, string->integer
-    if (pd.isna(barker)):
-        probes_object.barker = std_values.barker
-        warnings += "barker invalid, set to STD|"
+        try:
+            hf_law = hf_law.lower()
+            hf_law = retrieve_hf_law(hf_law)  # (integer)
+            probes_object.hf_law = hf_law
+        except:
+            probes_object.hf_law = std_values.hf_law
+            warnings += "hf_law invalid or not yet implemented, set to STD|"
+    barker_type = df.barker_type[n_case] #Barker correct, string->integer
+    if (pd.isna(barker_type)):
+        probes_object.barker_type = std_values.barker_type
+        warnings += "barker_type invalid, set to STD|"
     else:
-        match barker:
-            case "none":
-                probes_object.barker = 0
-            case "homann":
-                probes_object.barker = 1
-            case "carleton":
-                probes_object.barker = 2
-            case _:
-                probes_object.barker = std_values.barker
-                warnings += "barker invalid or not yet implemented, set to STD|"
-    match probes_object.stagtype:
-        case 0:
-            l=Rm/Rj
-            if(l<=1):
-                den=2-l-1.68*pow((l-1),2)-1.28*pow((l-1),3)
-                stagvar=1/den
-            else:
-                stagvar=l
-        case _:
-            raise ValueError("Error: Check the code, you should not be here")
-    probes_object.stagvar=stagvar #Stagnation variable, float
-    # Barker and Pt_0 check:
-    if (probes_object.barker == 0 and initials_object.Pt_0 != inputs_object.Pstag):
-        initials_object.Pt_0 = inputs_object.Pstag
-        warnings += "Pt_0 not consistent with the barker correction, set to Pstag|"
+        try:
+            barker_type = barker_type.lower()
+            barker_type = retrieve_barker_type(barker_type)  # (integer)
+            probes_object.barker_type = barker_type
+        except:
+            probes_object.barker_type = std_values.barker_type
+            warnings += "barker_type invalid or not yet implemented, set to STD|"
+    stag_var = retrieve_stag_var(probes_object.stag_type, probes_object.R_m, probes_object.R_j)  # Stagnation variable (float)
+    probes_object.stag_var=stag_var
+    # Barker's effect and P_t_0 consistency check:
+    if (probes_object.barker_type == 0 and initials_object.P_t_0 != inputs_object.P_stag):
+        initials_object.P_t_0 = inputs_object.P_stag
+        warnings += "P_t_0 not consistent with the Barker's correction, set to P_stag|"
     # Settings:
-    p = df.p[ncase] #Number of point for the boundary layer eta discretization, integer
-    if (is_valid_data(p) == False):
-        settings_object.p = std_values.p
-        warnings += "p invalid, set to STD|"
+    N_p = df.N_p[n_case]  # Number of point for the boundary layer eta discretization (integer)
+    if (is_valid_data(N_p) == False):
+        settings_object.N_p = std_values.N_p
+        warnings += "N_p invalid, set to STD|"
     else:
-        if(int(p)==p):
-            settings_object.p=int(df.p[ncase]) #Number of point for the boundary layer eta discretization, integer
+        if(int(N_p)==N_p):
+            settings_object.N_p=int(df.N_p[n_case])  
         else:
-            settings_object.p = std_values.p
-            warnings += "p invalid, set to STD|"
-    max_hf_iter = df.max_hf_iter[ncase] #Maximum number of iterations for the heat transfer
+            settings_object.N_p = std_values.N_p
+            warnings += "N_p invalid, set to STD|"
+    max_hf_iter = df.max_hf_iter[n_case]  # Maximum number of iterations for the heat transfer (integer)
     if (is_valid_data(max_hf_iter) == False):
         settings_object.max_hf_iter = std_values.max_hf_iter
         warnings += "max_hf_iter invalid, set to STD|"
     else:
         if(int(max_hf_iter)==max_hf_iter):
-            settings_object.max_hf_iter=df.max_hf_iter[ncase] #Maximum number of iterations for the heat transfer
+            settings_object.max_hf_iter=df.max_hf_iter[n_case] #Maximum number of iterations for the heat transfer
         else:
             settings_object.max_hf_iter = std_values.max_hf_iter
             warnings += "max_hf_iter invalid, set to STD|"
-    hf_conv = df.hf_conv[ncase] #Convergence criteria for the heat transfer
-    if (pd.isna(hf_conv) or (isinstance(hf_conv, np.float64) == False) or hf_conv<=0):
+    hf_conv = df.hf_conv[n_case]  # Convergence criteria for the heat transfer (float)
+    if (is_valid_data(hf_conv) == False):
         settings_object.hf_conv = std_values.hf_conv
         warnings += "hf_conv invalid, set to STD|"
     else:
-        settings_object.hf_conv=df.hf_conv[ncase] #Convergence criteria for the heat transfer
-    use_prev_ite = df.use_prev_ite[ncase] #Use previous iteration for the heat transfer
+        settings_object.hf_conv=df.hf_conv[n_case] 
+    use_prev_ite = df.use_prev_ite[n_case]  # Use previous iteration for the heat transfer (string->integer)
     if (pd.isna(use_prev_ite)):
         settings_object.use_prev_ite = std_values.use_prev_ite
         warnings += "use_prev_ite invalid, set to STD|"
     else:
-        use_prev_ite = use_prev_ite.lower() #We convert the string to lower case
-        match use_prev_ite:
-            case "yes":
-                settings_object.use_prev_ite = 1
-            case "no":
-                settings_object.use_prev_ite = 0
-            case _:
-                settings_object.use_prev_ite = std_values.use_prev_ite
-                warnings += "use_prev_ite invalid, set to STD|"
-    newton_conv = df.newton_conv[ncase] #Convergence criteria for the newton solver
-    if (pd.isna(newton_conv) or (isinstance(newton_conv, np.float64) == False) or newton_conv<=0):
-        settings_object.newton_conv = std_values.newton_conv
-        warnings += "newton_conv invalid, set to STD|"
-    else:
-        settings_object.newton_conv=df.newton_conv[ncase] #Convergence criteria for the newton solver
-    max_newton_iter = df.max_newton_iter[ncase] #Maximum number of iterations for the newton solver
-    if (is_valid_data(max_newton_iter) == False):
-        settings_object.max_newton_iter = std_values.max_newton_iter
-        warnings += "max_newton_iter invalid, set to STD|"
-    else:
-        if(int(max_newton_iter)==max_newton_iter):
-            settings_object.max_newton_iter=df.max_newton_iter[ncase] #Maximum number of iterations for the newton solver
-        else:
-            settings_object.max_newton_iter = std_values.max_newton_iter
-            warnings += "max_newton_iter invalid, set to STD|"
-    jac_diff = df.jac_diff[ncase] #Main newton jabobian finite difference epsilon
-    if (pd.isna(jac_diff) or (isinstance(jac_diff, np.float64) == False) or jac_diff<=0):
-        settings_object.jac_diff = std_values.jac_diff
-        warnings += "jac_diff invalid, set to STD|"
-    else:
-        settings_object.jac_diff=df.jac_diff[ncase] #Main newton jabobian finite difference epsilon
-    max_T_relax = df.max_T_relax[ncase] #Maximum value for the temperature used for relaxation
-    if (is_valid_data(max_T_relax) == False):
-        settings_object.max_T_relax = std_values.max_T_relax
-        warnings += "max_T_relax invalid, set to STD|"
-    else:
-        settings_object.max_T_relax=df.max_T_relax[ncase] #Maximum value for the temperature used for relaxation
-    min_T_relax = df.min_T_relax[ncase] #Minimum value for the temperature used for relaxation
-    if (is_valid_data(min_T_relax) == False):
-        settings_object.min_T_relax = std_values.min_T_relax
-        warnings += "min_T_relax invalid, set to STD|"
-    else:
-        settings_object.min_T_relax=df.min_T_relax[ncase] #Minimum value for the temperature used for relaxation
-    log_warning_hf = df.log_warning_hf[ncase] #Log warning for the heat flux
-    if (pd.isna(log_warning_hf)):
-        settings_object.log_warning_hf = std_values.log_warning_hf
-        warnings += "log_warning_hf invalid, set to STD|"
-    else:
-        log_warning_hf = log_warning_hf.lower() #We convert the string to lower case
-        match log_warning_hf:
-            case "yes":
-                settings_object.log_warning_hf = 1
-            case "no":
-                settings_object.log_warning_hf = 0
-            case _:
-                settings_object.log_warning_hf = std_values.log_warning_hf
-                warnings += "log_warning_hf invalid, set to STD|"
-    eta_max = df.eta_max[ncase] #Maximum value for the boundary layer eta
+        try:
+            use_prev_ite = use_prev_ite.lower()
+            use_prev_ite = retrieve_use_prev_ite(use_prev_ite)  # (integer)
+            settings_object.use_prev_ite = use_prev_ite
+        except:
+            settings_object.use_prev_ite = std_values.use_prev_ite
+            warnings += "use_prev_ite invalid, set to STD|"
+    eta_max = df.eta_max[n_case]  # Upper integration boundary for the normal coordinate of the boundary layer (float)
     if (is_valid_data(eta_max) == False):
         settings_object.eta_max = std_values.eta_max
         warnings += "eta_max invalid, set to STD|"
     else:
-        settings_object.eta_max=df.eta_max[ncase] #Minimum value for the temperature used for relaxation
-    # Return the objects
+        settings_object.eta_max = df.eta_max[n_case] 
+    log_warning_hf = df.log_warning_hf[n_case]  # Log warning for the heat flux (string)
+    if (pd.isna(log_warning_hf)):
+        settings_object.log_warning_hf = std_values.log_warning_hf
+        warnings += "log_warning_hf invalid, set to STD|"
+    else:
+        try:
+            log_warning_hf = log_warning_hf.lower() 
+            log_warning_hf = retrieve_log_warning_hf(log_warning_hf)  # (integer)
+            settings_object.log_warning_hf = log_warning_hf
+        except:
+            settings_object.log_warning_hf = std_values.log_warning_hf
+            warnings += "log_warning_hf invalid, set to STD|"
+    newton_conv = df.newton_conv[n_case]  # Convergence criteria for the newton solver (float)
+    if (is_valid_data(newton_conv) == False):
+        settings_object.newton_conv = std_values.newton_conv
+        warnings += "newton_conv invalid, set to STD|"
+    else:
+        settings_object.newton_conv=df.newton_conv[n_case] 
+    max_newton_iter = df.max_newton_iter[n_case]  # Maximum number of iterations for the newton solver (integer)
+    if (is_valid_data(max_newton_iter) == False):
+        settings_object.max_newton_iter = std_values.max_newton_iter
+        warnings += "max_newton_iter invalid, set to STD|"
+    else:
+        if(int(max_newton_iter) == max_newton_iter):
+            settings_object.max_newton_iter = df.max_newton_iter[n_case] 
+        else:
+            settings_object.max_newton_iter = std_values.max_newton_iter
+            warnings += "max_newton_iter invalid, set to STD|"
+    jac_diff = df.jac_diff[n_case]  # Jacobian finite difference epsilon (float)
+    if (is_valid_data(jac_diff) == False):
+        settings_object.jac_diff = std_values.jac_diff
+        warnings += "jac_diff invalid, set to STD|"
+    else:
+        settings_object.jac_diff = df.jac_diff[n_case] 
+    min_T_relax = df.min_T_relax[n_case]  # Minimum value for the temperature used for relaxation
+    if (is_valid_data(min_T_relax) == False):
+        settings_object.min_T_relax = std_values.min_T_relax
+        warnings += "min_T_relax invalid, set to STD|"
+    else:
+        settings_object.min_T_relax = df.min_T_relax[n_case] 
+    max_T_relax = df.max_T_relax[n_case]  # Maximum value for the temperature used for relaxation
+    if (is_valid_data(max_T_relax) == False):
+        settings_object.max_T_relax = std_values.max_T_relax
+        warnings += "max_T_relax invalid, set to STD|"
+    else:
+        settings_object.max_T_relax = df.max_T_relax[n_case] 
+    # Return the objects:
     return inputs_object, initials_object, probes_object, settings_object, warnings
 #.................................................
 #   Possible improvements:

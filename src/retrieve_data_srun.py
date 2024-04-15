@@ -42,7 +42,7 @@ def retrieve_data(df):
     initials_object = classes_file.initials_class() 
     probes_object = classes_file.probes_class()
     settings_object = classes_file.settings_class()
-    warnings = "None"  # This is pretty useless, it is a residual from the xlsx reading 
+    warnings = "None|" 
     # Inputs:
     inputs_object.comment = df.comment
     inputs_object.P = df.P
@@ -77,5 +77,9 @@ def retrieve_data(df):
     settings_object.jac_diff = df.jac_diff
     settings_object.min_T_relax = df.min_T_relax
     settings_object.max_T_relax = df.max_T_relax
+    # Barker's effect and P_t_0 consistency check:
+    if (probes_object.barker_type == 0 and initials_object.P_t_0 != inputs_object.P_stag):
+        initials_object.P_t_0 = inputs_object.P_stag
+        warnings += "P_t_0 not consistent with the Barker's correction, set to P_stag|"
     # we return the result
     return inputs_object, initials_object, probes_object, settings_object, warnings

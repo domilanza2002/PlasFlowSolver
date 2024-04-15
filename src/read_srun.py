@@ -7,6 +7,7 @@
 #.................................................
 import classes as classes_file  # Module that contains the classes of the program
 import bash_run as bash_run_file  # Module that contains the bash run functions
+from retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
 
 def prompt_input_file():
     """This function prompts the user for the
@@ -36,7 +37,6 @@ def read_srun(bash_run):
         output_filename (string): the name of the output file
     """
     # Variables:
-    P_TOL = 1e-3  # Tolerance for the pressure difference, P_stag = P + P_dyn
     input_filename = None  # Name of the input file
     file = None  # File object for I/O
     file_found = None  # Boolean variable to check if the file is found
@@ -140,7 +140,7 @@ def read_srun(bash_run):
     q_target = float(line.split("=")[1].strip())  # The heat flux is the float after the "=" sign
     # Plasma gas:
     line = file.readline()
-    plasma_gas = line.split("=")[1].strip().lower()  # The plasma gas is the string after the "=" sign
+    plasma_gas = line.split("=")[1].strip()  # The plasma gas is the string after the "=" sign
     # Conversion factors:
     line = file.readline()  # I skip the line, that is the section title (CONVERSION FACTORS)
     # Static pressure conversion factor:
@@ -168,7 +168,7 @@ def read_srun(bash_run):
     elif (P_dyn_used == True and P_stag_used == True):
         P_dyn = P_dyn * P_dyn_CF
         P_stag = P_stag * P_stag_CF
-        if ( abs( P_stag - P - P_dyn )>P_TOL ):  # I check if the pressures are consistent 
+        if ( pressure_consistency_check(P, P_dyn, P_stag) == False ):  # I check if the pressures are consistent 
             raise Exception("ERROR: The pressures are inconsistent.")
     else: 
         raise Exception("ERROR: Either the dynamic pressure or the stagnation pressure must be set.")
