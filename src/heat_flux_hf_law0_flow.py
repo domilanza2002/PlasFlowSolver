@@ -6,7 +6,7 @@
 #.................................................
 import mutationpp as mpp  # Thermodynamic library
 
-def heat_flux_hf_law0_flow(P,T,mixture):
+def heat_flux_hf_law0_flow(P, T, mixture):
     """This function computes the flow properties inside 
     the boundary layer.
 
