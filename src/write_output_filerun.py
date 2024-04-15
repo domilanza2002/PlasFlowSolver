@@ -1,28 +1,29 @@
 #.................................................
-#   WRITE_OUTPUT_FILERUN.PY, v3.0.0, February 2024, Domenico Lanza.
+#   WRITE_OUTPUT_FILERUN.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This file is needed to write the output file
+#   This module is needed to write the output file
+#   when the program is file run mode.
 #.................................................
 import time
-def write_output_filerun(df,output_filename,has_converged_out,rho_out,T_out,h_out,u_out,a_out,M_out,ht_out,Pt_out,Tt_out,Re_out,res_out):
-    #.................................................
-    #   This function writes the output file
-    #.................................................
-    #   INPUTS:
-    #   output_file_name: the name of the output file
-    #   has_converged_out: the convergence status
-    #   rho_out: the density
-    #   T_out: the temperature
-    #   h_out: the enthalpy
-    #   u_out: the velocity
-    #   a_out: the speed of sound
-    #   M_out: the mach number
-    #   ht_out: the total enthalpy
-    #   Pt_out: the total pressure
-    #   Tt_out: the total temperature
-    #   Re_out: the Reynolds number
-    #   warnings_out: the warnings
-    #.................................................
+def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, res_out):
+    """This function writes the output file when the program is in file run mode.
+
+    Args:
+        df (pandas.DataFrame): dataframe containing the input data.
+        output_filename (str): name of the output file.
+        has_converged_out (list): list containing the convergence status of the solution.
+        rho_out (list): list containing the density of the flow.
+        T_out (list): list containing the temperature of the flow.
+        h_out (list): list containing the enthalpy of the flow.
+        u_out (list): list containing the velocity of the flow.
+        a_out (list): list containing the speed of sound of the flow.
+        M_out (list): list containing the Mach number of the flow.
+        T_t_out (list): list containing the total temperature of the flow.
+        h_t_out (list): list containing the total enthalpy of the flow.
+        P_t_out (list): list containing the total pressure of the flow.
+        Re_out (list): list containing the Pitot Reynolds number of the flow.
+        res_out (list): list containing the residuals of the solution.
+    """
     comment = df.comment
     P = df.P
     Pdyn = df.Pdyn
@@ -57,10 +58,10 @@ def write_output_filerun(df,output_filename,has_converged_out,rho_out,T_out,h_ou
             q[i] = -1
         if (has_converged_out[i] == "yes"):
             # i want each data to occupy exactly 20 characters, in order to have a nice output file
-            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(Pdyn[i])+'{:20.10e}'.format(q[i])+'{:20.10e}'.format(rho_out[i])+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i])+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(ht_out[i])+'{:20.10e}'.format(Pt_out[i])+'{:20.10e}'.format(Tt_out[i])+'{:20.10e}'.format(Re_out[i])+"\n")
+            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(Pdyn[i])+'{:20.10e}'.format(q[i])+'{:20.10e}'.format(rho_out[i])+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i])+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(h_t_out[i])+'{:20.10e}'.format(P_t_out[i])+'{:20.10e}'.format(T_t_out[i])+'{:20.10e}'.format(Re_out[i])+"\n")
         elif (has_converged_out[i] == "no"):
             output_file.write("WARNING: the next set of data has not converged: residual= "+str(res_out[i])+"\n")
-            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(Pdyn[i])+'{:20.10e}'.format(q[i])+'{:20.10e}'.format(rho_out[i])+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i])+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(ht_out[i])+'{:20.10e}'.format(Pt_out[i])+'{:20.10e}'.format(Tt_out[i])+'{:20.10e}'.format(Re_out[i])+"\n")
+            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(Pdyn[i])+'{:20.10e}'.format(q[i])+'{:20.10e}'.format(rho_out[i])+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i])+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(h_t_out[i])+'{:20.10e}'.format(P_t_out[i])+'{:20.10e}'.format(T_t_out[i])+'{:20.10e}'.format(Re_out[i])+"\n")
         else: #invalid data
             output_file.write("WARNING: the next set of data is invalid:\n")
             output_file.write(comment[i]+": Invalid input data detected\n")
