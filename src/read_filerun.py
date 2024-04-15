@@ -1,178 +1,153 @@
 #.................................................
-#   READ_FILERUN.PY, v3.0.0, February 2024, Domenico Lanza.
+#   READ_FILERUN.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This project file is needed to read the
-#   FILERUN(File Run) file and to create the the
-#   dataframe object.
+#   This module is needed to read the
+#   database in File Run mode.
 #.................................................
-import classes as classes_file #Module that contains the classes of the program
-import bash_run as bash_run_file #Module that contains the functions to detect if a bashrun must be executed
+import classes as classes_file  # Module that contains the classes of the program
+import bash_run as bash_run_file  # Module that contains the functions to detect if a bashrun must be executed
 
-def prompt_input_file(): #function to prompt the input file
-    """This function prompts the input file and returns the input filename
+def prompt_input_file():
+    """This function prompts the user for the input file 
+    and returns the input filename.
 
     Returns:
-        string: input_filename, the name of the input file
+        input_filename (string): the input filename
     """
-    #.................................................
-    #   This function prompts the input file and returns the input filename
-    #.................................................
-    #   INPUTS:
-    #   None
-    #.................................................
-    #   OUTPUTS:
-    #   input_filename: the name of the input file
-    #.................................................
     #Variables:
-    input_file_name = None #name of the input file
-    print("Please input the name of the .in file with the data:") #we ask the user to choose an input file
+    input_file_name = None
+    print("Please input the name of the .in file with the data.")
     input_file_name = input("Filename: ") 
-    # we check if the extension is .xlsx, otherwise we throw an error
-    if (input_file_name[-3:] != ".in"): #if the extension is not .xlsx
-        #We add the extension to the file name
-        input_file_name = input_file_name+".in"
-    return input_file_name #we return the input filename
+    # I check if the extension is .in, otherwise I add it
+    if (input_file_name.endswith(".in") == False):
+        input_file_name = input_file_name + ".in"
+    return input_file_name
 
-def prompt_settings_file(): #function to prompt the input file
-    """This function prompts the settings file and returns the settings filename
+def prompt_settings_file():
+    """This function prompts the user for the settings file 
+    and returns the settings filename.
 
     Returns:
-        string: settings_filename, the name of the input file
+        settings_filename (string): the settings filename
     """
-    #.................................................
-    #   This function prompts the settings file and returns the settings filename
-    #.................................................
-    #   INPUTS:
-    #   None
-    #.................................................
-    #   OUTPUTS:
-    #   settings_filename: the name of the settings file
-    #.................................................
     #Variables:
-    settings_file_name = None #name of the input file
-    print("Please input the name of the .pfs file with the settings:") #we ask the user to choose a settings file
+    settings_file_name = None
+    print("Please input the name of the .pfs file with the settings.")
     settings_file_name = input("Filename: ") 
-    # we check if the extension is .pfs, otherwise we add it
-    if (settings_file_name[-4:] != ".pfs"): #if the extension is not .xlsx
-        #We add the extension to the file name
-        settings_file_name = settings_file_name+".pfs"
-    return settings_file_name #we return the input filename
+    # I check if the extension is .pfs, otherwise I add it
+    if (settings_file_name.endswith(".pfs") == False):
+        settings_file_name = settings_file_name + ".pfs"
+    return settings_file_name 
 
 def read_filerun(bash_run):
-    """This function reads the dataframe from the .in file
-    Inputs:
-        bash_run: bool, True if the program is in bash run mode
+    """ This function reads the dataframe from the .in input
+    file and from the .pfs settings file.
+    
+    Args:
+        bash_run (bool): boolean to check if the program is in bash run mode.
+    
     Returns:
-        string: df_object, the dataframe from the xlsx file
-        string: output_filename, the name of the output file
+        df_object (dataframe_class): dataframe object containing the input data.
+        output_filename (string): name of the output file.
     """
-    #.................................................
-    #   This function reads the dataframe from the xlsx file
-    #.................................................
-    #   INPUTS:
-    #   bash_run: bool, True if the program is in bash run mode 
-    #.................................................
-    #   OUTPUTS:
-    #   df:the dataframe from the xlsx file
-    #   output_filename: the name of the output file
-    #.................................................
     #Variables:
-    input_filename = None #name of the input file
-    settings_filename = None #name of the settings file
-    input_file = None #file object
-    settings_file = None #file object
-    file_found = None #variable to check if the file is found, boolean
-    line = None #line of the file
-    #Variables to be read from the file
-    #   -Inputs
-    comment = None #Comment, string
-    P = None #Pressure, float
-    Pdyn = None #Dynamic pressure, float
-    q = None #Heat flux, float
-    #   -Conversion factors
-    P_CF = None #Static pressure conversion factor, float
-    PD_CF = None #Dynamic pressure conversion factor, float  
-    Q_CF = None #Heat flux conversion factor, float
-    #   -Initial conditions
-    T_0 = None #Initial static temperature, float
-    Tt_0=None #Initial total temperature, float
-    u_0 = None #Initial velocity, float
-    Pt_0 = None #Initial total pressure, float
-    #   -Probes settings
-    Tw = None #Wall temperature, float
-    Rp = None #Pitot external radius, float
-    Rm = None #Flux probe external radius, float
-    Rj = None #Plasma jet radius, float
-    stagtype = None #Stagnation type, string->integer
-    hflaw = None #Heat flux law, string->integer
-    barker = None #Barker correct, string->integer
-    #   -Settings
-    plasma_gas = None #Plasma gas, string
-    p = None #Number of point for the boundary layer eta discretization, integer
-    max_hf_iter = None #Maximum number of iterations for the heat flux, integer
-    hf_conv = None #Convergence criteria for the heat flux, float
-    use_prev_ite = None #Use previous iteration for the heat transfer, string
-    newton_conv = None #Convergence criteria for the newton solver, float
-    max_newton_iter = None #Maximum number of iterations for the newton solver, integer
-    jac_diff = None #Main newton jacobian finite difference epsilon, float
-    max_T_relax = None #Maximum value for the temperature used for relaxation, float
-    min_T_relax = None #Minimum value for the temperature used for relaxation, float
-    log_warning_hf = None #Log warning for when the heat flux does not converge, string
-    eta_max = None #Maximum value for the boundary layer eta, float
-    #Variables to return
-    df_object = classes_file.dataframe_xlsx_class() #I create the dataframe object to be returned
-    output_filename = None #Name of the output file
-    #I set the file_found variable to False
+    input_filename = None  # Input filename
+    settings_filename = None  # Settings filename
+    input_file = None  # Input file object
+    settings_file = None  # Settings file object
+    file_found = None  # Boolean to check if the file is found
+    line = None  # Line read from the file
+    # To be computed:
+    n = None  # Number of cases (integer)
+    # To be read from the file:
+    # Inputs:
+    comment = None  # Comment (string)
+    P = None  # Pressure (float)
+    P_dyn = None  # Dynamic pressure (float)
+    P_stag = None  # Stagnation pressure (float)
+    q_target = None  # Target heat flux (float)
+    plasma_gas = None  # Plasma gas (string)
+    # Conversion factors:
+    P_CF = None  # Static pressure conversion factor (float)
+    P_dyn_CF = None  # Dynamic pressure conversion factor (float)
+    P_stag_CF = None  # Stagnation pressure conversion factor (float)
+    q_CF = None  # Heat flux conversion factor (float)
+    # Initial conditions:
+    T_0 = None  # Initial static temperature (float)
+    T_t_0 = None  # Initial total temperature (float)
+    u_0 = None  # Initial flow velocity (float)
+    P_t_0 = None  # Initial total pressure (float)
+    # Probe settings:
+    T_w = None  # Probe wall temperature (float)
+    R_p = None  # Pitot external radius (float)
+    R_m = None  # External radius of the heat flux probe (float)
+    R_j = None  # Plasma jet radius (float)
+    stag_type = None  # Stagnation type (string)
+    hf_law = None  # Heat flux law (string)
+    barker_type = None  # Barker's correction type (string)
+    # Program settings:
+    N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
+    max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
+    hf_conv = None  # Convergence criteria for the heat flux computation (float)
+    use_prev_ite = None  # Flag to indicate if the previous iteration for the heat flux computation should be
+    # used as initial guess for the new iteration (string)
+    eta_max = None  # Upper integration boundary for the normal coordinate of the boundary layer (float)
+    log_warning_hf = None  # Flag to indicate if a warning should be logged when the heat flux computation does not converge (string)
+    newton_conv = None  # Convergence criteria for the Newton-Raphson method (float)
+    max_newton_iter = None  # Maximum number of iterations for Newton-Raphson method (integer)
+    jac_diff = None  # Finite difference epsilon for the Jacobian matrix (float)
+    min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
+    max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
+    #Variables to return:
+    df_object = classes_file.dataframe_class()  # Object with all the variables
+    output_filename = None  # Name of the output file
     file_found = False
     #I check if the program is in bash run mode
-    if (bash_run == True): #If the program is in bash run mode
-        input_filename = bash_run_file.retrieve_filename() #I retrieve the filename from the bash.pfs file
-        try: #I try to read the file
-            file = open(input_filename, "r") #I try to open the file
-            file_found = True #If the file is found, we set the variable to True
-            file.close() #I close the file
-        except:
-            print("Error: the file in bash.pfs does not exist or is not an .in file")
-            print("The program will continue in manual mode")
-            bash_run = False #I set the bash_run variable to False
-    #I ask for the input file
+    if (bash_run == True):
+        input_filename = bash_run_file.retrieve_filename()  #I retrieve the filename from the bash.pfs file
+        try:  #I try to read the file
+            file = open(input_filename, "r")
+            file_found = True
+            file.close()
+        except:  #If the file is not found, we continue in manual mode
+            print("Error: the input file specified in bash.pfs does not exist or it is not an .in file.")
+            print("The program will continue in manual mode.")
+            bash_run = False
+    # If the program is not in bash more or the file is not found, we prompt the user for the input file
     while (file_found == False):
-        input_filename = prompt_input_file() #I prompt the input file
-        try: #I try to read the file
-            file = open(input_filename, "r") #I try to open the file
-            file_found = True #If the file is found, we set the variable to True
-            file.close() #I close the file
-            continue
+        input_filename = prompt_input_file()
+        try:  #I try to read the file
+            file = open(input_filename, "r")
+            file_found = True
+            file.close()
         except:
-            print("Error: the file does not exist or is not an .in file")
-            continue
-    #I set the output filename
-    output_filename = input_filename[:-3]+".out" #we set the output filename
-    #I read the settings filename
-    file_found = False #I set the file_found variable to False
-    #I check if the program is in bash run mode
-    if (bash_run == True): #If the program is in bash run mode
-        settings_filename = bash_run_file.retrieve_settings() #I retrieve the filename from the bash.pfs file
-        try: #I try to read the file
-            file = open(settings_filename, "r") #I try to open the file
-            file_found = True #If the file is found, we set the variable to True
-            file.close() #I close the file
+            print("Error: the file does not exist or it is not an .in file.")
+    # I set the output filename
+    output_filename = input_filename[:-3] + ".out"
+    # I read the settings filename
+    file_found = False
+    # I check if the program is still in bash run mode
+    if (bash_run == True):
+        settings_filename = bash_run_file.retrieve_settings()  # I retrieve the filename from the bash.pfs file
+        try:  # I try to read the file
+            file = open(settings_filename, "r") 
+            file_found = True
+            file.close() 
         except:
-            print("Error: the settings file in bash.pfs does not exist or is not an .pfs file")
-            print("The program will continue in manual mode")
-            bash_run = False #I set the bash_run variable to False
+            print("Error: the settings file in bash.pfs does not exist or is not an .pfs file.")
+            print("The program will continue in manual mode.")
+            bash_run = False 
+    # If the program is not in bash mode or the file is not found, we prompt the user for the settings file
     while (file_found == False):
         settings_filename = prompt_settings_file()
-        try:
-            file = open(settings_filename, "r") #I try to open the file
-            file_found = True #If the file is found, we set the variable to True
-            file.close() #I close the file
-            continue
+        try:  # I try to read the file
+            file = open(settings_filename, "r") 
+            file_found = True 
+            file.close() 
         except:
-            print("Error: the file does not exist or is not an .pfs file")
-            continue
-    #Now I read the settings file
-    settings_file = open(settings_filename, "r") #I open the file
+            print("Error: the file does not exist or it is not an .pfs file.")
+    # Now I read the settings file
+    settings_file = open(settings_filename, "r")
     # conversion factors
     settings_file.readline()
     #Static pressure conversion factor:
