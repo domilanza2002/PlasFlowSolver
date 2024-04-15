@@ -56,59 +56,54 @@ def retrieve_program_mode():
             raise ValueError("Invalid program mode.")
 
 def retrieve_filename():
-    """This function retrieves the filename from the bash.pfs file.
+    """This function retrieves the input 
+    filename from the bash.pfs file.
 
     Returns:
-        str: filename, the filename
+        filename (string): the input filename
     """
-    #.................................................
-    #   This function retrieves the filename from
-    #   the bash.pfs file.
-    #.................................................
-    #   INPUTS:
-    #   None.
-    #.................................................
-    #   OUTPUTS:
-    #   str: filename, the filename
-    #.................................................
     # Variables:
-    FILENAME = "bash.pfs"
-    file = None
-    filename = None
-    line = None
+    FILENAME = "bash.pfs"  # Default filename for the bash file
+    file = None  # File variable
+    line = None  # Line variable
+    filename = None  # Filename variable to be returned
+    # I start reading the file
     file = open(FILENAME, "r")
-    line = file.readline() # we skip the first line
+    line = file.readline()  # I skip the first line, that was the program mode
     line = file.readline()
-    # we take the part after the : symbol and strip it
+    # I take the piece of the string after the : symbol and I strip it
     filename = line.split(":")[1].strip()
     file.close()
     return filename
+#.................................................
+
 def retrieve_settings():
-    """This function retrieves the settings filename from the bash.pfs file.
+    """This function retrieves the settings filename
+    from the bash.pfs file.
 
     Returns:
-        str: settings_filename, the settings filename
+        settings_filename (string): the settings filename
     """
-    #.................................................
-    #   This function retrieves the settings filename from
-    #   the bash.pfs file.
-    #.................................................
-    #   INPUTS:
-    #   None.
-    #.................................................
-    #   OUTPUTS:
-    #   str: settings_filename, the settings filename
-    #.................................................
     # Variables:
-    FILENAME = "bash.pfs"
-    file = None
-    settings_filename = None
+    FILENAME = "bash.pfs"  # Default filename for the bash file
+    file = None  # File variable
     line = None
+    settings_filename = None  # Settings filename variable to be returned
+    # I start reading the file
     file = open(FILENAME, "r")
-    line = file.readline() # we skip the first line
-    line = file.readline() # we skip the second line
+    line = file.readline()  # I skip the first line, that was the program mode
+    line = file.readline()  # I skip the second line, that was the input filename
     line = file.readline()
-    # we take the part after the : symbol and strip it
+    # I take the piece of the string after the : symbol and I strip it
     settings_filename = line.split(":")[1].strip()
     file.close()
     return settings_filename
+#.................................................
+#   Possible improvements:
+#   -More customization options and error handling.
+#.................................................
+# EXECUTION TIME: Very fast.
+#.................................................
+#   KNOW PROBLEMS:
+#   -None
+#.................................................

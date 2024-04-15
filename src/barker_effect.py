@@ -1,73 +1,54 @@
 #.................................................
-#   BARKER_EFFECT.PY, v3.0.0, February 2024, Domenico Lanza.
+#   BARKER_EFFECT.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This file is needed to compute the barker effect
-#   given the total pressure, the pressure, the temperature and the velocity
+#   This module is needed to compute the Barker's effect.
 #.................................................
-import mutationpp as mpp #useful library for thermodynamic computations
-import math #useful library for math operations
-def barker_effect(probe, mixture_object, Pt, P, T, u):
+import mutationpp as mpp  # Thermodynamic library
+import math  # Math library
+def barker_effect(probes, mixture_object, P_t, P, T, u):
     """This function returns the barker pressure given the total pressure, the pressure, the temperature and the velocity
 
     Args:
-        probe (probe): probe object
+        probes (probes_class): probe properties
         mixture_object (mpp.Mixture): the mixture of the case
-        Pt (float): total pressure
+        P_t (float): total pressure
         P (float): pressure
         T (float): temperature
         u (float): velocity
     Returns:
-        Pb (float): barker pressure
+        P_b (float): barker pressure
         Re (float): reynolds number
     """
-    #.................................................
-    #   This function returns the barker pressure
-    #   given the total pressure, the pressure, the temperature and the velocity
-    #.................................................
-    #   INPUTS:
-    #   probe: probe object
-    #   mixture_object: the mixture of the case
-    #   Pt: total pressure
-    #   P: pressure
-    #   T: temperature
-    #   u: velocity
-    #   OUTPUTS:
-    #   Pb: barker pressure
-    #   Re: reynolds number
-    #.................................................
-    #we define the variables:
-    barker = probe.barker #barker effect
-    Rp = probe.Rp #pitot external radius
-    rho = None #density
-    mu = None #viscosity
-    Cp = None #barker cp
-    Pb = None #barker pressure
-    Re = None #reynolds number
-    #we set the mixture:
-    mixture_object.equilibrate(T, P) #we equilibrate the mixture
-    #we get the density:
-    rho = mixture_object.density()
-    #we get the viscosity:
-    mu = mixture_object.viscosity()
-    Re = rho*u*(2*Rp)/mu #we compute the reynolds number
-    match (barker): #we check which barker effect to use
-        case 0: #no barker effect
-            Cp = 0 #we set the barker pressure to 0
-        case 1: #homann barker effect
-            Cp = 6/(Re+0.455*math.sqrt(Re))
-        case 2: #Carleton correction
-            Cp = 1 + 8/(Re+0.5576*math.sqrt(Re))
+    # Variables:
+    barker_type = probes.barker_type  # Barker's correction type
+    R_p = probes.R_p  # Pitot external radius
+    rho = None  # Flow density
+    mu = None  # Flow viscosity
+    C_p = None  # Barker's correction C_p
+    P_b = None  # Barker's stagnation pressure read
+    Re = None  # Reynolds number on the pitot probe
+    mixture_object.equilibrate(T, P)  # I equilibrate the mixture
+    rho = mixture_object.density()  # I get the density
+    mu = mixture_object.viscosity()  # I get the viscosity
+    Re = rho*u*(2*R_p)/mu  # Barker's Reynolds number
+    match (barker_type):
+        case 0:  # No barker effect
+            C_p = 0
+        case 1:  # Homann's correction
+            C_p = 6/(Re+0.455*math.sqrt(Re))
+        case 2:  # Carleton's correction
+            C_p = 1 + 8/(Re+0.5576*math.sqrt(Re))
         case _:
-            print("Error: barker effect not yet implemented. But you should not be there... check retrieve_data.py")
+            print("Error: Barker's correction not yet implemented. But you should not be there... check retrieve_helper.py")
             exit()
-    #we compute the barker pressure:
-    Pb = Pt+0.5*rho*pow(u,2)*Cp
-    return Pb, Re #we return the barker pressure and the reynolds number
+    # Barker's pressure (stagnation pressure read instead of the total pressure)
+    P_b = P_t + 0.5*rho*pow(u, 2)*C_p
+    return P_b, Re
 #.................................................
 #   Possible improvements:
 #   - Add other barker computations
 #.................................................
-# EXECUTION TIME: fast
+# EXECUTION TIME: TBD
 #.................................................
 #   KNOW PROBLEMS:
 #   None.

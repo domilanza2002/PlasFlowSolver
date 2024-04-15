@@ -462,7 +462,7 @@ def retrieve_data(df,ncase):
                 den=2-l-1.68*pow((l-1),2)-1.28*pow((l-1),3)
                 stagvar=1/den
             else:
-                stagvar=1
+                stagvar=l
         case _:
             raise ValueError("Error: Check the code, you should not be here")
     probes_object.stagvar=stagvar #Stagnation variable, float

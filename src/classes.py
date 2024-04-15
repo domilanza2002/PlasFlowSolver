@@ -69,10 +69,6 @@ class inputs_class:
         P_stag = None  # Stagnation pressure (float)
         q_target = None  # Target heat flux (float)
         mixture_name = None  # Mixture name (string)
-        P_CF = None  # Static pressure conversion factor (float)
-        P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-        P_stag_CF = None  # Stagnation pressure conversion factor (float)
-        q_CF = None  # Heat flux conversion factor (float)
         
 #.................................................
 class initials_class:
@@ -91,14 +87,13 @@ class probes_class:
     for the current case.
     """
     def __init__(self):  # Basic constructor
-        T_w = None #Wall temperature, float
-        R_p = None #Pitot external radius, float
-        R_m = None #Flux probe external radius, float
-        R_j = None #Plasma jet radius, float
-        stag_type = None # Stagnation type, string->integer
-        hf_law = None #Heat flux law, string->integer
-        barker_type = None #Barker correct, string->integer
-        stagvar = None #Stagnation variable, float
+        T_w = None  # Probe wall temperature (float)
+        R_p = None  # Pitot external radius (float)
+        R_m = None  # Heat flux probe external radius (float)
+        R_j = None  # Plasma jet radius (float)
+        hf_law = None  # Heat flux law (integer)
+        barker_type = None  # Barker's correction type (integer)
+        stag_var = None  # Stagnation variable, beta*u/R_m (float)
 
 #..................................................
 class settings_class:

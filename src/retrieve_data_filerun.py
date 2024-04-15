@@ -1,95 +1,81 @@
 #.................................................
-#   RETRIEVE_DATA_FILERUN.PY, v3.0.0, February 2024, Domenico Lanza.
+#   RETRIEVE_DATA_FILERUN.PY, v1.0.0, April 2024, Domenico Lanza.
 #.................................................
-#   This project file is needed to retrieve the needed
-#   data from the dataframe object from the current loop
+#   This module is needed to retrieve the needed
+#   data from the dataframe object for the current loop
 #   iteration using the filerun mode.
 #.................................................
-import numpy as np #Library for numerical operations
-import classes as classes_file #Module with classes
-import mutationpp as mpp #Library for the thermodynamic properties
-import pandas as pd #Library for data manipulation
-def retrieve_data(df,ncase):
-    """This function retrieves the needed data from the dataframe object from the current loop iteration
+import classes as classes_file  # Module with the classes
+
+def retrieve_data(df, n_case):
+    """This function retrieves the needed data 
+    from the dataframe object from the current loop iteration
+    for the filerun mode.
 
     Args:
-        df (dataframe_xlsx_class): the dataframe object
-        ncase (int): the number of the case
+        df (dataframe_class): the dataframe object
+        n_case (int): the number of the current case
 
     Returns:
-        inputs_class: the inputs object containing the inputs
-        initials_class: the initials object containing the initials
-        probes_class: the probes object containing the probes
-        settings_class: the settings object containing the settings
+        inputs_class (inputs_class): the inputs object containing the inputs
+        initials_class (initials_class): the initials object containing the initials
+        probes_class (probes_class): the probes object containing the probes
+        settings_class (settings_class): the settings object containing the settings
     """
-    #.................................................
-    #   This function retrieves the needed data from the dataframe object from the current loop iteration
-    #   We retrieve the "ncase"-th line from the dataframe and we return the needed data
-    #.................................................
-    #   INPUTS:
-    #   df: the dataframe object
-    #   ncase: the number of the case
-    #.................................................
-    #   OUTPUTS:
-    #   -inputs_object: the inputs object containing the inputs
-    #   -initials_object: the initials object containing the initials
-    #   -probes_object: the probes object containing the probes
-    #   -settings_object: the settings object containing the settings
-    #.................................................
+    
     # Variables:
-    l = None #Ratio between the flux probe external radius and the plasma jet radius, float
-    den = None #Denominator for the stagnation variable, float
-    #   -Inputs
-    comment = None #Comment, string
-    P = None #Pressure, float
-    Pdyn = None #Dynamic pressure, float
-    q = None #Heat flux, float
-    plasma_gas = None #Plasma gas, string
-    #   -Conversion factors
-    P_CF = None #Static pressure conversion factor, float
-    PD_CF = None #Dynamic pressure conversion factor, float
-    PS_CF = None #Stagnation pressure conversion factor, float  
-    Q_CF = None #Heat flux conversion factor, float
-    #   -Initial conditions
-    T_0 = None #Initial static temperature, float
-    Tt_0=None #Initial total temperature, float
-    u_0 = None #Initial velocity, float
-    Pt_0 = None #Initial total pressure, float
-    #   -Probes settings
-    Tw = None #Wall temperature, float
-    Rp = None #Pitot external radius, float
-    Rm = None #Flux probe external radius, float
-    Rj = None #Plasma jet radius, float
-    stagtype = None #Stagnation type, string->integer
-    hflaw = None #Heat flux law, string->integer
-    barker = None #Barker correct, string->integer
-    stagvar = None #Stagnation variable, float
-    #   -Settings
-    p = None #Number of point for the boundary layer eta discretization, integer
-    max_hf_iter = None #Maximum number of iterations for the heat flux, integer
-    hf_conv = None #Convergence criteria for the heat flux, float
-    use_prev_ite = None #Use previous iteration for the heat transfer, string
-    newton_conv = None #Convergence criteria for the newton solver, float
-    max_newton_iter = None #Maximum number of iterations for the newton solver, integer
-    jac_diff = None #Main newton jacobian finite difference epsilon, float
-    max_T_relax = None #Maximum value for the temperature used for relaxation, float
-    min_T_relax = None #Minimum value for the temperature used for relaxation, float
-    log_warning_hf = None #Log warning for when the heat flux does not converge, string
-    eta_max = None #Maximum value for the boundary layer eta, float
-    # Variables to return
-    inputs_object = classes_file.inputs_class() #create the inputs object
-    initials_object = classes_file.initials_class() #create the initials object
-    probes_object = classes_file.probes_class() #create the probes object
-    settings_object = classes_file.settings_class() #create the settings object
-    warnings = []
+    ratio_L = None # Ratio between the flux probe external radius and the plasma jet radius (float)
+    den_sv = None  # Denominator for the stagnation variable (float)
+    mixture_name = None  # Mixture name (string)
+    warnings = None  # Warnings for the reading process (string)
+    # Inputs:
+    comment = None  # Comment (string)
+    P = None  # Pressure (float)
+    P_dyn = None  # Dynamic pressure (float)
+    P_stag = None  # Stagnation pressure (float)
+    q_target = None  # Target heat flux (float)
+    plasma_gas = None  # Plasma gas (string)
+    # Initial conditions:
+    T_0 = None  # Initial static temperature (float)
+    T_t_0 = None  # Initial total temperature (float)
+    u_0 = None  # Initial flow velocity (float)
+    P_t_0 = None  # Initial total pressure (float)
+    # Probe settings:
+    T_w = None  # Probe wall temperature (float)
+    R_p = None  # Pitot external radius (float)
+    R_m = None  # External radius of the heat flux probe (float)
+    R_j = None  # Plasma jet radius (float)
+    stag_type = None  # Stagnation type (string)
+    hf_law = None  # Heat flux law (string)
+    barker_type = None  # Barker's correction type (string)
+    # Program settings:
+    N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
+    max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
+    hf_conv = None  # Convergence criteria for the heat flux computation (float)
+    use_prev_ite = None  # Flag to indicate if the previous iteration for the heat flux computation should be
+    # used as initial guess for the new iteration (string)
+    eta_max = None  # Upper integration boundary for the normal coordinate of the boundary layer (float)
+    log_warning_hf = None  # Flag to indicate if a warning should be logged when the heat flux computation does not converge (string)
+    newton_conv = None  # Convergence criteria for the Newton-Raphson method (float)
+    max_newton_iter = None  # Maximum number of iterations for Newton-Raphson method (integer)
+    jac_diff = None  # Finite difference epsilon for the Jacobian matrix (float)
+    min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
+    max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
+
+    # Variables to return:
+    inputs_object = classes_file.inputs_class()  
+    initials_object = classes_file.initials_class() 
+    probes_object = classes_file.probes_class() 
+    settings_object = classes_file.settings_class()
+    warnings = [] 
     # Inputs:
     warnings = "None|"
     # Comment: no checks needed
-    comment = df.comment[ncase] #Comment, string
+    comment = df.comment[n_case] #Comment, string
     inputs_object.comment = comment #Comment, string
     # Pressure:
     try:
-        P = float(df.P[ncase]) #Pressure, float
+        P = float(df.P[n_case]) #Pressure, float
     except:
         raise ValueError("Error: The pressure value is not valid")
     if (P<=0):
@@ -98,7 +84,7 @@ def retrieve_data(df,ncase):
         inputs_object.P = P #Pressure, float
     # Dynamic pressure:
     try:
-        Pdyn = float(df.Pdyn[ncase]) #Dynamic pressure, float
+        Pdyn = float(df.Pdyn[n_case]) #Dynamic pressure, float
     except:
         raise ValueError("Error: The dynamic pressure value is not valid")
     if (Pdyn<=0):
@@ -107,7 +93,7 @@ def retrieve_data(df,ncase):
         inputs_object.Pdyn = Pdyn
     # Heat flux:
     try:
-        q = float(df.q[ncase]) #Heat flux, float
+        q = float(df.q[n_case]) #Heat flux, float
     except: 
         raise ValueError("Error: The heat flux value is not valid")
     if(q<=0):
@@ -164,12 +150,12 @@ def retrieve_data(df,ncase):
     # Stagnation variable
     match stagtype:
         case 0:
-            l=Rm/Rj
-            if(l<=1):
-                den=2-l-1.68*pow((l-1),2)-1.28*pow((l-1),3)
-                stagvar=1/den
+            ratio_L=Rm/Rj
+            if(ratio_L<=1):
+                den_sv=2-ratio_L-1.68*pow((ratio_L-1),2)-1.28*pow((ratio_L-1),3)
+                stagvar=1/den_sv
             else:
-                stagvar=1
+                stagvar=ratio_L
         case _:
             raise ValueError("Error: Check the code, you should not be here")
     probes_object.stagvar = stagvar
