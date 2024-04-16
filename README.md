@@ -1,10 +1,12 @@
 # .................................................
 #       PLASFLOWSOLVER Project
-#       main.py: main script
-#       Version 3.0.0, Domenico Lanza
+#       Version 1.0.0, Domenico Lanza
 # .................................................
-#   This python probes is used to solve the flow properties in a ICP facility,
-#   given the static pressure, dynamic pressure and stagnation heat flux.
-#   I will intensivly use the library MUTATION++ for the thermodynamic properties.
-#   Starting date: 01/28/2024
+#   This python code is used to solve a data reduction model
+#   for an ICP facility: given the static pressure, 
+#   the dynamic pressure and stagnation heat flux,
+#   it is possible to retrieve the freestream
+#   conditions with a certain number of hypoteses.
+#   In order to retrieve the thermodynamic properties,
+#   the Mutation++ library as been used.
 # .................................................
