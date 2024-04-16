@@ -50,6 +50,26 @@ def reset_vars(deta, T_e, T_w, N_p, eta_max):
     return x, y, z
 
 def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax):
+    """Function to compute the properties across the boundary layer.
+
+    Args:
+        T_e (float): the edge temperature
+        P_e (float): the edge pressure
+        mu_e (float): the edge viscosity
+        rho_e (float): the edge density
+        C_p_e (float): the edge specific heat
+        z (list, float): the eta array
+        N_p (integer): the number of points for the boundary layer eta discretization
+        mixture_object (mpp.Mixture): the mixture object
+        max_T_relax (float): the maximum value for the temperature used for relaxation
+
+    Returns:
+        Khi (list, float): the Khi array
+        rr (list, float): the rr array
+        kpr (list, float): the kpr array
+        C (list, float): the C array
+        redo (boolean): the variable to understand if we need to redo the computation
+    """
     # Variables:
     Khi = None  # Vector to store the Khi values, Khi = rho*mu/(rho_e*mu_e)
     rr = None  # Vector to store the rr values, rr = rho_e/rho

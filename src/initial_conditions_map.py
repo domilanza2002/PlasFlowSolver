@@ -58,7 +58,21 @@ def load_ic_db(db_name):
     
 
 def interp_ic_db(ic_db, P, P_dyn, q_target, multiplication_factor):
-    
+    """This function interpolates the initial conditions
+    database to retrieve the initial conditions for the
+    current case.
+
+    Args:
+        ic_db (initial_conditions_db_class): the initial conditions database object
+        P (float): the static pressure
+        P_dyn (float): the dynamic pressure
+        q_target (float): the target heat flux
+        multiplication_factor (float): the multiplication factor for the initial conditions
+
+    Returns:
+        initial_conditions (initials_class): the initial conditions object
+        warnings (string): the warnings
+    """
     # Variables:
     initial_conditions = None  # Initial conditions object
     int_point = None  # Interpolation point
