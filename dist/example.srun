@@ -5,13 +5,13 @@ P_dyn = 1.8e2
 P_stag = 
 q_target = 50.6e4
 plasma_gas = air_11
-CONVERSION FACTORS:
-ic_db_name = 
+CONVERSION FACTORS: 
 P_CF = 1e0
 P_dyn_CF = 1e0
 P_stag_CF = 1e0
 q_CF = 1e0
 INITIAL CONDITIONS:
+ic_db_name = 
 T_0 = 4000
 T_t_0 = 5000
 u_0 = 600
