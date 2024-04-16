@@ -8,7 +8,7 @@
 import classes as classes_file  # Module that contains the classes of the program
 import bash_run as bash_run_file  # Module that contains the bash run functions
 from retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
-
+from initial_conditions_map import verify_db  # Function to verify the initial conditions database
 def prompt_input_file():
     """This function prompts the user for the
     input filename.
@@ -58,6 +58,7 @@ def read_srun(bash_run):
     P_stag_CF = None  # Stagnation pressure conversion factor (float)
     q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
+    ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
     T_t_0 = None  # Initial total temperature (float)
     u_0 = None  # Initial flow velocity (float)
@@ -176,22 +177,35 @@ def read_srun(bash_run):
         raise Exception("ERROR: At least one of the inputs is zero or less.")
     # Initial conditions:
     line = file.readline()  # I skip the line, that is the section title (INITIAL CONDITIONS)
-    # Initial static temperature:
+    # Initial conditions database name:
     line = file.readline()
-    T_0 = float(line.split("=")[1].strip())  # The initial static temperature is the float after the "=" sign
-    # Initial total temperature: 
-    line = file.readline()
-    T_t_0 = float(line.split("=")[1].strip())  # The initial total temperature is the float after the "=" sign
-    # Initial velocity:
-    line = file.readline()
-    u_0 = float(line.split("=")[1].strip())  # The initial velocity is the float after the "=" sign
-    # Initial total pressure:
-    line = file.readline()
-    P_t_0 = float(line.split("=")[1].strip())  # The initial total pressure is the float after the "=" sign
-    if (P_t_0 == 0):
-        P_t_0 = P_stag  # If the initial total pressure is zero, I set it to the stagnation pressure
-    if ( T_0 <= 0 or T_t_0 <= 0 or u_0 <=0 or P_t_0<=0):
-        raise Exception("ERROR: At least one of the initial conditions is zero or less.")
+    ic_db_name = line.split("=")[1].strip()  # The initial conditions database name is the string after the "=" sign
+    if(verify_db(ic_db_name) == True):
+        print("Initial database " + ic_db_name + " verified.")
+        line = file.readline()
+        line = file.readline()
+        line = file.readline()
+        line = file.readline()
+    else:
+        if(ic_db_name != ""):
+            print("Initial database " + ic_db_name + " invalid. Initial conditions will be read from the file.")
+        ic_db_name = ""
+        # Initial static temperature:
+        line = file.readline()
+        T_0 = float(line.split("=")[1].strip())  # The initial static temperature is the float after the "=" sign
+        # Initial total temperature: 
+        line = file.readline()
+        T_t_0 = float(line.split("=")[1].strip())  # The initial total temperature is the float after the "=" sign
+        # Initial velocity:
+        line = file.readline()
+        u_0 = float(line.split("=")[1].strip())  # The initial velocity is the float after the "=" sign
+        # Initial total pressure:
+        line = file.readline()
+        P_t_0 = float(line.split("=")[1].strip())  # The initial total pressure is the float after the "=" sign
+        if (P_t_0 == 0):
+            P_t_0 = P_stag  # If the initial total pressure is zero, I set it to the stagnation pressure
+        if ( T_0 <= 0 or T_t_0 <= 0 or u_0 <=0 or P_t_0<=0):
+            raise Exception("ERROR: At least one of the initial conditions is zero or less.")
     # Probe properties:
     line = file.readline()  # I skip the line, that is the section title (PROBE PROPERTIES)
     # Wall temperature:
@@ -265,6 +279,7 @@ def read_srun(bash_run):
     df_object.P_dyn_CF = P_dyn_CF  # Dynamic pressure conversion factor (float)
     df_object.P_stag_CF = P_stag_CF  # Stagnation pressure conversion factor (float)
     df_object.q_CF = q_CF  # Heat flux conversion factor (float)
+    df_object.ic_db_name = ic_db_name  # Initial conditions database name (string)
     df_object.T_0 = T_0  # Initial static temperature (float)
     df_object.T_t_0 = T_t_0  # Initial total temperature (float)
     df_object.u_0 = u_0  # Initial flow velocity (float)

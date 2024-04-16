@@ -8,7 +8,6 @@
 from read_srun import read_srun  # Function to read the .srun file
 from read_xlsx import read_xlsx  # Function to read the .xlsx file
 from read_filerun import read_filerun  # Function to read the .in and .pfs files
-from exit_program import exit_program  # Function to exit the program
 
 def read_data(program_mode, bash_run):
     """This function reads the data from the input files
@@ -40,7 +39,7 @@ def read_data(program_mode, bash_run):
         print("Mode selected: xlsx run.")
         # In this case, I want to read an xlsx file with multiple cases
         try:
-            df_object, output_filename = read_xlsx.read_xlsx(bash_run)
+            df_object, output_filename = read_xlsx(bash_run)
         except Exception as e:
             raise Exception("Error while reading the xlsx file: " + str(e) + "\n Please check your .xlsx file format and try again.")
     elif (program_mode == 3):  # File run

@@ -7,6 +7,7 @@
 #   for the user.
 #.................................................
 import mutationpp as mpp
+import initial_conditions_map as ic_map_file  # Module with the initial conditions map functions
 
 def pressure_consistency_check(P, P_dyn, P_stag):
     """This function checks the consistency of the pressures.
@@ -57,7 +58,34 @@ def retrieve_mixture_name(plasma_gas):
                 raise ValueError("Error: Invalid plasma gas. Check the input file.")
     return mixture_name
 #...................................................
+def retrieve_ic(db_name, P, P_dyn, q_target):
+    """This function retrieves the initial conditions from the database.
 
+    Args:
+        db_name (string): the database name
+        P (float): the pressure
+        P_dyn (float): the dynamic pressure
+        q_target (float): the target heat flux
+
+    Returns:
+        ic_db (initial_conditions_db_class): the initial conditions database object
+    """
+    # Variables:
+    initials_object = None  # Variable to store the initials object
+    ic_db = None  # Variable to store the initial conditions database object
+    MULTIPLICATION_FACTOR = 1.15  # Multiplication factor for the interpolation
+    warnings = None  # Variable to store the warnings
+    try:
+        ic_db = ic_map_file.load_ic_db(db_name)
+    except Exception as e:
+        raise ValueError("Error: Cannot read the initial conditions database: " + str(e) + ".")
+    try:
+        initials_object, warnings = ic_map_file.interp_ic_db(ic_db, P, P_dyn, q_target, MULTIPLICATION_FACTOR)
+    except Exception as e:
+        raise ValueError("Error: Interpolation failed: " + str(e) + ".")
+    
+    return initials_object, warnings
+#...................................................
 def retrieve_stag_type(stag_type_string):
     """This function retrieves the stagnation type.
 

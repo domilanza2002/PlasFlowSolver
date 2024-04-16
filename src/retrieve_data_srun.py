@@ -6,6 +6,7 @@
 #.................................................
 import classes as classes_file  # Module with the classes
 from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
+from retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions
 from retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
 from retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
 from retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
@@ -52,10 +53,15 @@ def retrieve_data(df):
     mixture_name = retrieve_mixture_name(df.plasma_gas)
     inputs_object.mixture_name = mixture_name
     # Initial conditions:
-    initials_object.T_0 = df.T_0
-    initials_object.T_t_0 = df.T_t_0
-    initials_object.u_0 = df.u_0
-    initials_object.P_t_0 = df.P_t_0
+    if (df.ic_db_name == ""):
+        initials_object.T_0 = df.T_0
+        initials_object.T_t_0 = df.T_t_0
+        initials_object.u_0 = df.u_0
+        initials_object.P_t_0 = df.P_t_0
+    else:  # We have to read the initial conditions from the database
+        initials_object, warnings_int = retrieve_ic(df.ic_db_name, df.P, df.P_dyn, df.q_target)
+        if(warnings_int is not None):
+            warnings += warnings_int
     probes_object.T_w = df.T_w
     probes_object.R_p = df.R_p
     probes_object.R_m = df.R_m

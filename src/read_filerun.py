@@ -6,6 +6,7 @@
 #.................................................
 import classes as classes_file  # Module that contains the classes of the program
 import bash_run as bash_run_file  # Module that contains the functions to detect if a bashrun must be executed
+from initial_conditions_map import verify_db  # Function to verify if the database exists
 from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
 from retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
 from retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
@@ -76,9 +77,9 @@ def read_filerun(bash_run):
     # Conversion factors:
     P_CF = None  # Static pressure conversion factor (float)
     P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-    P_stag_CF = None  # Stagnation pressure conversion factor (float)
     q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
+    ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
     T_t_0 = None  # Initial total temperature (float)
     u_0 = None  # Initial flow velocity (float)
@@ -182,11 +183,20 @@ def read_filerun(bash_run):
         raise ValueError("Error: the heat flux conversion factor is not a number")
     # Initial conditions:
     settings_file.readline()  # I skip the line, which is the title
+    # Initial conditions database name:
+    line = settings_file.readline()
+    ic_db_name = line.split("=")[1].strip()  # Initial conditions database name (string)
+    if (verify_db(ic_db_name) == True):
+        print("Initial database " + ic_db_name + " verified.")
+    else:
+        if (ic_db_name != ""):
+            print("Initial database " + ic_db_name + " invalid. Initial conditions will be read from the file.")
+        ic_db_name = ""
     # Initial static temperature:
     line = settings_file.readline() 
     try:
         T_0 = float(line.split("=")[1].strip())  # Initial static temperature (float)
-        if (T_0 <= 0):
+        if (T_0 <= 0 and ic_db_name == ""):
             raise ValueError("Error: the initial static temperature is not positive.")
     except:
         raise ValueError("Error: the initial static temperature is not a number.")
@@ -194,7 +204,7 @@ def read_filerun(bash_run):
     line = settings_file.readline() 
     try:
         T_t_0 = float(line.split("=")[1].strip()) 
-        if (T_t_0 <= 0):
+        if (T_t_0 <= 0 and ic_db_name == ""):
             raise ValueError("Error: the initial total temperature is not positive.")
     except:
         raise ValueError("Error: the initial total temperature is not a number.")
@@ -202,7 +212,7 @@ def read_filerun(bash_run):
     line = settings_file.readline() 
     try:
         u_0 = float(line.split("=")[1].strip())  # Initial velocity (float)
-        if (u_0 <= 0):
+        if (u_0 <= 0 and ic_db_name == ""):
             raise ValueError("Error: the initial velocity is not positive.")
     except:
         raise ValueError("Error: the initial velocity is not a number.")
@@ -210,7 +220,7 @@ def read_filerun(bash_run):
     line = settings_file.readline() 
     try:
         P_t_0 = float(line.split("=")[1].strip())  # Initial total pressure (float)
-        if (P_t_0 < 0):
+        if (P_t_0 < 0 and ic_db_name == ""):
             raise ValueError("Error: the initial total pressure is negative.")
     except:
         raise ValueError("Error: the initial total pressure is not a number.")
@@ -387,6 +397,7 @@ def read_filerun(bash_run):
     df_object.P_CF = P_CF
     df_object.P_dyn_CF = P_dyn_CF
     df_object.q_CF = q_CF
+    df_object.ic_db_name = ic_db_name
     df_object.T_0 = T_0
     df_object.T_t_0 = T_t_0
     df_object.u_0 = u_0
