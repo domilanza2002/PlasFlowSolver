@@ -182,7 +182,6 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
             if (already_reset == True):
                 raise ValueError("ERROR: T<=0, nan or T>T_max, resetting BL vars...FAILED")
             print("ERROR: T<=0, nan or T>T_max, resetting BL vars...")
-            exit()
             x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
             Khi, rr, kpr, C, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax)
             already_reset = True

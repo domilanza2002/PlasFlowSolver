@@ -56,6 +56,7 @@ def read_xlsx(bash_run):
     P_stag_CF = None  # Stagnation pressure conversion factor (float)
     q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
+    ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
     T_t_0 = None  # Initial total temperature (float)
     u_0 = None  # Initial flow velocity (float)
@@ -133,6 +134,8 @@ def read_xlsx(bash_run):
     # Heat flux conversion factor:
     q_CF = df_dropped['q_CF']
     # INITIAL CONDITIONS
+    # Initial conditions database name:
+    ic_db_name = df_dropped['ic_db_name']
     # Initial static temperature:
     T_0 = df_dropped['T_0']
     # Initial total temperature:
@@ -191,6 +194,7 @@ def read_xlsx(bash_run):
     df_object.P_dyn_CF = P_dyn_CF
     df_object.P_stag_CF = P_stag_CF
     df_object.q_CF = q_CF
+    df_object.ic_db_name = ic_db_name
     df_object.T_0 = T_0
     df_object.T_t_0 = T_t_0
     df_object.u_0 = u_0

@@ -372,7 +372,7 @@ if program_mode == 1:  # Single run
 elif program_mode == 2:  # xlsx run
     write_output_xlsx_file.write_output_xlsx(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out)
 elif program_mode == 3:  # File run
-    write_output_filerun_file.write_output_filerun(df_object, output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, res_out)
+    write_output_filerun_file.write_output_filerun(df_object, output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out)
 else:
     print("ERROR: Invalid program mode. You should never see this message...")
     print("The program will now terminate.")

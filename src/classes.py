@@ -5,9 +5,10 @@
 #   There are currently 5 classes:
 #   -dataframe_class: class to store all the input variables
 #   -inputs_class: class to store all the inputs of the program for the current iteration
-#   -settings_class: class to store all the settings of the program
-#   -probes_class: class to store all the probes properties
+#   -initial_conditions_db_class: class to store all the initial conditions database
 #   -initials_class: class to store all the initial conditions
+#   -probes_class: class to store all the probes properties
+#   -settings_class: class to store all the settings of the program
 #.................................................
 #.................................................
 class dataframe_class:
@@ -31,6 +32,7 @@ class dataframe_class:
         P_stag_CF = None  # Stagnation pressure conversion factor (float)
         q_CF = None  # Heat flux conversion factor (float)
         # Initial conditions:
+        ic_db_name = None  # Initial conditions database name (string)
         T_0 = None  # Initial static temperature (float)
         T_t_0 = None  # Initial total temperature (float)
         u_0 = None  # Initial flow velocity (float)
@@ -71,11 +73,21 @@ class inputs_class:
         mixture_name = None  # Mixture name (string)
         
 #.................................................
+class initial_conditions_db_class:
+    """This class contains the initial conditions 
+    database for the current case.
+    """
+    def __init__(self):  # Basic constructor
+        self.db_inputs = None
+        self.db_outputs = None
+#.................................................
+
 class initials_class:
     """This class contains the initial conditions 
     of the program for the current case.
     """
     def __init__(self):  # Basic constructor
+        ic_db_name = None  # Initial conditions database name (string)
         T_0 = None  # Initial static temperature (float)
         T_t_0 = None  # Initial total temperature (float)
         u_0 = None  # Initial flow velocity (float)
