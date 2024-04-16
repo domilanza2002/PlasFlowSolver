@@ -7,7 +7,7 @@
 #.................................................
 import classes as classes_file  # Module with the classes
 from retrieve_helper import retrieve_stag_var  # Function to retrieve the stagnation variable
-
+from retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions database
 def retrieve_data(df, n_case):
     """This function retrieves the needed data 
     from the dataframe object from the current loop iteration
@@ -34,10 +34,9 @@ def retrieve_data(df, n_case):
     comment = None  # Comment (string)
     P = None  # Pressure (float)
     P_dyn = None  # Dynamic pressure (float)
-    P_stag = None  # Stagnation pressure (float)
     q_target = None  # Target heat flux (float)
-    mixture_name = None  # Plasma gas (string)
     # Initial conditions:
+    ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
     T_t_0 = None  # Initial total temperature (float)
     u_0 = None  # Initial flow velocity (float)
@@ -114,17 +113,23 @@ def retrieve_data(df, n_case):
     inputs_object.P_stag = inputs_object.P + inputs_object.P_dyn  # Stagnation pressure (float)
     q_CF = df.q_CF  # Heat flux conversion factor (float)
     inputs_object.q_target *= q_CF  # Heat flux to W/m^2
+    ic_db_name = df.ic_db_name  # Initial conditions database name (string)
     # Initials:
-    T_0 = df.T_0  # Initial temperature (float)
-    initials_object.T_0 = T_0 
-    T_t_0 = df.T_t_0  # Initial total temperature (float)
-    initials_object.T_t_0=T_t_0 
-    u_0 = df.u_0  # Initial velocity (float)
-    initials_object.u_0 = u_0  # Initial velocity (float)
-    P_t_0 = df.P_t_0  # Initial total pressure (float)
-    if (P_t_0 == 0):  # If the initial total pressure is zero we set it as the stagnation pressure
-        P_t_0 = inputs_object.P_stag
-    initials_object.P_t_0=P_t_0 
+    if (ic_db_name != ""):
+        initials_object, warnings_int = retrieve_ic(ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target)
+        if (warnings_int is not None):
+            warnings += warnings_int
+    else:
+        T_0 = df.T_0  # Initial temperature (float)
+        initials_object.T_0 = T_0 
+        T_t_0 = df.T_t_0  # Initial total temperature (float)
+        initials_object.T_t_0=T_t_0 
+        u_0 = df.u_0  # Initial velocity (float)
+        initials_object.u_0 = u_0  # Initial velocity (float)
+        P_t_0 = df.P_t_0  # Initial total pressure (float)
+        if (P_t_0 == 0):  # If the initial total pressure is zero we set it as the stagnation pressure
+            P_t_0 = inputs_object.P_stag
+        initials_object.P_t_0=P_t_0 
     # Probe properties:
     # Wall temperature:
     T_w = df.T_w  # Wall temperature, float
