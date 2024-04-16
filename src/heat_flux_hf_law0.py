@@ -49,7 +49,7 @@ def reset_vars(deta, T_e, T_w, N_p, eta_max):
         z.append(g_i)
     return x, y, z
 
-def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax):
+def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, u, z, N_p, mixture_object, max_T_relax):
     """Function to compute the properties across the boundary layer.
 
     Args:
@@ -68,6 +68,7 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, m
         rr (list, float): the rr array
         kpr (list, float): the kpr array
         C (list, float): the C array
+        E (list, float): the E array
         redo (boolean): the variable to understand if we need to redo the computation
     """
     # Variables:
@@ -75,6 +76,7 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, m
     rr = None  # Vector to store the rr values, rr = rho_e/rho
     kpr = None  # Vector to store the kpr values, kpr=lambda_eq/(mu_e*C_p*rr)
     C = None  # Vector to store the C values, C=C_p/C_p_e
+    E = None  # Vector to store the E values, E=u^2/(C_p*T_e)
     T = None  # Variable to store the current temperature
     rho = None  # Density on the current point
     C_p = None  # Specific heat on the current point
@@ -82,6 +84,7 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, m
     lambda_eq = None  # Equilibrium thermal conductivity on the current point
     kpr_i = None  # The kpr_i-th value
     c_i = None  # The c_i-th value
+    e_i = None  # The e_i-th value
     redo = None # Variable to understand if we need to redo the computation
     
     # Initialization:
@@ -89,6 +92,7 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, m
     rr = []  # Reset the rr array
     kpr = []  # Reset the kpr array
     C = []  # Reset the C array
+    E = []  # Reset the E array
     redo = False  
     for i in range(0, N_p):
         T = T_e*z[i]  # Current temperature
@@ -104,7 +108,9 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, m
         kpr.append(kpr_i) 
         c_i = C_p/C_p_e 
         C.append(c_i) 
-    return Khi, rr, kpr, C, redo
+        e_i = pow(u,2)/(C_p*T_e)
+        E.append(e_i)
+    return Khi, rr, kpr, C, E, redo
 
 def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     """Function to compute the stagnation heat flux for 
@@ -155,6 +161,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     rr = None  # Vector to store the rr values, rr = rho_e/rho
     kpr = None  # Vector to store the kpr values, kpr=lambda_eq/(mu_e*C_p*rr)
     C = None  # Vector to store the C values, C=C_p/C_p_e
+    E = None  # Vector to store the E values, E=u^2/(C_p*T_e)
     aa = None  # Vector to store the aa values: coefficients for the continuity equation, and the differential equations
     bb = None  # Vector to store the bb values: coefficients for the differential equations
     dd = None  # Vector to store the dd values: coefficients for the differential equations
@@ -197,13 +204,13 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         # a convergence criteria based on the succesive iteration method
         iter += 1
         # I reset some vectors:
-        Khi, rr, kpr, C, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax)
+        Khi, rr, kpr, C, E, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, u, z, N_p, mixture_object, max_T_relax)
         if (redo == True):
             if (already_reset == True):
                 raise ValueError("ERROR: T<=0, nan or T>T_max, resetting BL vars...FAILED")
             print("ERROR: T<=0, nan or T>T_max, resetting BL vars...")
             x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
-            Khi, rr, kpr, C, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax)
+            Khi, rr, kpr, C, E, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, u, z, N_p, mixture_object, max_T_relax)
             already_reset = True
         # Continuity equation:
         aa = []
@@ -227,6 +234,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         # ENERGY EQUATION:
         dkpr = first_deriv_file.first_deriv_array(kpr, deta, ORDER)  # I compute dkpr/deta
         dc = first_deriv_file.first_deriv_array(C, deta, ORDER)  # I compute dc/deta
+        dy = first_deriv_file.first_deriv_array(y, deta, ORDER)  # I compute dy/deta
         # Reset the aa, bb and dd vectors
         aa = [] 
         bb = [] 
@@ -235,7 +243,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         for i in range(0, N_p):
             aa.append( kpr[i]/pow(deta,2) )
             bb.append( (dkpr[i]+kpr[i]/C[i]*dc[i]-V[i])/deta )
-            dd.append(0)
+            dd.append( E[i]/C[i]* (0.5*rr[i]*y[i]-Khi[i]*pow(dy[i], 2)) ) 
         g_init = T_w/T_e  # Initial condition for eta=0
         g_final = 1  # Final condition for eta=eta_max
         new_g = eq_diff_solve_file.solver(aa,bb,dd, g_init, g_final)  # I solve it with the solver module
