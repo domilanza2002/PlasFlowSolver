@@ -6,6 +6,7 @@ P_stag =
 q_target = 50.6e4
 plasma_gas = air_11
 CONVERSION FACTORS:
+ic_db_name = 
 P_CF = 1e0
 P_dyn_CF = 1e0
 P_stag_CF = 1e0

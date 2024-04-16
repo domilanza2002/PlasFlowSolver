@@ -3,6 +3,7 @@ P_CF = 1e0
 P_dyn_CF = 1e0
 q_CF = 1e3
 INITIAL CONDITIONS:
+ic_db_name = 
 T_0 = 3000
 T_t_0 = 4000
 u_0 = 300

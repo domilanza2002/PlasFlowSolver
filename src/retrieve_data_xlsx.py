@@ -9,8 +9,10 @@ import numpy as np  # Library for the numerical operations
 import pandas as pd  # Library to read the xlsx file
 import mutationpp as mpp  # Thermodynamic library
 import classes as classes_file  # Module with the classes
+from initial_conditions_map import verify_db  # Function to verify the database
 from retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
 from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
+from retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions
 from retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
 from retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
 from retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
@@ -208,6 +210,7 @@ def retrieve_data(df,n_case):
     P_stag_CF = None  # Stagnation pressure conversion factor (float)
     q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
+    ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
     T_t_0 = None  # Initial total temperature (float)
     u_0 = None  # Initial flow velocity (float)
@@ -333,35 +336,45 @@ def retrieve_data(df,n_case):
         q_CF = df.q_CF[n_case]  # Heat flux conversion factor (float)
     inputs_object.q_target *= q_CF  # I convert the heat flux to the right unit
     # Initials:
-    T_0 = df.T_0[n_case]  # Initial temperature (float)
-    if (is_valid_data(T_0) == False):
-        initials_object.T_0 = std_values.T_0
-        warnings += "T_0 invalid, set to STD|"
+    ic_db_name = df.ic_db_name[n_case]  # Initial conditions database name (string)
+    if(verify_db(ic_db_name) == True):
+        print("Initial database " + ic_db_name + " verified.")
+        initials_object, warnings_int = retrieve_ic(ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target)
+        if(warnings_int is not None):
+            warnings += warnings_int
     else:
-        initials_object.T_0=df.T_0[n_case] 
-    T_t_0 = df.T_t_0[n_case]  # Initial total temperature (float)
-    if (is_valid_data(T_t_0) == False):
-        initials_object.T_t_0 = std_values.T_t_0
-        warnings += "T_t_0 invalid, set to STD|"
-    else:
-        initials_object.T_t_0=df.T_t_0[n_case] 
-    u_0 = df.u_0[n_case]  # Initial velocity (float)
-    if (is_valid_data(u_0) == False):
-        initials_object.u_0 = std_values.u_0
-        warnings += "u_0 invalid, set to STD|"
-    else:
-        initials_object.u_0 = df.u_0[n_case] 
-    P_t_0 = df.P_t_0[n_case]  # Initial total pressure (float)
-    if (is_valid_data(P_t_0) == False):
-        if (P_t_0 == 0):
-            initials_object.P_t_0 = inputs_object.P_stag
+        if(ic_db_name != "" and (pd.isna(ic_db_name) == False)):
+            print("Initial database " + ic_db_name + " invalid. Initial conditions will be read from the file.")
+            warnings += "Invalid database, the initial conditions are read from the xlsx file.|"
+        T_0 = df.T_0[n_case]  # Initial temperature (float)
+        if (is_valid_data(T_0) == False):
+            initials_object.T_0 = std_values.T_0
+            warnings += "T_0 invalid, set to STD|"
         else:
-            initials_object.P_t_0 = std_values.P_t_0
-            if (initials_object.P_t_0 == 0):
+            initials_object.T_0=df.T_0[n_case] 
+        T_t_0 = df.T_t_0[n_case]  # Initial total temperature (float)
+        if (is_valid_data(T_t_0) == False):
+            initials_object.T_t_0 = std_values.T_t_0
+            warnings += "T_t_0 invalid, set to STD|"
+        else:
+            initials_object.T_t_0=df.T_t_0[n_case] 
+        u_0 = df.u_0[n_case]  # Initial velocity (float)
+        if (is_valid_data(u_0) == False):
+            initials_object.u_0 = std_values.u_0
+            warnings += "u_0 invalid, set to STD|"
+        else:
+            initials_object.u_0 = df.u_0[n_case] 
+        P_t_0 = df.P_t_0[n_case]  # Initial total pressure (float)
+        if (is_valid_data(P_t_0) == False):
+            if (P_t_0 == 0):
                 initials_object.P_t_0 = inputs_object.P_stag
-            warnings += "P_t_0 invalid, set to STD|"
-    else:
-        initials_object.P_t_0 = df.P_t_0[n_case]
+            else:
+                initials_object.P_t_0 = std_values.P_t_0
+                if (initials_object.P_t_0 == 0):
+                    initials_object.P_t_0 = inputs_object.P_stag
+                warnings += "P_t_0 invalid, set to STD|"
+        else:
+            initials_object.P_t_0 = df.P_t_0[n_case]
     # Probe properties:
     T_w = df.T_w[n_case]  # Wall temperature (float)
     if (is_valid_data(T_w) == False):
