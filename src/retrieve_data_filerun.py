@@ -105,14 +105,9 @@ def retrieve_data(df, n_case):
     # Plasma gas:
     plasma_gas = df.plasma_gas  # Plasma gas (string)
     inputs_object.mixture_name = plasma_gas  # Already managed in read_filerun.py
-    # Conversion factors:
-    P_CF = df.P_CF  # Static pressure conversion factor (float)
-    inputs_object.P *= P_CF  # Static pressure to Pascal
-    P_dyn_CF = df.P_dyn_CF  # Dynamic pressure conversion factor (float)
-    inputs_object.P_dyn *= P_dyn_CF  # Dynamic pressure to Pascal
+    # Stagnation pressure:
     inputs_object.P_stag = inputs_object.P + inputs_object.P_dyn  # Stagnation pressure (float)
-    q_CF = df.q_CF  # Heat flux conversion factor (float)
-    inputs_object.q_target *= q_CF  # Heat flux to W/m^2
+    # Database name:
     ic_db_name = df.ic_db_name  # Initial conditions database name (string)
     # Initials:
     if (ic_db_name != ""):

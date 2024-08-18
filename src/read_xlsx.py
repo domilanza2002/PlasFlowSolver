@@ -50,11 +50,6 @@ def read_xlsx(bash_run):
     P_stag = None  # Stagnation pressure (float)
     q_target = None  # Target heat flux (float)
     plasma_gas = None  # Plasma gas (string)
-    # Conversion factors:
-    P_CF = None  # Static pressure conversion factor (float)
-    P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-    P_stag_CF = None  # Stagnation pressure conversion factor (float)
-    q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
     ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
@@ -124,15 +119,6 @@ def read_xlsx(bash_run):
     q_target = df_dropped['q_target']
     # Plasma gas:
     plasma_gas = df_dropped['plasma_gas']
-    # INPUT CONVERSION FACTOR
-    #Static pressure conversion factor:
-    P_CF = df_dropped['P_CF']
-    # Dynamic pressure conversion factor:
-    P_dyn_CF = df_dropped['P_dyn_CF']
-    # Stagnation pressure conversion factor:
-    P_stag_CF = df_dropped['P_stag_CF']
-    # Heat flux conversion factor:
-    q_CF = df_dropped['q_CF']
     # INITIAL CONDITIONS
     # Initial conditions database name:
     ic_db_name = df_dropped['ic_db_name']
@@ -190,10 +176,6 @@ def read_xlsx(bash_run):
     df_object.P_stag = P_stag
     df_object.q_target = q_target
     df_object.plasma_gas = plasma_gas
-    df_object.P_CF = P_CF
-    df_object.P_dyn_CF = P_dyn_CF
-    df_object.P_stag_CF = P_stag_CF
-    df_object.q_CF = q_CF
     df_object.ic_db_name = ic_db_name
     df_object.T_0 = T_0
     df_object.T_t_0 = T_t_0
