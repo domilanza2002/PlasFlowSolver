@@ -74,10 +74,6 @@ def read_filerun(bash_run):
     P_stag = None  # Stagnation pressure (float)
     q_target = None  # Target heat flux (float)
     plasma_gas = None  # Plasma gas (string)
-    # Conversion factors:
-    P_CF = None  # Static pressure conversion factor (float)
-    P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-    q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
     ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
@@ -155,32 +151,6 @@ def read_filerun(bash_run):
             print("Error: the file does not exist or it is not an .pfs file.")
     # Now I read the settings file
     settings_file = open(settings_filename, "r")
-    # Conversion factors:
-    settings_file.readline()  # I skip the first line, which is the title
-    # Static pressure conversion factor:
-    line = settings_file.readline()
-    try:
-        P_CF = float(line.split("=")[1].strip())  # Static pressure conversion factor (float)
-        if (P_CF <= 0):
-            raise ValueError("Error: the static pressure conversion factor is not positive.")        
-    except:
-        raise ValueError("Error: the static pressure conversion factor is not a number.")
-    # Dynamic pressure conversion factor:
-    line = settings_file.readline() 
-    try:
-        P_dyn_CF = float(line.split("=")[1].strip())  # Dynamic pressure conversion factor (float)
-        if (P_dyn_CF <= 0):
-            raise ValueError("Error: the dynamic pressure conversion factor is not positive.")
-    except:
-        raise ValueError("Error: the dynamic pressure conversion factor is not a number.")
-    # Heat flux conversion factor:
-    line = settings_file.readline() 
-    try:
-        q_CF = float(line.split("=")[1].strip())  # Heat flux conversion factor (float)
-        if (q_CF <= 0):
-            raise ValueError("Error: the heat flux conversion factor is not positive")
-    except:
-        raise ValueError("Error: the heat flux conversion factor is not a number")
     # Initial conditions:
     settings_file.readline()  # I skip the line, which is the title
     # Initial conditions database name:
@@ -394,9 +364,6 @@ def read_filerun(bash_run):
     df_object.P_dyn = P_dyn
     df_object.q_target = q_target
     df_object.plasma_gas = plasma_gas   
-    df_object.P_CF = P_CF
-    df_object.P_dyn_CF = P_dyn_CF
-    df_object.q_CF = q_CF
     df_object.ic_db_name = ic_db_name
     df_object.T_0 = T_0
     df_object.T_t_0 = T_t_0

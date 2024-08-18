@@ -52,11 +52,6 @@ def read_srun(bash_run):
     P_stag = None  # Stagnation pressure (float)
     q_target = None  # Target heat flux (float)
     plasma_gas = None  # Plasma gas (string)
-    # Conversion factors:
-    P_CF = None  # Static pressure conversion factor (float)
-    P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-    P_stag_CF = None  # Stagnation pressure conversion factor (float)
-    q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
     ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
@@ -142,33 +137,11 @@ def read_srun(bash_run):
     # Plasma gas:
     line = file.readline()
     plasma_gas = line.split("=")[1].strip()  # The plasma gas is the string after the "=" sign
-    # Conversion factors:
-    line = file.readline()  # I skip the line, that is the section title (CONVERSION FACTORS)
-    # Static pressure conversion factor:
-    line = file.readline()
-    P_CF = float(line.split("=")[1].strip())  # The static pressure conversion factor is the float after the "=" sign
-    # Dynamic pressure conversion factor:
-    line = file.readline()
-    if (P_dyn_used):  # I check if the dynamic pressure has been used
-        P_dyn_CF = float(line.split("=")[1].strip())  # The dynamic pressure conversion factor is the float after the "=" sign
-    # Stagnation pressure conversion factor:
-    line = file.readline()  # I read the line
-    if (P_stag_used):  # I check if the stagnation pressure has been used
-        P_stag_CF = float(line.split("=")[1].strip())  # The stagnation pressure conversion factor is the float after the "=" sign
-    # Stagnation heat flux conversion factor:
-    line = file.readline()
-    q_CF = float(line.split("=")[1].strip())  # The heat flux conversion factor is the float after the "=" sign
-    # I convert the pressures and the heat flux to the standard units (Pa, Pa, W/m^2)
-    P = P * P_CF
     if (P_dyn_used == True and P_stag_used == False):
-        P_dyn = P_dyn * P_dyn_CF
         P_stag = P + P_dyn
     elif (P_dyn_used == False and P_stag_used == True):
-        P_stag = P_stag * P_stag_CF
         P_dyn = P_stag - P
     elif (P_dyn_used == True and P_stag_used == True):
-        P_dyn = P_dyn * P_dyn_CF
-        P_stag = P_stag * P_stag_CF
         if ( pressure_consistency_check(P, P_dyn, P_stag) == False ):  # I check if the pressures are consistent 
             raise Exception("ERROR: The pressures are inconsistent.")
     else: 
@@ -275,10 +248,6 @@ def read_srun(bash_run):
     df_object.P_stag = P_stag  # Stagnation pressure (float)
     df_object.q_target = q_target  # Target heat flux (float)
     df_object.plasma_gas = plasma_gas  # Plasma gas (string)
-    df_object.P_CF = P_CF  # Static pressure conversion factor (float)
-    df_object.P_dyn_CF = P_dyn_CF  # Dynamic pressure conversion factor (float)
-    df_object.P_stag_CF = P_stag_CF  # Stagnation pressure conversion factor (float)
-    df_object.q_CF = q_CF  # Heat flux conversion factor (float)
     df_object.ic_db_name = ic_db_name  # Initial conditions database name (string)
     df_object.T_0 = T_0  # Initial static temperature (float)
     df_object.T_t_0 = T_t_0  # Initial total temperature (float)

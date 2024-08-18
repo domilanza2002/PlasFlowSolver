@@ -191,6 +191,12 @@ while (n_case < n_lines):  # I loop through all the cases
     P_stag = inputs_object.P_stag
     q_target = inputs_object.q_target
     mixture_name = inputs_object.mixture_name
+    # print inputs
+    print("Comment: "+comment)
+    print("Static pressure: "+str(P)+" Pa")
+    print("Stagnation pressure: "+str(P_stag)+" Pa")
+    print("Target heat flux: "+str(q_target)+" W/m^2")
+    print("Mixture name: "+mixture_name)
     if (probes_object.barker_type == 0): 
         n_eq = 3  # If we do not consider the barker effect, we need to solve 3 equations
     else:

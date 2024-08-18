@@ -32,10 +32,6 @@ def generate_std_file(FILENAME):
     # I generate the file:
     file = open(FILENAME, "w")  # I open the file
     file.write("plasma_gas = air_11\n")  # Plasma gas (string)
-    file.write("P_CF = 1e0\n")  # Static pressure conversion factor (float)
-    file.write("P_dyn_CF = 1e0\n")  # Dynamic pressure conversion factor (float)
-    file.write("P_stag_CF = 1e0\n")  # Stagnation pressure conversion factor (float)
-    file.write("q_CF = 1e3\n")  # Heat flux conversion factor (float)
     file.write("T_0 = 4000\n")  # Initial temperature (float)
     file.write("T_t_0 = 6000\n")  # Initial total temperature (float)
     file.write("u_0 = 500\n")  # Initial velocity (float)
@@ -78,14 +74,6 @@ def read_file(FILENAME):
     # Reading:
     line = file.readline()
     df.plasma_gas = line.split(" = ")[1].strip()  # Plasma gas (string)
-    line = file.readline()
-    df.P_CF = float(line.split(" = ")[1].strip())  # Static pressure conversion factor (float)
-    line = file.readline()
-    df.P_dyn_CF = float(line.split(" = ")[1].strip())  # Dynamic pressure conversion factor (float)
-    line = file.readline()
-    df.P_stag_CF = float(line.split(" = ")[1].strip())  # Stagnation pressure conversion factor (float)
-    line = file.readline()
-    df.q_CF = float(line.split(" = ")[1].strip())  # Heat flux conversion factor (float)
     line = file.readline()
     df.T_0 = float(line.split(" = ")[1].strip())  # Initial temperature (float)
     line = file.readline() 
@@ -204,11 +192,6 @@ def retrieve_data(df,n_case):
     P_stag = None  # Stagnation pressure (float)
     q_target = None  # Target heat flux (float)
     plasma_gas = None  # Plasma gas (string)
-    # Conversion factors:
-    P_CF = None  # Static pressure conversion factor (float)
-    P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-    P_stag_CF = None  # Stagnation pressure conversion factor (float)
-    q_CF = None  # Heat flux conversion factor (float)
     # Initial conditions:
     ic_db_name = None  # Initial conditions database name (string)
     T_0 = None  # Initial static temperature (float)
@@ -266,10 +249,14 @@ def retrieve_data(df,n_case):
             raise ValueError("Error: The stagnation pressure or dynamic value is not valid.")
         else:
             P_used = "dyn"
+            inputs_object.P_dyn = df.P_dyn[n_case]  
     elif (is_valid_data(P_dyn) == False):
         P_used = "stag"
+        inputs_object.P_stag = df.P_stag[n_case]
     else:
         P_used = "Both"
+        inputs_object.P_dyn = df.P_dyn[n_case]  
+        inputs_object.P_stag = df.P_stag[n_case]
     # Heat flux:
     q_target = df.q_target[n_case]  # Heat flux (float)
     if(is_valid_data(q_target) == False):
@@ -292,49 +279,14 @@ def retrieve_data(df,n_case):
         mix_temp = mpp.Mixture(inputs_object.mixture_name)
     except Exception as e:
         raise ValueError("Error: Invalid plasma gas. Check std_value associated or retrieve_helper.py")
-    # Conversion factors:
-    P_CF = df.P_CF[n_case]  # Static pressure conversion factor (float)
-    if (is_valid_data(P_CF) == False):
-        P_CF = std_values.P_CF
-        warnings += "P_CF invalid, set to STD|"
-    else:
-        P_CF = df.P_CF[n_case]
-    inputs_object.P *= P_CF  # I convert the pressure to Pascal
     match P_used:
         case "dyn":
-            P_dyn_CF = df.P_dyn_CF[n_case]  # Dynamic pressure conversion factor (float)
-            if (is_valid_data(P_dyn_CF) == False):
-                P_dyn_CF = std_values.P_dyn_CF
-                warnings += "P_dyn_CF invalid, set to STD|"
-            inputs_object.P_dyn = P_dyn*P_dyn_CF  # I convert the dynamic pressure to Pascal
             inputs_object.P_stag = inputs_object.P_dyn + inputs_object.P  # I compute the stagnation pressure
         case "stag":
-            P_stag_CF = df.P_stag_CF[n_case]  # Stagnation pressure conversion factor (float)
-            if (is_valid_data(P_stag_CF) == False):
-                P_stag_CF = std_values.P_stag_CF
-                warnings += "P_stag_CF invalid, set to STD|"
-            inputs_object.P_stag = P_stag*P_stag_CF  # I convert the stagnation pressure to Pascal
             inputs_object.P_dyn = inputs_object.P_stag - inputs_object.P  # I compute the dynamic pressure
         case "Both":
-            P_dyn_CF = df.P_dyn_CF[n_case]  # Dynamic pressure conversion factor (float)
-            if (is_valid_data(P_dyn_CF) == False):
-                P_dyn_CF = std_values.P_dyn_CF 
-                warnings += "P_dyn_CF invalid, set to STD|"
-            P_stag_CF = df.P_stag_CF[n_case]  # Stagnation pressure conversion factor (float)
-            if (is_valid_data(P_stag_CF) == False):
-                P_stag_CF = std_values.P_stag_CF 
-                warnings += "P_stag_CF invalid, set to STD|"
-            inputs_object.P_dyn = P_dyn*P_dyn_CF
-            inputs_object.P_stag = P_stag*P_stag_CF
             if (pressure_consistency_check(inputs_object.P,inputs_object.P_dyn,inputs_object.P_stag) == False):
                 raise ValueError("Error: The stagnation pressure and dynamic pressure values are not consistent.")
-    q_CF = df.q_CF[n_case]  # Heat flux conversion factor (float)
-    if (is_valid_data(q_CF) == False):
-        q_CF = std_values.q_CF
-        warnings += "q_CF invalid, set to STD|"
-    else:
-        q_CF = df.q_CF[n_case]  # Heat flux conversion factor (float)
-    inputs_object.q_target *= q_CF  # I convert the heat flux to the right unit
     # Initials:
     ic_db_name = df.ic_db_name[n_case]  # Initial conditions database name (string)
     if(verify_db(ic_db_name) == True):

@@ -29,10 +29,6 @@ def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out,
     P = None  # Pressure (float)
     P_dyn = None  # Dynamic pressure (float)
     q_target = None  # Target heat flux (float)
-    # Conversion factors:
-    P_CF = None  # Static pressure conversion factor (float)
-    P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-    q_CF = None  # Heat flux conversion factor (float)
     output_file = None  # Output file (file)
     c_date = None  # Current date (string)
     c_time = None  # Current time (string)
@@ -41,9 +37,6 @@ def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out,
     P = df.P
     P_dyn = df.P_dyn
     q_target = df.q_target
-    P_CF = df.P_CF
-    P_dyn_CF = df.P_dyn_CF
-    q_CF = df.q_CF
     # If the file exists, we append the date and time in the file:
     try:
         output_file = open(output_filename, "r")
@@ -64,9 +57,9 @@ def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out,
         while (len(comment[i])<20):  # I want each comment to occupy exactly 20 characters
             comment[i] = comment[i] + " "
         if (rho_out[i] != -1):  # If the case crashed, we just write -1
-            P[i] = float(P[i])*P_CF
-            P_dyn[i] = float(P_dyn[i])*P_dyn_CF
-            q_target[i] = float(q_target[i])*q_CF
+            P[i] = float(P[i])
+            P_dyn[i] = float(P_dyn[i])
+            q_target[i] = float(q_target[i])
         else:
             P[i] = -1
             P_dyn[i] = -1

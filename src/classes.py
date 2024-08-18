@@ -26,11 +26,6 @@ class dataframe_class:
         P_stag = None  # Stagnation pressure (float)
         q_target = None  # Target heat flux (float)
         plasma_gas = None  # Plasma gas (string)
-        # Conversion factors:
-        P_CF = None  # Static pressure conversion factor (float)
-        P_dyn_CF = None  # Dynamic pressure conversion factor (float)
-        P_stag_CF = None  # Stagnation pressure conversion factor (float)
-        q_CF = None  # Heat flux conversion factor (float)
         # Initial conditions:
         ic_db_name = None  # Initial conditions database name (string)
         T_0 = None  # Initial static temperature (float)
