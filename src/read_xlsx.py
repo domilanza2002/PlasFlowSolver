@@ -110,35 +110,35 @@ def read_xlsx(bash_run):
     # comment:
     comment = df_dropped['comment']
     # Pressure:
-    P = df_dropped['P']
+    P = df_dropped['P [kPa]']
     # Dynamic pressure:
-    P_dyn = df_dropped['P_dyn']
+    P_dyn = df_dropped['P_dyn [kPa]']
     # Stagnation pressure:
-    P_stag = df_dropped['P_stag']
+    P_stag = df_dropped['P_stag [kPa]']
     # Heat flux:
-    q_target = df_dropped['q_target']
+    q_target = df_dropped['q_target [W/cm^2]']
     # Plasma gas:
     plasma_gas = df_dropped['plasma_gas']
     # INITIAL CONDITIONS
     # Initial conditions database name:
     ic_db_name = df_dropped['ic_db_name']
     # Initial static temperature:
-    T_0 = df_dropped['T_0']
+    T_0 = df_dropped['T_0 [K]']
     # Initial total temperature:
-    T_t_0 = df_dropped['T_t_0']
+    T_t_0 = df_dropped['T_t_0 [K]']
     # Initial velocity:
-    u_0 = df_dropped['u_0']
+    u_0 = df_dropped['u_0 [m/s]']
     # Initial total pressure:
-    P_t_0 = df_dropped['P_t_0']
+    P_t_0 = df_dropped['P_t_0 [kPa]']
     # PROBE SETTINGS
     #Wall temperature:
-    T_w = df_dropped['T_w']
+    T_w = df_dropped['T_w [K]']
     # Pitot external radius:
-    R_p = df_dropped['R_p'] 
+    R_p = df_dropped['R_p [mm]'] 
     # Heat flux probe external radius:
-    R_m = df_dropped['R_m'] 
+    R_m = df_dropped['R_m [mm]'] 
     # Plasma jet radius:
-    R_j = df_dropped['R_j'] 
+    R_j = df_dropped['R_j [mm]'] 
     # Stagnation type:
     stag_type = df_dropped['stag_type'] 
     # Heat flux law:
@@ -165,9 +165,9 @@ def read_xlsx(bash_run):
     # Jacobian finite difference epsilon:
     jac_diff = df_dropped['jac_diff']
     # Minimum value for the temperature used for relaxation:
-    min_T_relax = df_dropped['min_T_relax'] 
+    min_T_relax = df_dropped['min_T_relax [K]'] 
     # Maximum value for the temperature used for relaxation:
-    max_T_relax = df_dropped['max_T_relax']
+    max_T_relax = df_dropped['max_T_relax [K]']
     # I store the values in the dataframe object
     df_object.n = n
     df_object.comment = comment

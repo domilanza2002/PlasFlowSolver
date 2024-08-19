@@ -3,6 +3,7 @@
 #.................................................
 #   This Module is needed to write the output file.
 #.................................................
+from classes import CF_constants as CF_constants_class  # Class with the conversion factors
 def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out):
     """This function writes the output file for the srun mode of the program.
 
@@ -22,6 +23,8 @@ def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out,
         warnings_out (str): the warnings
         res_out (float): the residual
     """
+    # Constants:
+    P_CF = CF_constants_class().P_CF  # Conversion factor for the pressure
     # Variables:
     file = None # File object
     # Writing the output file:
@@ -35,7 +38,7 @@ def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out,
     file.write("M_out: " + str(M_out[0]) + "\n")
     file.write("T_t_out: " + str(T_t_out[0]) + " K\n")
     file.write("h_t_out: " + str(h_t_out[0]/1000) + " kJ/Kg\n")
-    file.write("P_t_out: " + str(P_t_out[0]) + " Pa\n")
+    file.write("P_t_out: " + str(P_t_out[0]/P_CF) + " kPa\n")  # From Pa to kPa
     file.write("Re_out: " + str(Re_out[0]) + "\n")
     file.write("warnings_out: " + str(warnings_out[0]) + "\n")
     file.write("res_out: " + str(res_out[0]) + "\n")

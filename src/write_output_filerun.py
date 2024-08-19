@@ -34,9 +34,9 @@ def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out,
     c_time = None  # Current time (string)
     # Retrieve the data from the dataframe:
     comment = df.comment
-    P = df.P
-    P_dyn = df.P_dyn
-    q_target = df.q_target
+    P = df.P  # Already in kPa
+    P_dyn = df.P_dyn  # Already in kPa
+    q_target = df.q_target  # Already in W/cm^2
     # If the file exists, we append the date and time in the file:
     try:
         output_file = open(output_filename, "r")
@@ -49,7 +49,7 @@ def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out,
     except:  # If the file does not exist, I create it
         output_file = open(output_filename, "w")
     # Header:
-    output_file.write("comment                    pressure [Pa]   dyn pressure [Pa]   heat flux [W/m^2]     density [g/m^3]     temperature [K]     enthalpy [kJ/kg]     velocity [m/s]   sound speed [m/s]         Mach number      Total Temp [K] total enth. [kJ/kg] Total pressure [Pa]      Pitot Reynolds     Warnings:\n")
+    output_file.write("comment                    pressure [kPa]  dyn pressure [kPa]  heat flux [W/cm^2]     density [g/m^3]     temperature [K]     enthalpy [kJ/kg]     velocity [m/s]   sound speed [m/s]         Mach number      Total Temp [K] total enth. [kJ/kg] Total pressure [kPa]     Pitot Reynolds     Warnings:\n")
     output_file.close()
     # Write the data in the file:
     output_file = open(output_filename, "a")
@@ -66,10 +66,10 @@ def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out,
             q_target[i] = -1
         if (has_converged_out[i] == "yes"):
             # I want each data to occupy exactly 20 characters, in order to have a nice output file
-            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(P_dyn[i])+'{:20.10e}'.format(q_target[i])+'{:20.10e}'.format(rho_out[i]*1000)+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i]/1000)+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(T_t_out[i])+'{:20.10e}'.format(h_t_out[i]/1000)+'{:20.10e}'.format(P_t_out[i])+'{:20.10e}'.format(Re_out[i])+"     "+warnings_out[i]+"\n")
+            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(P_dyn[i])+'{:20.10e}'.format(q_target[i])+'{:20.10e}'.format(rho_out[i]*1000)+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i]/1000)+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(T_t_out[i])+'{:20.10e}'.format(h_t_out[i]/1000)+'{:20.10e}'.format(P_t_out[i]/1000)+'{:20.10e}'.format(Re_out[i])+"     "+warnings_out[i]+"\n")
         elif (has_converged_out[i] == "no"):
             output_file.write("WARNING: the next set of data has not converged: residual= " + str(res_out[i] ) +"\n")
-            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(P_dyn[i])+'{:20.10e}'.format(q_target[i])+'{:20.10e}'.format(rho_out[i]*1000)+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i]/1000)+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(T_t_out[i])+'{:20.10e}'.format(h_t_out[i]/1000)+'{:20.10e}'.format(P_t_out[i])+'{:20.10e}'.format(Re_out[i])+"     "+warnings_out[i]+"\n")
+            output_file.write(comment[i]+'{:20.10e}'.format(P[i])+'{:20.10e}'.format(P_dyn[i])+'{:20.10e}'.format(q_target[i])+'{:20.10e}'.format(rho_out[i]*1000)+'{:20.10e}'.format(T_out[i])+'{:20.10e}'.format(h_out[i]/1000)+'{:20.10e}'.format(u_out[i])+'{:20.10e}'.format(a_out[i])+'{:20.10e}'.format(M_out[i])+'{:20.10e}'.format(T_t_out[i])+'{:20.10e}'.format(h_t_out[i]/1000)+'{:20.10e}'.format(P_t_out[i]/1000)+'{:20.10e}'.format(Re_out[i])+"     "+warnings_out[i]+"\n")
         else:  # Invalid data:
             output_file.write("WARNING: the next set of data is invalid:\n")
             output_file.write(comment[i] + ": Invalid input data detected.\n")
