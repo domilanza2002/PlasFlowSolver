@@ -1,18 +1,14 @@
-CONVERSION FACTORS:
-P_CF = 1e0
-P_dyn_CF = 1e0
-q_CF = 1e3
 INITIAL CONDITIONS:
 ic_db_name = 
-T_0 = 3000
-T_t_0 = 4000
-u_0 = 300
-P_t_0 = 0
+T_0 [K] = 3000
+T_t_0 [K] = 4000
+u_0 [m/s] = 300
+P_t_0 [kPa] = 0
 PROBES PROPERTIES:
-T_w = 400
-R_p = 4e-3
-R_m = 10.1e-3
-R_j = 50e-3
+T_w [K] = 400
+R_p [mm] = 4e-3
+R_m [mm] = 10.1e-3
+R_j [mm] = 50e-3
 stagtype = flat
 hf_law = exact
 barker_type = carleton
@@ -27,5 +23,5 @@ log_warning_hf = yes
 newton_conv = 1e-8
 max_newton_iter = 30
 jac_diff = 1e-2
-min_T_relax = 200
-max_T_relax = 18000
+min_T_relax [K] = 200
+max_T_relax [K] = 18000
