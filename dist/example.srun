@@ -1,26 +1,21 @@
 INPUTS:
 comment = Example
-P = 6e3
-P_dyn = 1.8e2
-P_stag = 
-q_target = 50.6e4
+P [kPa] = 6e0
+P_dyn [kPa] = 1.8e-1
+P_stag [kPa] = 
+q_target [W/cm^2] = 50.6e0
 plasma_gas = air_11
-CONVERSION FACTORS: 
-P_CF = 1e0
-P_dyn_CF = 1e0
-P_stag_CF = 1e0
-q_CF = 1e0
 INITIAL CONDITIONS:
 ic_db_name = 
-T_0 = 4000
-T_t_0 = 5000
-u_0 = 600
-P_t_0 = 0
+T_0 [K] = 4000
+T_t_0 [K] = 5000
+u_0 [m/s] = 600
+P_t_0 [kPa] = 0
 PROBE PROPERTIES:
-T_w = 400
-R_p = 4e-3
-R_m = 10.1e-3
-R_j = 50e-3
+T_w [K] = 400
+R_p [mm] = 4e-3
+R_m [mm] = 10.1e-3
+R_j [mm] = 50e-3
 stag_type = flat
 hf_law = exact
 barker_type = none
@@ -34,5 +29,5 @@ log_warning_hf = yes
 newton_conv = 1e-8
 max_newton_iter = 30
 jac_diff = 1e-2
-min_T_relax = 200
-max_T_relax = 18000
+min_T_relax [K] = 200
+max_T_relax [K] = 18000

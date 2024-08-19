@@ -32,14 +32,14 @@ def generate_std_file(FILENAME):
     # I generate the file:
     file = open(FILENAME, "w")  # I open the file
     file.write("plasma_gas = air_11\n")  # Plasma gas (string)
-    file.write("T_0 = 4000\n")  # Initial temperature (float)
-    file.write("T_t_0 = 6000\n")  # Initial total temperature (float)
-    file.write("u_0 = 500\n")  # Initial velocity (float)
-    file.write("P_t_0 = 0\n")  # Initial total pressure (float)
-    file.write("T_w = 400\n")  # Wall temperature (float)
-    file.write("R_p = 4e-3\n")  # Pitot external radius (float)
-    file.write("R_m = 10.1e-3\n")  # Flux probe external radius (float)
-    file.write("R_j = 50e-3\n")  # Plasma jet radius (float)
+    file.write("T_0 [K]= 4000\n")  # Initial temperature (float)
+    file.write("T_t_0 [K] = 6000\n")  # Initial total temperature (float)
+    file.write("u_0 [m/s] = 500\n")  # Initial velocity (float)
+    file.write("P_t_0 [kPa] = 0\n")  # Initial total pressure (float)
+    file.write("T_w [K] = 400\n")  # Wall temperature (float)
+    file.write("R_p [mm] = 4e0\n")  # Pitot external radius (float)
+    file.write("R_m [mm] = 10.1e0\n")  # Flux probe external radius (float)
+    file.write("R_j [mm] = 50e0\n")  # Plasma jet radius (float)
     file.write("stag_type = 0\n")  # Stagnation type (integer)
     file.write("hf_law = 0\n")  # Heat flux law (integer)
     file.write("barker_type = 0\n")  # Barker's correction (integer)
@@ -52,8 +52,8 @@ def generate_std_file(FILENAME):
     file.write("newton_conv = 1e-8\n")  # Convergence criteria for the newton solver (float)
     file.write("max_newton_iter = 30\n")  # Maximum number of iterations for the newton solver (integer)
     file.write("jac_diff = 1e-2\n")  # Jacobian finite difference epsilon (float)
-    file.write("min_T_relax = 200\n")  # Minimum value for the temperature used for relaxation (float)
-    file.write("max_T_relax = 18000\n")  # Maximum value for the temperature used for relaxation (float)
+    file.write("min_T_relax [K] = 200\n")  # Minimum value for the temperature used for relaxation (float)
+    file.write("max_T_relax [K] = 18000\n")  # Maximum value for the temperature used for relaxation (float)
     file.close()
 #.................................................
 
