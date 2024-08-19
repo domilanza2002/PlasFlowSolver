@@ -5,24 +5,13 @@
 #   when the program is file run mode.
 #.................................................
 import time # Module to retrieve the current date and time
-def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out):
+def write_output_filerun(df, output_filename, out_obj):
     """This function writes the output file when the program is in file run mode.
 
     Args:
         df (pandas.DataFrame): dataframe containing the input data.
         output_filename (str): name of the output file.
-        has_converged_out (list): list containing the convergence status of the solution.
-        rho_out (list): list containing the density of the flow.
-        T_out (list): list containing the temperature of the flow.
-        h_out (list): list containing the enthalpy of the flow.
-        u_out (list): list containing the velocity of the flow.
-        a_out (list): list containing the speed of sound of the flow.
-        M_out (list): list containing the Mach number of the flow.
-        T_t_out (list): list containing the total temperature of the flow.
-        h_t_out (list): list containing the total enthalpy of the flow.
-        P_t_out (list): list containing the total pressure of the flow.
-        Re_out (list): list containing the Pitot Reynolds number of the flow.
-        res_out (list): list containing the residuals of the solution.
+        out_obj (out_properties_class): object containing all the output properties.
     """
     # Variables:
     comment = None  # Comment (string)
@@ -32,6 +21,20 @@ def write_output_filerun(df, output_filename, has_converged_out, rho_out, T_out,
     output_file = None  # Output file (file)
     c_date = None  # Current date (string)
     c_time = None  # Current time (string)
+    # Extracting the output properties:
+    has_converged_out = out_obj.has_converged_out  # Has converged flag
+    rho_out = out_obj.rho_out  # Density
+    T_out = out_obj.T_out  # Static temperature
+    h_out = out_obj.h_out  # Static enthalpy
+    u_out = out_obj.u_out  # Flow velocity
+    a_out = out_obj.a_out  # Speed of sound
+    M_out = out_obj.M_out  # Mach number
+    T_t_out = out_obj.T_t_out  # Total temperature
+    h_t_out = out_obj.h_t_out  # Total enthalpy
+    P_t_out = out_obj.P_t_out  # Total pressure
+    Re_out = out_obj.Re_out  # Reynolds number
+    warnings_out = out_obj.warnings_out  # Warnings
+    res_out = out_obj.res_out  # Final convergence criteria
     # Retrieve the data from the dataframe:
     comment = df.comment
     P = df.P  # Already in kPa

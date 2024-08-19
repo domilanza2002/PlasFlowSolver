@@ -4,29 +4,31 @@
 #   This Module is needed to write the output file.
 #.................................................
 from classes import CF_constants as CF_constants_class  # Class with the conversion factors
-def write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out):
+def write_output_srun(output_filename, out_obj):
     """This function writes the output file for the srun mode of the program.
 
     Args:
         output_filename (str): the name of the output file
-        has_converged_out (bool): the convergence status
-        rho_out (float): the density
-        T_out (float): the temperature
-        h_out (float): the enthalpy
-        u_out (float): the velocity
-        a_out (float): the speed of sound
-        M_out (float): the mach number
-        T_t_out (float): the total temperature
-        h_t_out (float): the total enthalpy
-        P_t_out (float): the total pressure
-        Re_out (float): the Reynolds number
-        warnings_out (str): the warnings
-        res_out (float): the residual
+        out_obj (out_properties_class): the object containing all the output properties
     """
     # Constants:
     P_CF = CF_constants_class().P_CF  # Conversion factor for the pressure
     # Variables:
     file = None # File object
+    # Extracting the output properties:
+    has_converged_out = out_obj.has_converged_out  # Has converged flag
+    rho_out = out_obj.rho_out  # Density
+    T_out = out_obj.T_out  # Static temperature
+    h_out = out_obj.h_out  # Static enthalpy
+    u_out = out_obj.u_out  # Flow velocity
+    a_out = out_obj.a_out  # Speed of sound
+    M_out = out_obj.M_out  # Mach number
+    T_t_out = out_obj.T_t_out  # Total temperature
+    h_t_out = out_obj.h_t_out  # Total enthalpy
+    P_t_out = out_obj.P_t_out  # Total pressure
+    Re_out = out_obj.Re_out  # Reynolds number
+    warnings_out = out_obj.warnings_out  # Warnings
+    res_out = out_obj.res_out  # Final convergence criteria
     # Writing the output file:
     file = open(output_filename, "w")
     file.write("has_converged_out: " + str(has_converged_out[0]) + "\n")
