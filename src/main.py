@@ -85,6 +85,8 @@ Re = None  # Pitot Reynolds number for the Barker's effect
 rho = None  # Final density of the flow
 a = None  # Final sound speed of the flow
 M = None  # Final Mach number of the flow
+species_names = None  # Names of the species
+species_Y = None  # Mass fractions of the species
 has_converged_out = None  # Variable to store if the iteration has converged
 rho_out = None  # Edge density to be written on the output file
 T_out = None  # Edge temperature to be written on the output file
@@ -98,6 +100,8 @@ P_t_out = None  # Total pressure to be written on the output file
 Re_out = None  # Pitot Reynolds number to be written on the output file
 warnings_out=None  # Warnings to be written on the output file
 res_out = None  # Final convergence criteria to be written on the output file
+species_names_out = None  # Names of the species
+species_Y_out = None  # Mass fractions of the species
 # Variables to manage the heat flux computation:
 exit_due_error = None  # Variable to exit the Newton loop if an error occurs during the computation
 hf_first_comp = None  # Variable to store if it is the first time that we compute the heat flux for the current case
@@ -157,6 +161,8 @@ P_t_out = []
 Re_out = []
 warnings_out=[]
 res_out = []
+species_names_out = {}  # Dictorionary to store the names of the species
+species_Y_out = {}  # Dictionary to store the mass fractions of the species
 print("Starting main program loop...")
 while (n_case < n_lines):  # I loop through all the cases
     print("--------------------------------------------------")
@@ -183,6 +189,8 @@ while (n_case < n_lines):  # I loop through all the cases
             warnings_out.append("Error: invalid data")
             res_out.append(-1)
             n_case += 1
+            species_names_out[n_case] = None
+            species_Y_out[n_case] = None
             continue
     n_case += 1 #we increase the number of cases
     print("Executing case number "+str(n_case)+"...")
@@ -344,6 +352,8 @@ while (n_case < n_lines):  # I loop through all the cases
         Re_out.append(-1)
         warnings_out.append("Error detected during the computation.")
         res_out.append(-1)
+        species_names_out[n_case] = None
+        species_Y_out[n_case] = None
         continue
     if (exit_due_error == True and program_mode==1):  # If we have skipped the case and we are in single run
         print("Error detected during the computation of the case. The program will now terminate.")
@@ -351,6 +361,7 @@ while (n_case < n_lines):  # I loop through all the cases
     print("Executing Newton loop...done")
     # Flow properties to output:
     rho, a, M, h, h_t = out_properties_file.out_properties(mixture_object, T, P, u)
+    species_names, species_Y = out_properties_file.mass_fraction_composition(mixture_object, T, P)
     # P.S. The enthalpy is shifted to 0 K
     # Now we append the results to the output vectors:
     if (has_converged):
@@ -371,6 +382,8 @@ while (n_case < n_lines):  # I loop through all the cases
     Re_out.append(Re)
     warnings_out.append(warnings)
     res_out.append(cnv)
+    species_names_out[n_case] = species_names
+    species_Y_out[n_case] = species_Y
     print("Executing case number "+str(n_case)+"...done")
 print("--------------------------------------------------")
 print("Writing output file...")
@@ -388,6 +401,8 @@ out_object.P_t_out = P_t_out
 out_object.Re_out = Re_out
 out_object.warnings_out = warnings_out
 out_object.res_out = res_out
+out_object.species_names_out = species_names_out
+out_object.species_Y_out = species_Y_out
 # Writing the output file:
 if program_mode == 1:  # Single run
     write_output_srun_file.write_output_srun(output_filename, out_object)

@@ -139,6 +139,8 @@ class out_properties_class:
         self.Re_out = None  # Pitot Reynolds number to be written on the output file
         self.warnings_out=None  # Warnings to be written on the output file
         self.res_out = None  # Final convergence criteria to be written on the output file
+        self.species_names_out = None  # Names of the species
+        self.species_Y_out = None  # Mass fractions of the species
 
 class CF_constants:
     """This class contains the constants used to convert

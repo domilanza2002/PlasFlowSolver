@@ -45,6 +45,8 @@ def retrieve_mixture_name(plasma_gas):
     match plasma_gas:
         case "n2":
             mixture_name = "nitrogen2"
+        case "N2":
+            mixture_name = "nitrogen2"
         case "nitrogen2":
             mixture_name = "nitrogen2"
         case "air_13":

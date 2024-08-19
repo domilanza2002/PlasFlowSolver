@@ -29,6 +29,8 @@ def write_output_srun(output_filename, out_obj):
     Re_out = out_obj.Re_out  # Reynolds number
     warnings_out = out_obj.warnings_out  # Warnings
     res_out = out_obj.res_out  # Final convergence criteria
+    species_names_out = out_obj.species_names_out[1]  # Names of the species, only 1 element
+    species_Y_out = out_obj.species_Y_out[1]  # Mass fractions of the species, only 1 element
     # Writing the output file:
     file = open(output_filename, "w")
     file.write("has_converged_out: " + str(has_converged_out[0]) + "\n")
@@ -42,6 +44,9 @@ def write_output_srun(output_filename, out_obj):
     file.write("h_t_out: " + str(h_t_out[0]/1000) + " kJ/Kg\n")
     file.write("P_t_out: " + str(P_t_out[0]/P_CF) + " kPa\n")  # From Pa to kPa
     file.write("Re_out: " + str(Re_out[0]) + "\n")
+    file.write("Species mass fraction composition:\n")
+    for i in range(len(species_names_out)):
+        file.write(species_names_out[i] + ": " + str(species_Y_out[i]) + "\n")
     file.write("warnings_out: " + str(warnings_out[0]) + "\n")
     file.write("res_out: " + str(res_out[0]) + "\n")
     file.close()
