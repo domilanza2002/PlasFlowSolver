@@ -87,5 +87,5 @@ def retrieve_data(df):
     if (probes_object.barker_type == 0 and initials_object.P_t_0 != inputs_object.P_stag):
         initials_object.P_t_0 = inputs_object.P_stag
         warnings += "P_t_0 not consistent with the Barker's correction, set to P_stag|"
-    # we return the result
+    # I return the result
     return inputs_object, initials_object, probes_object, settings_object, warnings

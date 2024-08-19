@@ -33,9 +33,10 @@ def write_output_xlsx(output_filename, has_converged_out, rho_out, T_out, h_out,
     df=pd.read_excel(input_filename, header=[0,1])  #I read the dataframe from the input file
     # Scale the output data:
     for i in range(0, len(rho_out)):
-        rho_out[i] = rho_out[i]*1000
-        h_out[i] = h_out[i]/1000
-        h_t_out[i] = h_t_out[i]/1000
+        rho_out[i] = rho_out[i]*1000  # From kg/m^3 to g/m^3
+        h_out[i] = h_out[i]/1000  # From J/kg to kJ/kg
+        h_t_out[i] = h_t_out[i]/1000  # From J/kg to kJ/kg
+        P_t_out[i] = P_t_out[i]/1000  # From Pa to kPa
     # I add the new columns to the dataframe
     # HAS CONVERGED
     n_col = len(df.columns)
@@ -66,7 +67,7 @@ def write_output_xlsx(output_filename, has_converged_out, rho_out, T_out, h_out,
     df.insert(n_col, ("Output","total enthalpy [kJ/kg]"), h_t_out, False)
     # TOTAL PRESSURE
     n_col = len(df.columns) 
-    df.insert(n_col, ("Output","total pressure [Pa]"), P_t_out, False) 
+    df.insert(n_col, ("Output","total pressure [kPa]"), P_t_out, False) 
     # REYNOLDS NUMBER
     n_col = len(df.columns)
     df.insert(n_col, ("Output","reynolds number"), Re_out, False) 

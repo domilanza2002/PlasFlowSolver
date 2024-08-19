@@ -8,6 +8,7 @@
 #.................................................
 import mutationpp as mpp
 import initial_conditions_map as ic_map_file  # Module with the initial conditions map functions
+from classes import CF_constants as CF_constants_class  # Class with the conversion factors
 
 def pressure_consistency_check(P, P_dyn, P_stag):
     """This function checks the consistency of the pressures.
@@ -225,3 +226,31 @@ def retrieve_log_warning_hf(log_warning_hf_string):
         case _:
             raise ValueError("Error: Invalid log_warning_hf. Check the input file.")
     return log_warning_hf
+
+def retrieve_converted_inputs(inputs_object, initials_object, probes_object):
+    """This function retrieves the converted inputs.
+    
+    Args:
+        inputs_object (inputs_class): the inputs object
+        initials_object (initials_class): the initials object
+        probes_object (probes_class): the probes object
+        
+    Returns:
+        inputs_object (inputs_class): the converted inputs object
+        initials_object (initials_class): the converted initials object
+        probes_object (probes_class): the converted probes object
+    """
+    CF_CONSTANTS = CF_constants_class()  # Object with the conversion factors
+    # Conversion of the inputs:
+    inputs_object.P *= CF_CONSTANTS.P_CF
+    inputs_object.P_dyn *= CF_CONSTANTS.P_CF
+    inputs_object.P_stag *= CF_CONSTANTS.P_CF
+    inputs_object.q_target *= CF_CONSTANTS.Q_CF
+    # Conversion of the initials:
+    initials_object.P_t_0 *= CF_CONSTANTS.P_CF
+    # Conversion of the probes:
+    probes_object.R_p *= CF_CONSTANTS.L_CF
+    probes_object.R_m *= CF_CONSTANTS.L_CF
+    probes_object.R_j *= CF_CONSTANTS.L_CF
+    # Return the objects:
+    return inputs_object, initials_object, probes_object

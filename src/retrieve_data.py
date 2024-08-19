@@ -8,6 +8,7 @@ from exit_program import exit_program  # Function to exit the program
 import retrieve_data_srun as retrieve_data_srun_file  # Module to retrieve the data from the .srun file
 import retrieve_data_xlsx as retrieve_data_xlsx_file  # Module to retrieve the data from the .xlsx file
 import retrieve_data_filerun as retrieve_data_filerun_file  # Module to retrieve the data from the .in and .pfs files
+from retrieve_helper import retrieve_converted_inputs  # Function to retrieve the converted inputs
 
 def retrieve_data(df_object, program_mode, n_case):
     # Variables:
@@ -40,5 +41,7 @@ def retrieve_data(df_object, program_mode, n_case):
         print("ERROR: Invalid program mode. You should never see this message...")
         print("The program will now terminate")
         exit_program()
-    
-    return inputs_object, initials_object, probes_object, settings_object, warnings  # Return the inputs, initials, probes, settings and warnings
+    # Units conversion (same for all the cases):
+    inputs_object, initials_object, probes_object = retrieve_converted_inputs(inputs_object, initials_object, probes_object)
+    # Return:
+    return inputs_object, initials_object, probes_object, settings_object, warnings 
