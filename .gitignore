@@ -7,3 +7,4 @@ src/*.out
 src/*.srun
 src/*.pfs
 src/*.var
+src/*.h5

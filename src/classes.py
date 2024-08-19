@@ -9,6 +9,7 @@
 #   -initials_class: class to store all the initial conditions
 #   -probes_class: class to store all the probes properties
 #   -settings_class: class to store all the settings of the program
+#   -out_properties_class: class to store all the output properties
 #   -CF_constants: class to store all the conversion factors
 #.................................................
 #.................................................
@@ -120,6 +121,25 @@ class settings_class:
         self.jac_diff = None #Main newton jacobian finite difference epsilon, float
         self.min_T_relax = None #Minimum value for the temperature used for relaxation, float
         self.max_T_relax = None #Maximum value for the temperature used for relaxation, float
+        
+class out_properties_class:
+    """This class contains the output properties of the program.
+    """
+    def __init__(self):
+        self.has_converged_out = None  # Variable to store if the iteration has converged
+        self.rho_out = None  # Edge density to be written on the output file
+        self.T_out = None  # Edge temperature to be written on the output file
+        self.h_out = None  # Edge enthalpy to be written on the output file
+        self.u_out = None  # Edge velocity to be written on the output file
+        self.a_out = None  # Edge sound speed to be written on the output file
+        self.M_out = None  # Edge Mach number to be written on the output file
+        self.T_t_out = None  # Total temperature to be written on the output file
+        self.h_t_out = None  # Total enthalpy to be written on the output file
+        self.P_t_out = None  # Total pressure to be written on the output file
+        self.Re_out = None  # Pitot Reynolds number to be written on the output file
+        self.warnings_out=None  # Warnings to be written on the output file
+        self.res_out = None  # Final convergence criteria to be written on the output file
+
 class CF_constants:
     """This class contains the constants used to convert
     the read values to the SI units.

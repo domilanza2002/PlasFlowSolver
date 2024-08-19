@@ -110,6 +110,7 @@ settings_object = classes_file.settings_class()  # Object with the settings for 
 probes_object = classes_file.probes_class()  # Object with the probe properties for the current iteration
 initials_object = classes_file.initials_class()  # Object with the initial conditions for the current iteration
 df_object = classes_file.dataframe_class()  # Object to store the dataframe, independently from the program mode
+out_object = classes_file.out_properties_class()  # Object to store the output properties
 #.................................................
 #
 #   Here the program starts
@@ -373,12 +374,27 @@ while (n_case < n_lines):  # I loop through all the cases
     print("Executing case number "+str(n_case)+"...done")
 print("--------------------------------------------------")
 print("Writing output file...")
+# Packing the output data:
+out_object.has_converged_out = has_converged_out
+out_object.rho_out = rho_out
+out_object.T_out = T_out
+out_object.h_out = h_out
+out_object.u_out = u_out
+out_object.a_out = a_out
+out_object.M_out = M_out
+out_object.T_t_out = T_t_out
+out_object.h_t_out = h_t_out
+out_object.P_t_out = P_t_out
+out_object.Re_out = Re_out
+out_object.warnings_out = warnings_out
+out_object.res_out = res_out
+# Writing the output file:
 if program_mode == 1:  # Single run
-    write_output_srun_file.write_output_srun(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out)
+    write_output_srun_file.write_output_srun(output_filename, out_object)
 elif program_mode == 2:  # xlsx run
-    write_output_xlsx_file.write_output_xlsx(output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out)
+    write_output_xlsx_file.write_output_xlsx(output_filename, out_object)
 elif program_mode == 3:  # File run
-    write_output_filerun_file.write_output_filerun(df_object, output_filename, has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out, Re_out, warnings_out, res_out)
+    write_output_filerun_file.write_output_filerun(df_object, output_filename, out_object)
 else:
     print("ERROR: Invalid program mode. You should never see this message...")
     print("The program will now terminate.")
