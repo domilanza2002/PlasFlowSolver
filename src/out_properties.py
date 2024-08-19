@@ -52,3 +52,31 @@ def out_properties(mixture_object, T, P, u):
     h = mixture_object.mixtureHMass() + h0
     h_t = h + 0.5*pow(u,2)
     return rho, a, M, h, h_t
+
+def mass_fraction_composition(mixture_object, T, P):
+    """This function computes the mass fraction composition of the gas.
+
+    Args:
+        mixture_object (mpp.Mixture): the mixture object
+        T (float): temperature
+        P (float): pressure
+
+    Returns:
+        species_names (list): list of species names 
+        species_Y (list): list of mass fractions
+    """
+    # Variables:
+    species_names = None  # Species names
+    species_Y = None  # Mass fraction composition
+    n_species = None  # Number of species
+    # Init:
+    species_names = []
+    species_Y = []
+    # Computation:
+    mixture_object.equilibrate(T, P)  # Equilibrate the mixture
+    n_species = mixture_object.nSpecies()  # Number of species
+    for i in range(n_species):
+        species_names.append(mixture_object.speciesName(i))  # Append species name
+    species_Y = mixture_object.Y()  # Retrieve mass fractions
+    # Return:
+    return species_names, species_Y

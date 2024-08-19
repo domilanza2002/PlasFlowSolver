@@ -16,6 +16,7 @@ def write_output_xlsx(output_filename, out_obj):
     input_filename = None  # Input filename
     n_col = None  # Number of columns
     df = None  # Dataframe to edit
+    n_cases = None  # Number of cases
     # Extracting the output properties:
     has_converged_out = out_obj.has_converged_out  # Has converged flag
     rho_out = out_obj.rho_out  # Density
@@ -30,9 +31,11 @@ def write_output_xlsx(output_filename, out_obj):
     Re_out = out_obj.Re_out  # Reynolds number
     warnings_out = out_obj.warnings_out  # Warnings
     res_out = out_obj.res_out  # Final convergence criteria
+    species_names_out = out_obj.species_names_out  # Names of the species (dictionary)
+    species_Y_out = out_obj.species_Y_out  # Mass fractions of the species (dictionary)
     # I rebuild the input file name:
     input_filename=output_filename[:-9]+".xlsx"
-    df=pd.read_excel(input_filename, header=[0,1])  #I read the dataframe from the input file
+    df = pd.read_excel(input_filename, header=[0,1])  #I read the dataframe from the input file
     # Scale the output data:
     for i in range(0, len(rho_out)):
         rho_out[i] = rho_out[i]*1000  # From kg/m^3 to g/m^3
@@ -73,6 +76,25 @@ def write_output_xlsx(output_filename, out_obj):
     # REYNOLDS NUMBER
     n_col = len(df.columns)
     df.insert(n_col, ("Output","reynolds number"), Re_out, False) 
+    # SPECIES NAMES AND MASS FRACTIONS
+    n_cases = len(species_names_out)
+    if(len(species_Y_out) != n_cases):
+        raise ValueError("The number of cases in the species names and mass fractions dictionaries is different. This should not be possible.")
+    for i in range(1,n_cases+1):  # From 1 to n_cases included
+        c_species_names = species_names_out[i]  # I extract the current species names
+        c_species_Y = species_Y_out[i]  # I extract the current species mass fractions
+        if ((c_species_names is None) or (c_species_Y is None)):
+            continue
+        for j in range(len(c_species_names)):
+            c_species_name = c_species_names[j]
+            #print(df.columns)
+            if ("Output",c_species_name) not in df.columns:
+                n_col = len(df.columns)
+                df.insert(n_col, ("Output",c_species_name), None, False)
+        for j in range(len(c_species_names)):
+            c_species_name = c_species_names[j]
+            c_species_Y_value = c_species_Y[j]
+            df.loc[i-1,("Output",c_species_name)] = c_species_Y_value
     # WARNINGS
     n_col = len(df.columns) 
     df.insert(n_col, ("Output","warnings"), warnings_out, False) 
