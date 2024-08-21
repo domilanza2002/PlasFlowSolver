@@ -30,6 +30,7 @@ import out_properties as out_properties_file  # Module to compute the output pro
 import write_output_srun as write_output_srun_file  # Module to write the output file in a .srun run
 import write_output_xlsx as write_output_xlsx_file  # Module to write the output file in a .xlsx run
 import write_output_filerun as write_output_filerun_file  # Module to write the output file in a .in run
+import database_manager as database_manager_file  # Module to manage the database
 from exit_program import exit_program, clean_files  # Module to kill and clean the program
 #.................................................
 # PROGRAM VARIABLES:
@@ -105,6 +106,13 @@ species_Y_out = None  # Mass fractions of the species
 # Variables to manage the heat flux computation:
 exit_due_error = None  # Variable to exit the Newton loop if an error occurs during the computation
 hf_first_comp = None  # Variable to store if it is the first time that we compute the heat flux for the current case
+# Variable to manage the database
+db_settings = None  # Database settings object
+db_used = None  # Flag to indicate if the database is used
+t_start_case = None  # Variable to store the time at the beginning of the case
+t_end_case = None  # Variable to store the time at the end of the case
+run_time_vect = None  # Vector to store the run time of each case
+db_inputs = None  # Database inputs
 #
 #.................................................
 # CLASS INSTANCES:
@@ -115,11 +123,14 @@ probes_object = classes_file.probes_class()  # Object with the probe properties 
 initials_object = classes_file.initials_class()  # Object with the initial conditions for the current iteration
 df_object = classes_file.dataframe_class()  # Object to store the dataframe, independently from the program mode
 out_object = classes_file.out_properties_class()  # Object to store the output properties
+db_settings = classes_file.database_settings_class()  # Object to store the database settings
+db_inputs = classes_file.database_inputs_class()  # Object to store the database inputs
 #.................................................
 #
 #   Here the program starts
 t1 = time.time()  # I store the time at the beginning of the program, to keep track of the execution time
 presentation_file.presentation()  # I call the presentation module, to present the program to the user
+# Bashrun check:
 bash_run = bash_run_file.bash_file_detected()  # I check if a bashrun has to be executed
 if (bash_run == False):  # If the program is in manual mode
     print("No valid bash.pfs file detected, the program will run in manual mode.")
@@ -133,6 +144,15 @@ else:  # If the program is in bash mode
         print("The program will continue in normal mode")
         program_mode = prompt_program_mode_file.prompt_program_mode()  # I prompt the program mode to the user
         bash_run = False  # I set the program to manual mode
+# Database check:
+db_settings = database_manager_file.init_database()  # The initial operations for the database are performed
+if (db_settings is None):
+    db_used = False
+    print("No valid database_settings.pfs file detected, the program will not use the database.")
+else:
+    db_used = True
+    print("A valid database_settings.pfs file detected, the program will use the database.")
+    db_inputs = database_manager_file.init_db_inputs()  # The initial operations for the database inputs are performed
 # Now I read the data:
 try:
     df_object, output_filename = read_data_file.read_data(program_mode, bash_run)
@@ -148,6 +168,7 @@ n_case = 0
 n_lines = df_object.n  # I store the number of cases to be executed
 print("Number of cases to be executed: "+str(n_lines)+".")
 # I initialize the output vectors
+run_time_vect = []
 has_converged_out = []
 rho_out = []
 T_out = []
@@ -191,6 +212,9 @@ while (n_case < n_lines):  # I loop through all the cases
             n_case += 1
             species_names_out[n_case] = None
             species_Y_out[n_case] = None
+            if (db_used):
+                db_inputs = database_manager_file.db_inputs_append_null_line(db_inputs)
+                run_time_vect.append(-1)
             continue
     n_case += 1 #we increase the number of cases
     print("Executing case number "+str(n_case)+"...")
@@ -234,6 +258,10 @@ while (n_case < n_lines):  # I loop through all the cases
     newton_conv = settings_object.newton_conv  # I retrieve the convergence criteria for the Newton loop
     print("Executing Newton loop...")
     mixture_object = mpp.Mixture(mixture_name) # I create the mixture object
+    # Database operation:
+    if(db_used):
+        db_inputs = database_manager_file.db_inputs_append(db_inputs, inputs_object, probes_object)
+        t_start_case = time.time()  # I store the time at the beginning of the case
     # NEWTON-RAPHSON LOOP:
     while (iter < max_newton_iter):
         # The loop has a stop condition for safety reason, but inside the loop there is also a convergence condition.
@@ -336,6 +364,11 @@ while (n_case < n_lines):  # I loop through all the cases
             P_t = P_t_star
     #.................................................
     # The Newton's loop has ended
+    # Database operation:
+    if (db_used):
+        t_end_case = time.time()  # I store the time at the end of the case
+        run_time_vect.append(t_end_case-t_start_case)  # I store the run time
+    # I check if the case has converged or not
     if (exit_due_error == True and program_mode != 1):  # If we have skipped the case and we are not in single run
         # We only skip the case, but we do not exit the program
         print("The case number "+str(n_case)+" has encountered an error during the computation. The case will be skipped.")
@@ -415,8 +448,13 @@ else:
     print("The program will now terminate.")
     exit_program()
 print("Writing output file...done")
+# Database operation:
+if (db_used):
+    print("Generating database...")
+    database_manager_file.update_database(db_settings, db_inputs, out_object, run_time_vect)
+    print("Generating database...done")
 # We clean the temporary files for use_prev_ite:
 clean_files()
-print("Program terminated")
+print("Program terminated.")
 t2=time.time()
 print("Execution time: "+str(t2-t1)+" seconds.")
