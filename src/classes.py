@@ -150,6 +150,54 @@ class CF_constants:
         self.P_CF = 1e3  # Conversion factor for pressure (kPa->Pa)
         self.Q_CF = 1e4  # Conversion factor for heat flux (W/cm^2->W/m^2)
         self.L_CF = 1e-3  # Conversion factor for length (mm->m)
+class database_settings_class:
+    """This class contains the database settings.
+    """
+    def __init__(self):
+        self.db_name = None  # Database name
+        self.create_db_flag = None  # Flag to indicate if the database should be created if it does not exist
+        self.lower_time_flag = None  # Flag to indicate if the database should be updated if a lower time is found
+        self.generate_ic_flag = None  # Flag to indicate if the initial conditions map should be generated from the database
+
+class database_inputs_class:
+    """This class contains the database inputs.
+    """
+    def __init__(self):
+        # Input properties:
+        self.P = None  # Pressure
+        self.P_dyn =  None  # Dynamic pressure
+        self.q_target =  None  # Target heat flux
+        self.mixture_name =  None  # Mixture name
+        self.T_w =  None  # Probe wall temperature
+        self.R_p =  None  # Pitot external radius
+        self.R_m =  None  # Heat flux probe external radius
+        self.R_j =  None  # Plasma jet radius
+        self.barker_type =  None  # Barker's correction type
+        self.stag_type =  None  # Stagnation type
+
+class database_class:
+    """This class contains the database data to be saved.
+    """
+    def __init__(self):
+        # Input properties:
+        self.P = None  # Pressure
+        self.P_dyn = None  # Dynamic pressure
+        self.q_target = None
+        self.mixture_name = None  # Mixture name
+        self.T_w = None  # Probe wall temperature
+        self.R_p = None  # Pitot external radius
+        self.R_m = None  # Heat flux probe external radius
+        self.R_j = None  # Plasma jet radius
+        self.barker_type = None  # Barker's correction type
+        self.stag_type = None  # Stagnation type
+        # Output properties:
+        self.T = None  # Temperature
+        self.T_t = None  # Total temperature
+        self.u = None  # Flow velocity
+        self.P_t = None  # Total pressure
+        self.time = None  # Runnning time
+        # Convergence properties:
+        self.has_converged = None  # Flag to indicate if the iteration has converged
 #.................................................
 #   Possible improvements:
 #   -Add getters and setters and make all the variable private

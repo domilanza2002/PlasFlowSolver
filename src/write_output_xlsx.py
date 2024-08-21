@@ -87,10 +87,9 @@ def write_output_xlsx(output_filename, out_obj):
             continue
         for j in range(len(c_species_names)):
             c_species_name = c_species_names[j]
-            #print(df.columns)
             if ("Output",c_species_name) not in df.columns:
                 n_col = len(df.columns)
-                df.insert(n_col, ("Output",c_species_name), None, False)
+                df.insert(n_col, ("Output",c_species_name), pd.NA, False)
         for j in range(len(c_species_names)):
             c_species_name = c_species_names[j]
             c_species_Y_value = c_species_Y[j]

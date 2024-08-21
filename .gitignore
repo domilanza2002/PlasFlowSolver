@@ -8,3 +8,4 @@ src/*.srun
 src/*.pfs
 src/*.var
 src/*.h5
+src/*.csv
