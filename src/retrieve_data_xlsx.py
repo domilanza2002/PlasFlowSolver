@@ -32,7 +32,7 @@ def generate_std_file(FILENAME):
     # I generate the file:
     file = open(FILENAME, "w")  # I open the file
     file.write("plasma_gas = air_11\n")  # Plasma gas (string)
-    file.write("T_0 [K]= 4000\n")  # Initial temperature (float)
+    file.write("T_0 [K] = 4000\n")  # Initial temperature (float)
     file.write("T_t_0 [K] = 6000\n")  # Initial total temperature (float)
     file.write("u_0 [m/s] = 500\n")  # Initial velocity (float)
     file.write("P_t_0 [kPa] = 0\n")  # Initial total pressure (float)
