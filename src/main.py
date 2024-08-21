@@ -182,7 +182,7 @@ P_t_out = []
 Re_out = []
 warnings_out=[]
 res_out = []
-species_names_out = {}  # Dictorionary to store the names of the species
+species_names_out = {}  # Dictionary to store the names of the species
 species_Y_out = {}  # Dictionary to store the mass fractions of the species
 print("Starting main program loop...")
 while (n_case < n_lines):  # I loop through all the cases
