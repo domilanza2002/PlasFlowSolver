@@ -32,6 +32,7 @@ import write_output_xlsx as write_output_xlsx_file  # Module to write the output
 import write_output_filerun as write_output_filerun_file  # Module to write the output file in a .in run
 import database_manager as database_manager_file  # Module to manage the database
 from exit_program import exit_program, clean_files  # Module to kill and clean the program
+from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix the memory leak
 #.................................................
 # PROGRAM VARIABLES:
 # I declare here all the variables I will use in this script
@@ -130,6 +131,8 @@ db_inputs = classes_file.database_inputs_class()  # Object to store the database
 #   Here the program starts
 t1 = time.time()  # I store the time at the beginning of the program, to keep track of the execution time
 presentation_file.presentation()  # I call the presentation module, to present the program to the user
+# Fix the memory leak in the MPP library:
+fix_mpp_memory_leak()
 # Bashrun check:
 bash_run = bash_run_file.bash_file_detected()  # I check if a bashrun has to be executed
 if (bash_run == False):  # If the program is in manual mode
