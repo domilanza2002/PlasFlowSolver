@@ -1,0 +1,6 @@
+Database name: test.csv
+Create database if not found: true
+Update if lower time: true
+Generate ic map: true
+ic map name (Do not include the .h5): test
+ic map mixture split: true
