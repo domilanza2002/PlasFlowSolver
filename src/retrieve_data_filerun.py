@@ -140,7 +140,7 @@ def retrieve_data(df, n_case):
     probes_object.R_j = R_j  
     # Stagnation type:
     stag_type = df.stag_type  #Stagnation type (integer)
-    # Not saved in any object
+    probes_object.stag_type = stag_type  # Already managed in read_filerun.py
     # Heat flux law:
     hf_law = df.hf_law  #Heat flux law (integer)
     probes_object.hf_law = hf_law  # Already managed in read_filerun.py
