@@ -7,6 +7,8 @@ import pandas as pd
 
 from classes import database_settings_class
 from classes import database_class
+from classes import initial_conditions_db_class
+import initial_conditions_map as ic_map_file
 
 def db_inputs_init():
     """Function to initialize the database inputs.
@@ -47,6 +49,7 @@ def db_inputs_append(db_inputs, inputs_object, probes_object):
     db_inputs.barker_type.append(probes_object.barker_type)
     db_inputs.stag_type.append(probes_object.stag_type)
     return db_inputs
+
 def db_inputs_append_null_line(db_inputs):
     """Function to append a line when the data are not valid.
 
@@ -137,6 +140,25 @@ def read_pfs_file():
             db_settings.generate_ic_flag = False
         case _:
             return None
+    # IC MAP NAME
+    line = file.readline()
+    db_settings.ic_map_name = line.split(":")[1].strip()  # I take the part of the string after the ":", I strip it
+    if (db_settings.ic_map_name == ""):
+        return None
+    # IC MIXTURE SPLIT
+    line = file.readline()
+    db_settings.ic_mixture_split_flag = line.split(":")[1].strip().lower()  # I take the part of the string after the ":", I strip it
+    match db_settings.ic_mixture_split_flag:  # I check if the flag is valid
+        case "true":
+            db_settings.ic_mixture_split_flag = True
+        case "1":
+            db_settings.ic_mixture_split_flag = True
+        case "false":
+            db_settings.ic_mixture_split_flag = False
+        case "0":
+            db_settings.ic_mixture_split_flag = False
+        case _:
+            return None
     file.close()  # I close the file
     return db_settings
 
@@ -215,6 +237,8 @@ def database_updater(db_name, db, lower_time_flag):
     Returns:
         dataframe: The updated database
     """
+    # Constants:
+    TOL = 1e-3  # Tolerance for the comparison of the values
     # Variables:
     current_db = None  # Dataframe to store the current database
     # I read the current database
@@ -231,13 +255,103 @@ def database_updater(db_name, db, lower_time_flag):
     current_db = current_db.drop_duplicates()
     # I update the run time if needed
     if (lower_time_flag == True):
+        # First check for exact duplicates
         current_db = current_db.sort_values(by="run_time", ascending=True)
         current_db = current_db.drop_duplicates(subset=["P", "P_dyn", "q_target", "mixture_name", "T_w", "R_p", "R_m", "R_j", "barker_type", "stag_type"], keep="first")
+        current_db = current_db.reset_index(drop=True)
+        # Check with tolerance
+        l_t_s = len(current_db)
+        i = 0
+        while i < l_t_s:
+            j = i + 1
+            while j < l_t_s:
+                if (current_db["mixture_name"][i] == current_db["mixture_name"][j] and current_db["barker_type"][i] == current_db["barker_type"][j] and current_db["stag_type"][i] == current_db["stag_type"][j]):
+                    if (abs(current_db["P"][i] - current_db["P"][j]) < TOL and abs(current_db["P_dyn"][i] - current_db["P_dyn"][j]) < TOL and abs(current_db["q_target"][i] - current_db["q_target"][j]) < TOL and abs(current_db["T_w"][i] - current_db["T_w"][j]) < TOL and abs(current_db["R_p"][i] - current_db["R_p"][j]) < TOL and abs(current_db["R_m"][i] - current_db["R_m"][j]) < TOL and abs(current_db["R_j"][i] - current_db["R_j"][j]) < TOL):
+                        if (current_db["run_time"][i] < current_db["run_time"][j]):
+                            current_db = current_db.drop(j)
+                            j = j - 1
+                            current_db = current_db.reset_index(drop=True)
+                            l_t_s = len(current_db)
+                        else:
+                            current_db = current_db.drop(i)
+                            i = i - 1
+                            current_db = current_db.reset_index(drop=True)
+                            l_t_s = len(current_db)
+                            break
+                j = j + 1
+            i = i + 1
+        current_db = current_db.reset_index(drop=True)
     # I return the updated database
     return current_db
 
-def generate_ic_map(): #TO DO
-    print("To be implemented.")
+
+def generate_ic_map(db, ic_name, ic_split_flag):
+    """Function to generate the IC map.
+    
+    Args:
+        db (dataframe): The database
+        ic_mixture_split_flag (bool): The flag to split the mixtures in the IC map
+    """
+    # Variables:
+    ic_filename = None  # The name of the IC map file
+    previous_ic = None  # The previous IC map
+    current_ic = None  # The current IC map
+    if (ic_split_flag == False):  # We do not split the mixtures
+        ic_filename = ic_name + ".h5"
+        # Verify the database
+        if(ic_map_file.verify_db(ic_filename) == False):
+            try:
+                ic_map_file.create_ic_db(ic_filename, db)
+            except Exception as e:
+                print("DatabaseError: The IC map could not be created. Error: ", e)
+                print("The IC map will not be generated.")
+                return
+        else:  # The database exists
+            try:
+                previous_ic = ic_map_file.load_ic_db(ic_filename)  # I load the previous IC map
+            except Exception as e:
+                print("DatabaseError: The IC map could not be loaded. Error: ", e)
+                print("The IC map will not be generated.")
+                return
+            # I update the IC map
+            current_ic = ic_map_file.update_ic_db(previous_ic, db)
+            try:
+                ic_map_file.create_ic_db_from_p_and_v(ic_filename, current_ic.db_inputs, current_ic.db_outputs)
+            except Exception as e:
+                print("DatabaseError: The IC map could not be updated. Error: ", e)
+                print("The IC map will not be generated.")
+                return
+    else:  # We split the mixtures
+        # We find the unique mixtures
+        mixtures = db["mixture_name"].unique()
+        # We create the IC maps
+        for mixture in mixtures:
+            ic_filename = ic_name + "_" + mixture + ".h5"
+            # Verify the database
+            if(ic_map_file.verify_db(ic_filename) == False):
+                try:
+                    current_ic = db[db["mixture_name"] == mixture]
+                    ic_map_file.create_ic_db(ic_filename, current_ic)
+                except Exception as e:
+                    print("DatabaseError: The IC map could not be created. Error: ", e)
+                    print("The IC map will not be generated.")
+                    return
+            else:
+                try:
+                    previous_ic = ic_map_file.load_ic_db(ic_filename)  # I load the previous IC map
+                except Exception as e:
+                    print("DatabaseError: The IC map could not be loaded. Error: ", e)
+                    print("The IC map will not be generated.")
+                    return
+                current_db = db[db["mixture_name"] == mixture]
+                current_ic = ic_map_file.update_ic_db(previous_ic, current_db)
+                try:
+                    ic_map_file.create_ic_db_from_p_and_v(ic_filename, current_ic.db_inputs, current_ic.db_outputs)
+                except Exception as e:
+                    print("DatabaseError: The IC map could not be updated. Error: ", e)
+                    print("The IC map will not be generated.")
+                    return
+        
 
 def update_database(db_settings, db_inputs, out_vars, run_time):
     """This function update the database at the end of the program.
@@ -258,6 +372,8 @@ def update_database(db_settings, db_inputs, out_vars, run_time):
     create_db_flag = db_settings.create_db_flag
     lower_time_flag = db_settings.lower_time_flag
     generate_ic_flag = db_settings.generate_ic_flag
+    ic_map_name = db_settings.ic_map_name
+    ic_mixture_split_flag = db_settings.ic_mixture_split_flag
     # Validate the database
     if (verify_database(db_name) == False and create_db_flag == False):
         print("DatabaseError: The database is not valid and the create_db_flag is set to False. The database will not be generated.")
@@ -299,6 +415,6 @@ def update_database(db_settings, db_inputs, out_vars, run_time):
     print("The database has been updated.")
     # If needed, we generate the IC map
     if (generate_ic_flag == True):
-        generate_ic_map()
+        generate_ic_map(updated_db, ic_map_name, ic_mixture_split_flag)
         print("The IC map has been generated.")
     
