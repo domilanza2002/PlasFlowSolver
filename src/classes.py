@@ -102,6 +102,7 @@ class probes_class:
         self.R_j = None  # Plasma jet radius (float)
         self.hf_law = None  # Heat flux law (integer)
         self.barker_type = None  # Barker's correction type (integer)
+        self.stag_type = None  # Stagnation type (integer)
         self.stag_var = None  # Stagnation variable, beta*u/R_m (float)
 
 #..................................................

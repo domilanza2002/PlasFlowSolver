@@ -206,6 +206,7 @@ def retrieve_data(df,n_case):
     stag_type = None  # Stagnation type (string)
     hf_law = None  # Heat flux law (string)
     barker_type = None  # Barker's correction type (string)
+    stag_var = None  # Stagnation variable (float)
     # Program settings:
     N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
     max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)

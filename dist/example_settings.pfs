@@ -6,9 +6,9 @@ u_0 [m/s] = 300
 P_t_0 [kPa] = 0
 PROBES PROPERTIES:
 T_w [K] = 400
-R_p [mm] = 4e-3
-R_m [mm] = 10.1e-3
-R_j [mm] = 50e-3
+R_p [mm] = 4e0
+R_m [mm] = 10.1e0
+R_j [mm] = 50e0
 stagtype = flat
 hf_law = exact
 barker_type = carleton

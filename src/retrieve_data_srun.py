@@ -67,6 +67,7 @@ def retrieve_data(df):
     probes_object.R_m = df.R_m
     probes_object.R_j = df.R_j
     stag_type = retrieve_stag_type(df.stag_type)
+    probes_object.stag_type = stag_type
     probes_object.hf_law = retrieve_hf_law(df.hf_law)
     probes_object.barker_type = retrieve_barker_type(df.barker_type)
     stag_var = retrieve_stag_var(stag_type, probes_object.R_m, probes_object.R_j)
