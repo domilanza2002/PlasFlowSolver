@@ -155,7 +155,7 @@ if (db_settings is None):
 else:
     db_used = True
     print("A valid database_settings.pfs file detected, the program will use the database.")
-    db_inputs = database_manager_file.init_db_inputs()  # The initial operations for the database inputs are performed
+    db_inputs = database_manager_file.db_inputs_init()  # The initial operations for the database inputs are performed
 # Now I read the data:
 try:
     df_object, output_filename = read_data_file.read_data(program_mode, bash_run)

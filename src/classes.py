@@ -158,6 +158,8 @@ class database_settings_class:
         self.create_db_flag = None  # Flag to indicate if the database should be created if it does not exist
         self.lower_time_flag = None  # Flag to indicate if the database should be updated if a lower time is found
         self.generate_ic_flag = None  # Flag to indicate if the initial conditions map should be generated from the database
+        self.ic_name = None  # Initial conditions map name
+        self.ic_mixture_split_flag = None  # Flag to indicate if the initial conditions map should be split by mixture
 
 class database_inputs_class:
     """This class contains the database inputs.
