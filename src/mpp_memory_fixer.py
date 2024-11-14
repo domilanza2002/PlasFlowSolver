@@ -58,3 +58,4 @@ def fix_mpp_memory_leak():
     create_mixture_file(MIXTURE_NAME)
     # Create a Mixture object
     mix = mpp.Mixture(MIXTURE_NAME)
+    delete_mixture_file(MIXTURE_NAME)
