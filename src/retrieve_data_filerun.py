@@ -111,7 +111,7 @@ def retrieve_data(df, n_case):
     ic_db_name = df.ic_db_name  # Initial conditions database name (string)
     # Initials:
     if (ic_db_name != ""):
-        initials_object, warnings_int = retrieve_ic(ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target)
+        initials_object, warnings_int = retrieve_ic(ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target, df.T_w)
         if (warnings_int is not None):
             warnings += warnings_int
     else:

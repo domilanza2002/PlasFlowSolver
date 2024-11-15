@@ -204,6 +204,8 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
             print("ERROR: T<=0, nan or T>T_max, resetting BL vars...")
             x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
             Khi, rr, kpr, C, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, C_p_e, z, N_p, mixture_object, max_T_relax)
+            if (redo == True):
+                raise ValueError("ERROR: T<=0, nan or T>T_max, resetting BL vars...FAILED")
             already_reset = True
         # Continuity equation:
         aa = []
