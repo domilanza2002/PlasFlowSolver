@@ -61,7 +61,7 @@ def retrieve_mixture_name(plasma_gas):
                 raise ValueError("Error: Invalid plasma gas. Check the input file.")
     return mixture_name
 #...................................................
-def retrieve_ic(db_name, P, P_dyn, q_target):
+def retrieve_ic(db_name, P, P_dyn, q_target, T_w):
     """This function retrieves the initial conditions from the database.
 
     Args:
@@ -69,6 +69,7 @@ def retrieve_ic(db_name, P, P_dyn, q_target):
         P (float): the pressure
         P_dyn (float): the dynamic pressure
         q_target (float): the target heat flux
+        T_w (float): the wall temperature
 
     Returns:
         ic_db (initial_conditions_db_class): the initial conditions database object
@@ -83,7 +84,7 @@ def retrieve_ic(db_name, P, P_dyn, q_target):
     except Exception as e:
         raise ValueError("Error: Cannot read the initial conditions database: " + str(e) + ".")
     try:
-        initials_object, warnings = ic_map_file.interp_ic_db(ic_db, P, P_dyn, q_target, MULTIPLICATION_FACTOR)
+        initials_object, warnings = ic_map_file.interp_ic_db(ic_db, P, P_dyn, q_target, T_w, MULTIPLICATION_FACTOR)
     except Exception as e:
         raise ValueError("Error: Interpolation failed: " + str(e) + ".")
     

@@ -288,11 +288,18 @@ def retrieve_data(df,n_case):
         case "Both":
             if (pressure_consistency_check(inputs_object.P,inputs_object.P_dyn,inputs_object.P_stag) == False):
                 raise ValueError("Error: The stagnation pressure and dynamic pressure values are not consistent.")
+    # Needed:
+    T_w = df.T_w[n_case]  # Wall temperature (float)
+    if (is_valid_data(T_w) == False):
+        probes_object.T_w = std_values.T_w
+        warnings += "T_w invalid, set to STD|"
+    else:
+        probes_object.T_w=df.T_w[n_case]
     # Initials:
     ic_db_name = df.ic_db_name[n_case]  # Initial conditions database name (string)
     if(verify_db(ic_db_name) == True):
         print("Initial database " + ic_db_name + " verified.")
-        initials_object, warnings_int = retrieve_ic(ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target)
+        initials_object, warnings_int = retrieve_ic(ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target, probes_object.T_w)
         if(warnings_int is not None):
             warnings += warnings_int
     else:
@@ -329,12 +336,6 @@ def retrieve_data(df,n_case):
         else:
             initials_object.P_t_0 = df.P_t_0[n_case]
     # Probe properties:
-    T_w = df.T_w[n_case]  # Wall temperature (float)
-    if (is_valid_data(T_w) == False):
-        probes_object.T_w = std_values.T_w
-        warnings += "T_w invalid, set to STD|"
-    else:
-        probes_object.T_w=df.T_w[n_case]
     R_p = df.R_p[n_case]  # Pitot external radius (float)
     if (is_valid_data(R_p) == False):
         probes_object.R_p = std_values.R_p

@@ -198,7 +198,7 @@ def update_ic_db(ic_obj, db_obj):
     
     
 
-def interp_ic_db(ic_db, P, P_dyn, q_target, multiplication_factor):
+def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
     """This function interpolates the initial conditions
     database to retrieve the initial conditions for the
     current case.
@@ -208,12 +208,17 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, multiplication_factor):
         P (float): the static pressure
         P_dyn (float): the dynamic pressure
         q_target (float): the target heat flux
+        T_w (float): the wall temperature
         multiplication_factor (float): the multiplication factor for the initial conditions
 
     Returns:
         initial_conditions (initials_class): the initial conditions object
         warnings (string): the warnings
     """
+    # Constants:
+    OFFSET_T = 100.0  # Offset for the static temperature
+    OFFSET_T_T = 100.0  # Offset for the total temperature
+    MIN_U = 10  # Minimum flow velocity
     # Variables:
     initial_conditions = None  # Initial conditions object
     int_point = None  # Interpolation point
@@ -233,14 +238,36 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, multiplication_factor):
     u_0 = scipy_int.griddata(points, values[:,2], int_point, method='linear', fill_value=-1.0)
     
     if (T_0 == -1.0 or T_t_0 == -1.0 or u_0 == -1.0):  # If the linear interpolation fails, I use the nearest interpolation
-        T_0 = scipy_int.griddata(points, values[:,0], int_point, method='nearest')
-        T_t_0 = scipy_int.griddata(points, values[:,1], int_point, method='nearest')
-        u_0 = scipy_int.griddata(points, values[:,2], int_point, method='nearest')
+        #T_0 = scipy_int.griddata(points, values[:,0], int_point, method='nearest')
+        #T_t_0 = scipy_int.griddata(points, values[:,1], int_point, method='nearest')
+        #u_0 = scipy_int.griddata(points, values[:,2], int_point, method='nearest')
+    
+        rfb4 = scipy_int.Rbf(points[:,0], points[:,1], points[:,2], values[:,0], function='thin_plate', smooth=5)
+        T_0 = []
+        T_0.append(rfb4(int_point[0], int_point[1], int_point[2]))
+        
+        rfb4 = scipy_int.Rbf(points[:,0], points[:,1], points[:,2], values[:,1], function='thin_plate', smooth=5)
+        T_t_0 = []
+        T_t_0.append(rfb4(int_point[0], int_point[1], int_point[2]))
+        
+        rfb4 = scipy_int.Rbf(points[:,0], points[:,1], points[:,2], values[:,2], function='thin_plate', smooth=5)
+        u_0 = []
+        u_0.append(rfb4(int_point[0], int_point[1], int_point[2]))
+        
         warnings = "Linear interpolation failed, nearest interpolation used.|"
     # I create the object
-    initial_conditions.T_0 = T_0[0]*multiplication_factor
-    initial_conditions.T_t_0 = T_t_0[0]*multiplication_factor
-    initial_conditions.u_0 = u_0[0]*multiplication_factor
+    T_0 = T_0[0]*multiplication_factor
+    if(T_0 < T_w):
+        T_0 = T_w + OFFSET_T
+    T_t_0 = T_t_0[0]*multiplication_factor
+    if(T_t_0 < T_0):
+        T_t_0 = T_0 + OFFSET_T_T
+    u_0 = u_0[0]*multiplication_factor
+    if(u_0 < MIN_U):
+        u_0 = MIN_U
+    initial_conditions.T_0 = T_0
+    initial_conditions.T_t_0 = T_t_0
+    initial_conditions.u_0 = u_0
     initial_conditions.P_t_0 = P + P_dyn
     # I return the object
     return initial_conditions, warnings

@@ -59,7 +59,7 @@ def retrieve_data(df):
         initials_object.u_0 = df.u_0
         initials_object.P_t_0 = df.P_t_0
     else:  # We have to read the initial conditions from the database
-        initials_object, warnings_int = retrieve_ic(df.ic_db_name, df.P, df.P_dyn, df.q_target)
+        initials_object, warnings_int = retrieve_ic(df.ic_db_name, df.P, df.P_dyn, df.q_target, df.T_w)
         if(warnings_int is not None):
             warnings += warnings_int
     probes_object.T_w = df.T_w

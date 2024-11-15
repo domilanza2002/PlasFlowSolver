@@ -1,5 +1,5 @@
 <!-- Ionized 11 species air mixture -->
-<mixture mechanism="air11_Park" state_model="Equil" thermo_db="RRHO" viscosity="Wilke" thermal_conductivity="Wilke">
+<mixture state_model="Equil" thermo_db="RRHO">
 
     <species>
         e- N+ O+ NO+ N2+ O2+ N O NO N2 O2
