@@ -83,6 +83,14 @@ def retrieve_ic(db_name, P, P_dyn, q_target, T_w):
         ic_db = ic_map_file.load_ic_db(db_name)
     except Exception as e:
         raise ValueError("Error: Cannot read the initial conditions database: " + str(e) + ".")
+    
+    # The inputs are not in the correct units, so I have to convert them:
+    CF_CONSTANTS = CF_constants_class()  # Object with the conversion factors
+    # Conversion of the inputs:
+    P *= CF_CONSTANTS.P_CF
+    P_dyn *= CF_CONSTANTS.P_CF
+    q_target *= CF_CONSTANTS.Q_CF
+    
     try:
         initials_object, warnings = ic_map_file.interp_ic_db(ic_db, P, P_dyn, q_target, T_w, MULTIPLICATION_FACTOR)
     except Exception as e:

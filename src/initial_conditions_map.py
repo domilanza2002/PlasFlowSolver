@@ -241,7 +241,7 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
         #T_0 = scipy_int.griddata(points, values[:,0], int_point, method='nearest')
         #T_t_0 = scipy_int.griddata(points, values[:,1], int_point, method='nearest')
         #u_0 = scipy_int.griddata(points, values[:,2], int_point, method='nearest')
-    
+        print("Linear interpolation failed, nearest interpolation used.")
         rfb4 = scipy_int.Rbf(points[:,0], points[:,1], points[:,2], values[:,0], function='thin_plate', smooth=5)
         T_0 = []
         T_0.append(rfb4(int_point[0], int_point[1], int_point[2]))
