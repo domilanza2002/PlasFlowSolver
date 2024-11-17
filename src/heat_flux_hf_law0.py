@@ -251,7 +251,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
                 break
         if(stop or iter >= max_iter):  # If we converged or we reached the maximum number of iterations
             if(stop == False and log_warning_hf==True):  # If we did not converge and we want to log the warning
-                print("Warning: an heat flux computation did not converge for the current iteration.")
+                print("Warning: a heat flux computation did not converge for the current iteration.")
             break  # We stop the loop
         # If we did not converge, we need to update the x,y,z arrays
         for i in range(0, N_p):
