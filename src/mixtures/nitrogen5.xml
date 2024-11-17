@@ -1,5 +1,5 @@
 <!-- Nitrogen with 5 components-->
-<mixture mechanism="nitrogen5_std" use_transport="yes" state_model="Equil" thermo_db="NASA-9" thermal_conductivity="Wilke" viscosity="Wilke">
+<mixture state_model="EquilTP" >
     <species>
         N2 N2+ N N+ e-
     </species>
