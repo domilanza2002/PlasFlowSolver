@@ -337,6 +337,7 @@ while (n_case < n_lines):  # I loop through all the cases
                     T_t = settings_object.max_T_relax - OFFSET_T_T
                 if(T > settings_object.max_T_relax):
                     T = settings_object.max_T_relax - OFFSET_T
+                # Now residuals should probably be recomputed
             cnv_old = cnv
         #.................................................
         print("Case:"+str(n_case)+", Iteration "+str(iter)+", convergence criteria: "+str(cnv))
