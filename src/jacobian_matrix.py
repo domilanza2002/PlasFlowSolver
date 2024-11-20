@@ -74,7 +74,7 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     # DERIVATIVE WRT u:
     delta = u*jac_diff  # Velocity increment for the finite difference
     u_star = u + delta  # New velocity for the finite difference
-    q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u_star, mixture_object)
+    q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u_star, mixture_object)[0]
     P_b_star = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T, u_star)[0]
     # Derivatives:
     dq_du = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. u
@@ -83,7 +83,7 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     # DERIVATIVE WRT T_t:
     delta = T_t*jac_diff  # Total temperature increment for the finite difference
     T_t_star = T_t + delta  # New total temperature for the finite difference
-    q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t_star, u, mixture_object)
+    q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t_star, u, mixture_object)[0]
     h_t_star = enthalpy_file.enthalpy(mixture_object, P_t, T_t_star)
     s_t_star = entropy_file.entropy(mixture_object, P_t, T_t_star)
     # Derivatives:
@@ -95,7 +95,7 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     if (barker_type != 0):
         delta = P_t*jac_diff  # Total pressure increment for the finite difference
         P_t_star = P_t + delta  # New total pressure for the finite difference
-        q_star = heat_flux_file.heat_flux(probes, settings, P_t_star, T_t, u, mixture_object)
+        q_star = heat_flux_file.heat_flux(probes, settings, P_t_star, T_t, u, mixture_object)[0]
         h_t_star = enthalpy_file.enthalpy(mixture_object, P_t_star, T_t)
         s_t_star = entropy_file.entropy(mixture_object, P_t_star, T_t)
         P_b_star = barker_effect_file.barker_effect(probes, mixture_object, P_t_star, P, T, u)[0]  # I retrieve only the pressure

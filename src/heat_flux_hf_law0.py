@@ -168,8 +168,10 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     dg = None  # The derivative of g with respect to eta
     redo = None  # Variable to understand if we need to reset the boundary layer variables
     already_reset = None  # Variable to understand if we already reset the boundary layer variables
+    bad_convergence = None  # Variable to understand if the heat flux computation did not converge
     #.................................................
     #START OF THE CODE:
+    bad_convergence = False
     deta = eta_max/(N_p-1)  # Step of eta. We use N_p-1 because we need N_p points, not N_p+1 (we start from 0 and we end at eta_max)
     # Now I check if the x, y, z exist, so if the heat flux has been computed previously
     if (settings.use_prev_ite == True):  # If we want to use the previous iteration for the heat flux
@@ -252,6 +254,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         if(stop or iter >= max_iter):  # If we converged or we reached the maximum number of iterations
             if(stop == False and log_warning_hf==True):  # If we did not converge and we want to log the warning
                 print("Warning: a heat flux computation did not converge for the current iteration.")
+                bad_convergence = True
             break  # We stop the loop
         # If we did not converge, we need to update the x,y,z arrays
         for i in range(0, N_p):
@@ -272,7 +275,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         if (hf_first_comp==0):  # We need to update the hf_first_comp variable
             hf_first_comp=np.array([1])
             np.savetxt("hf_first_comp.var", hf_first_comp, fmt="%1.1u")
-    return q
+    return q, bad_convergence
 #.................................................
 #   Possible improvements:
 #   -Make the central finite derivative order variable
