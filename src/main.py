@@ -8,6 +8,7 @@
 # Standard library imports:
 import math  # Standard library for math operations
 import time  # Standard library for time tracking operations
+import random  # Standard library for random operations
 #   Third party library imports:
 import numpy as np  # Third party library for math operations
 import mutationpp as mpp  # Third party library for thermodynamic computations
@@ -33,6 +34,17 @@ import write_output_filerun as write_output_filerun_file  # Module to write the 
 import database_manager as database_manager_file  # Module to manage the database
 from exit_program import exit_program, clean_files  # Module to kill and clean the program
 from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix the memory leak
+#.................................................
+# PROGRAM CONSTANTS:
+# I declare here all the constants I will use in this script
+# Convergence threshold:
+CNV_THRESHOLD = 1e-4  # Convergence threshold for the Newton loop
+# Jacobian difference threshold:
+JAC_DIFF_MAX = 1e-1  # Maximum Jacobian difference threshold
+JAC_DIFF_INCREASE = 4  # Jacobian difference increase factor
+VARS_INCREASE = 0.1  # Variables increase factor
+OFFSET_T_T = 5000
+OFFSET_T = 500
 #.................................................
 # PROGRAM VARIABLES:
 # I declare here all the variables I will use in this script
@@ -61,6 +73,8 @@ max_newton_iter = None  # Maximum number of iterations for the Newton loop
 has_converged = None  # Boolean to check if the iteration has converged
 res = None  # Residuals array
 cnv = None  # Current convergence criteria
+cnv_old = None  # Old convergence criteria
+dcnv = None  # Current convergence criteria increment
 cnv_ref = None  # Reference convergence criteria
 jac = None  # Jacobian matrix of the system
 d_vars = None  # Variable to store the variable increments
@@ -107,6 +121,7 @@ species_Y_out = None  # Mass fractions of the species
 # Variables to manage the heat flux computation:
 exit_due_error = None  # Variable to exit the Newton loop if an error occurs during the computation
 hf_first_comp = None  # Variable to store if it is the first time that we compute the heat flux for the current case
+bad_hf = None  # Variable to store if the heat flux is bad
 # Variable to manage the database
 db_settings = None  # Database settings object
 db_used = None  # Flag to indicate if the database is used
@@ -248,6 +263,7 @@ while (n_case < n_lines):  # I loop through all the cases
         # We store this variable in a file using numpy.savetxt
         np.savetxt("hf_first_comp.var", hf_first_comp, fmt="%1.1u")
     # I reset some variables useful for the upcoming loops:
+    bad_hf = False  # Variable to store if the heat flux is bad
     iter = 0  # I reset the iteration counter
     has_converged = False  # I reset the convergence boolean
     # I initialize the variables for the Newton loop:
@@ -272,7 +288,7 @@ while (n_case < n_lines):  # I loop through all the cases
         iter += 1
         # I compute the heat flux:
         try:
-            q = heat_flux_file.heat_flux(probes_object, settings_object, P_t, T_t, u, mixture_object)
+            q, bad_hf = heat_flux_file.heat_flux(probes_object, settings_object, P_t, T_t, u, mixture_object)
         except Exception as e:
             print("Error encountered during the heat flux computation: "+str(e))
             print("Skipping case...")
@@ -301,8 +317,27 @@ while (n_case < n_lines):  # I loop through all the cases
         if (iter == 1):  # I create the reference convergence criteria if it is the first iteration
             cnv_ref = math.sqrt(cnv)
             cnv = 1
+            cnv_old = 1
         else:
             cnv = math.sqrt(cnv)/cnv_ref
+            dcnv = abs(cnv_old - cnv)
+            if (dcnv < CNV_THRESHOLD and cnv > CNV_THRESHOLD and settings_object.jac_diff < JAC_DIFF_MAX): # A better criteria based on same percentage should be used
+                settings_object.jac_diff *= JAC_DIFF_INCREASE
+                print("Jac_diff increased to "+str(settings_object.jac_diff))
+                T += T*VARS_INCREASE*random.choice([1,-1])
+                u += u*VARS_INCREASE*random.choice([1,-1])
+                T_t += T_t*VARS_INCREASE*random.choice([1,-1])
+                if (probes_object.barker_type != 0):
+                    P_t += P_t*VARS_INCREASE*random.choice([1,-1])
+                if (T < settings_object.min_T_relax):
+                    T = settings_object.min_T_relax
+                if (T_t < T):
+                    T_t = T + OFFSET_T_T
+                if(T_t>settings_object.max_T_relax):
+                    T_t = settings_object.max_T_relax - OFFSET_T_T
+                if(T > settings_object.max_T_relax):
+                    T = settings_object.max_T_relax - OFFSET_T
+            cnv_old = cnv
         #.................................................
         print("Case:"+str(n_case)+", Iteration "+str(iter)+", convergence criteria: "+str(cnv))
         # I check for the convergence:
@@ -371,6 +406,10 @@ while (n_case < n_lines):  # I loop through all the cases
     if (db_used):
         t_end_case = time.time()  # I store the time at the end of the case
         run_time_vect.append(t_end_case-t_start_case)  # I store the run time
+    # Bad heat flux check:
+    if (bad_hf):
+        print("The heat flux is bad. The case did not converge.")
+        has_converged = False
     # I check if the case has converged or not
     if (exit_due_error == True and program_mode != 1):  # If we have skipped the case and we are not in single run
         # We only skip the case, but we do not exit the program
