@@ -13,6 +13,13 @@ import continuity as continuity_file  # Module with the function to solve the co
 import first_deriv as first_deriv_file  # Module with the function to compute the first derivative of functions
 import eq_diff_solve as eq_diff_solve_file  # Module with the function to solve differential equations
 
+def stretched_eta(eta_new,eta_max):
+    return (eta_new / eta_max) * 6  # Scale by the original range (0 to 6)
+
+def f(eta_old):
+    return 0.007005 * eta_old**3 - 0.114439 * eta_old**2 + 0.598555 * eta_old
+
+
 def reset_vars(deta, T_e, T_w, N_p, eta_max):
     """Function to reset the x,y,z arrays
     for the heat flux computation.
@@ -33,6 +40,7 @@ def reset_vars(deta, T_e, T_w, N_p, eta_max):
     y = None  # Array with the F values
     z = None  # Array with the g values
     eta = None  # The eta_i-th value
+    stretched_eta_i = None  # The stretched eta_i-th value
     f_i = None  # The F_i-th value
     g_i = None  # The g_i-th value
     # Initialization:
@@ -43,7 +51,9 @@ def reset_vars(deta, T_e, T_w, N_p, eta_max):
     for i in range(N_p):
         eta = i * deta 
         x.append(eta)
-        f_i = 0.007005*pow(eta,3) - 0.114439*pow(eta,2) + 0.598555*eta  # Initial solution
+        #f_i = 0.007005*pow(eta,3) - 0.114439*pow(eta,2) + 0.598555*eta  # Initial solution
+        stretched_eta_i = stretched_eta(eta, eta_max)  # Stretched eta
+        f_i = f(stretched_eta_i)  # Initial solution
         y.append(f_i)
         g_i = min(1, f_i+T_w/T_e*(eta_max-eta)/eta_max)  # Initial solution
         z.append(g_i)
