@@ -138,6 +138,7 @@ class out_properties_class:
         self.h_t_out = None  # Total enthalpy to be written on the output file
         self.P_t_out = None  # Total pressure to be written on the output file
         self.Re_out = None  # Pitot Reynolds number to be written on the output file
+        self.Kn_out = None  # Knudsen number to be written on the output file
         self.warnings_out=None  # Warnings to be written on the output file
         self.res_out = None  # Final convergence criteria to be written on the output file
         self.species_names_out = None  # Names of the species
