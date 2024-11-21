@@ -97,6 +97,7 @@ u_star = None  # Variable to store the new u value, before the relaxation
 T_t_star = None  # Variable to store the new T_t value, before the relaxation
 P_t_star = None  # Variable to store the new P_t value, before the relaxation
 Re = None  # Pitot Reynolds number for the Barker's effect
+mfp = None  # Mean free path for the Barker's effect
 # Output properties:
 rho = None  # Final density of the flow
 a = None  # Final sound speed of the flow
@@ -114,6 +115,7 @@ T_t_out = None  # Total temperature to be written on the output file
 h_t_out = None  # Total enthalpy to be written on the output file
 P_t_out = None  # Total pressure to be written on the output file
 Re_out = None  # Pitot Reynolds number to be written on the output file
+Kn_out = None  # Knudsen number to be written on the output file
 warnings_out=None  # Warnings to be written on the output file
 res_out = None  # Final convergence criteria to be written on the output file
 species_names_out = None  # Names of the species
@@ -198,6 +200,7 @@ T_t_out = []
 h_t_out = []
 P_t_out = []
 Re_out = []
+Kn_out = []
 warnings_out=[]
 res_out = []
 species_names_out = {}  # Dictionary to store the names of the species
@@ -225,6 +228,7 @@ while (n_case < n_lines):  # I loop through all the cases
             h_t_out.append(-1)
             P_t_out.append(-1)
             Re_out.append(-1)
+            Kn_out.append(-1)
             warnings_out.append("Error: invalid data")
             res_out.append(-1)
             n_case += 1
@@ -426,6 +430,7 @@ while (n_case < n_lines):  # I loop through all the cases
         h_t_out.append(-1)
         P_t_out.append(-1)
         Re_out.append(-1)
+        Kn_out.append(-1)
         warnings_out.append("Error detected during the computation.")
         res_out.append(-1)
         species_names_out[n_case] = None
@@ -436,8 +441,9 @@ while (n_case < n_lines):  # I loop through all the cases
         exit_program()
     print("Executing Newton loop...done")
     # Flow properties to output:
-    rho, a, M, h, h_t = out_properties_file.out_properties(mixture_object, T, P, u)
+    rho, a, M, h, h_t, mfp = out_properties_file.out_properties(mixture_object, T, P, u)
     species_names, species_Y = out_properties_file.mass_fraction_composition(mixture_object, T, P)
+    Kn = mfp/(probes_object.R_m)  # Knudsen number
     # P.S. The enthalpy is shifted to 0 K
     # Now we append the results to the output vectors:
     if (has_converged):
@@ -456,6 +462,7 @@ while (n_case < n_lines):  # I loop through all the cases
     P_t_out.append(P_t)
     T_t_out.append(T_t)
     Re_out.append(Re)
+    Kn_out.append(Kn)
     warnings_out.append(warnings)
     res_out.append(cnv)
     species_names_out[n_case] = species_names
@@ -477,6 +484,7 @@ out_object.P_t_out = P_t_out
 out_object.Re_out = Re_out
 out_object.warnings_out = warnings_out
 out_object.res_out = res_out
+out_object.Kn_out = Kn_out
 out_object.species_names_out = species_names_out
 out_object.species_Y_out = species_Y_out
 # Writing the output file:

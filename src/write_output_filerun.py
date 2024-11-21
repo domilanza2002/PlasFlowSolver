@@ -33,6 +33,7 @@ def write_output_filerun(df, output_filename, out_obj):
     h_t_out = out_obj.h_t_out  # Total enthalpy
     P_t_out = out_obj.P_t_out  # Total pressure
     Re_out = out_obj.Re_out  # Reynolds number
+    Kn_out = out_obj.Kn_out  # Knudsen number
     warnings_out = out_obj.warnings_out  # Warnings
     res_out = out_obj.res_out  # Final convergence criteria
     # Retrieve the data from the dataframe:
@@ -54,6 +55,7 @@ def write_output_filerun(df, output_filename, out_obj):
     # Header:
     output_file.write("comment                    pressure [kPa]  dyn pressure [kPa]  heat flux [W/cm^2]     density [g/m^3]     temperature [K]     enthalpy [kJ/kg]     velocity [m/s]   sound speed [m/s]         Mach number      Total Temp [K] total enth. [kJ/kg] Total pressure [kPa]     Pitot Reynolds     Warnings:\n")
     output_file.close()
+    # OSS: Reynold and Kn not written in the output file
     # Write the data in the file:
     output_file = open(output_filename, "a")
     for i in range(len(has_converged_out)):

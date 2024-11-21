@@ -27,6 +27,7 @@ def write_output_srun(output_filename, out_obj):
     h_t_out = out_obj.h_t_out  # Total enthalpy
     P_t_out = out_obj.P_t_out  # Total pressure
     Re_out = out_obj.Re_out  # Reynolds number
+    Kn_out = out_obj.Kn_out  # Knudsen number
     warnings_out = out_obj.warnings_out  # Warnings
     res_out = out_obj.res_out  # Final convergence criteria
     species_names_out = out_obj.species_names_out[1]  # Names of the species, only 1 element
@@ -44,6 +45,7 @@ def write_output_srun(output_filename, out_obj):
     file.write("h_t_out: " + str(h_t_out[0]/1000) + " kJ/Kg\n")
     file.write("P_t_out: " + str(P_t_out[0]/P_CF) + " kPa\n")  # From Pa to kPa
     file.write("Re_out: " + str(Re_out[0]) + "\n")
+    file.write("Kn_out: " + str(Kn_out[0]) + "\n")
     file.write("Species mass fraction composition:\n")
     for i in range(len(species_names_out)):
         file.write(species_names_out[i] + ": " + str(species_Y_out[i]) + "\n")

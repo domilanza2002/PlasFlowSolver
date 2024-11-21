@@ -29,6 +29,7 @@ def write_output_xlsx(output_filename, out_obj):
     h_t_out = out_obj.h_t_out  # Total enthalpy
     P_t_out = out_obj.P_t_out  # Total pressure
     Re_out = out_obj.Re_out  # Reynolds number
+    Kn_out = out_obj.Kn_out  # Knudsen number
     warnings_out = out_obj.warnings_out  # Warnings
     res_out = out_obj.res_out  # Final convergence criteria
     species_names_out = out_obj.species_names_out  # Names of the species (dictionary)
@@ -76,6 +77,9 @@ def write_output_xlsx(output_filename, out_obj):
     # REYNOLDS NUMBER
     n_col = len(df.columns)
     df.insert(n_col, ("Output","reynolds number"), Re_out, False) 
+    # KNUDSEN NUMBER
+    n_col = len(df.columns)
+    df.insert(n_col, ("Output","knudsen number"), Kn_out, False)
     # SPECIES NAMES AND MASS FRACTIONS
     n_cases = len(species_names_out)
     if(len(species_Y_out) != n_cases):

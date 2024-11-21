@@ -36,6 +36,7 @@ def out_properties(mixture_object, T, P, u):
         M (float): mach number
         h (float): enthalpy
         h_t (float): total enthalpy
+        mfp (float): mean free path
     """
     #Variables
     rho = None  # Density
@@ -43,6 +44,7 @@ def out_properties(mixture_object, T, P, u):
     M = None  # Mach number
     h = None  # Enthalpy
     h_t = None  # Total enthalpy
+    mfp = None  # Mean free path
     h0 = enthalpy_shift(mixture_object, P)  # Enthalpy shift
     # Computation:
     mixture_object.equilibrate(T, P) 
@@ -51,7 +53,8 @@ def out_properties(mixture_object, T, P, u):
     M = u/a 
     h = mixture_object.mixtureHMass() + h0
     h_t = h + 0.5*pow(u,2)
-    return rho, a, M, h, h_t
+    mfp = mixture_object.meanFreePath()
+    return rho, a, M, h, h_t, mfp
 
 def mass_fraction_composition(mixture_object, T, P):
     """This function computes the mass fraction composition of the gas.
