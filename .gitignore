@@ -2,6 +2,10 @@ src/__pycache__/
 src/*.test.py
 src/inputs/
 src/*.xlsx
+src/runs/*.xlsx
+src/some_runs/*.xlsx
+src/some_runs/eta_sens/*.xlsx
+src/some_runs/*.csv
 src/*.in
 src/*.out
 src/*.srun
