@@ -93,7 +93,7 @@ def read_file(FILENAME):
     line = file.readline() 
     df.stag_type = int(line.split(" = ")[1].strip())  # Stagnation type (integer)
     line = file.readline() 
-    df.h_flaw = int(line.split(" = ")[1].strip())  # Heat flux law (integer)
+    df.hf_law = int(line.split(" = ")[1].strip())  # Heat flux law (integer)
     line = file.readline() 
     df.barker_type = int(line.split(" = ")[1].strip())  # Barker's correction (integer)
     line = file.readline() 
