@@ -325,7 +325,7 @@ while (n_case < n_lines):  # I loop through all the cases
         else:
             cnv = math.sqrt(cnv)/cnv_ref
             dcnv = abs(cnv_old - cnv)
-            if (dcnv < CNV_THRESHOLD and cnv > CNV_THRESHOLD and settings_object.jac_diff < JAC_DIFF_MAX): # A better criteria based on same percentage should be used
+            if (dcnv/cnv < 0.01 and settings_object.jac_diff < JAC_DIFF_MAX): # A better criteria based on some percentage should be used
                 settings_object.jac_diff *= JAC_DIFF_INCREASE
                 print("Jac_diff increased to "+str(settings_object.jac_diff))
                 T += T*VARS_INCREASE*random.choice([1,-1])
