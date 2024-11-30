@@ -17,20 +17,17 @@ def heat_flux_hf_law0_edge(P_e,T_e,mixture):
 
     Returns:
         rho_e (float): The edge density
-        C_p_e (float): The edge specific heat
         mu_e (float): The edge viscosity
     """
     
     # I declare the variables I need to return
     rho_e = None  # Density on the edge
-    C_p_e = None  # Specific heat on the edge
     mu_e = None  # Viscosity on the edge
     # I start the computations
     mixture.equilibrate(T_e, P_e)  # I equilibrate the mixture
     rho_e = mixture.density() # I get the density on the edge, Kg/m^3
-    C_p_e = mixture.mixtureEquilibriumCpMass()  # I get the specific heat at constant pressure on the edge, J/kg/K
     mu_e = mixture.viscosity()  # I get the viscosity on the edge, Pa s
-    return rho_e, C_p_e, mu_e
+    return rho_e, mu_e
 #.................................................
 #   Possible improvements:
 #   None.
