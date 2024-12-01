@@ -205,6 +205,9 @@ warnings_out=[]
 res_out = []
 species_names_out = {}  # Dictionary to store the names of the species
 species_Y_out = {}  # Dictionary to store the mass fractions of the species
+M_v = []  # Vector to store the Mach number
+k=2
+d=1.2
 print("Starting main program loop...")
 while (n_case < n_lines):  # I loop through all the cases
     print("--------------------------------------------------")
@@ -281,12 +284,57 @@ while (n_case < n_lines):  # I loop through all the cases
     newton_conv = settings_object.newton_conv  # I retrieve the convergence criteria for the Newton loop
     print("Executing Newton loop...")
     mixture_object = mpp.Mixture(mixture_name) # I create the mixture object
+    mixture_object.equilibrate(T, P)
+    a_initial = mixture_object.equilibriumSoundSpeed()
+    M_initial = u/a_initial
+    try:
+        eps = math.log(k*M_initial/(d-M_initial))
+    except:
+        print("Error in the initial Mach number computation. The case will be skipped.")
+        if (program_mode == 1):
+            print("Error while retrieving the data from the .srun file: " + str(e))
+            print("The program will now terminate.")
+            exit_program()
+        elif (program_mode == 2 or program_mode == 3):
+            has_converged_out.append("Error: invalid data")
+            rho_out.append(-1)
+            T_out.append(-1)
+            h_out.append(-1)
+            u_out.append(-1)
+            a_out.append(-1)
+            M_out.append(-1)
+            T_t_out.append(-1)
+            h_t_out.append(-1)
+            P_t_out.append(-1)
+            Re_out.append(-1)
+            Kn_out.append(-1)
+            warnings_out.append("Error: invalid data")
+            res_out.append(-1)
+            n_case += 1
+            species_names_out[n_case] = None
+            species_Y_out[n_case] = None
+            if (db_used):
+                db_inputs = database_manager_file.db_inputs_append_null_line(db_inputs)
+                run_time_vect.append(-1)
+            continue
     # Database operation:
     if(db_used):
         db_inputs = database_manager_file.db_inputs_append(db_inputs, inputs_object, probes_object)
         t_start_case = time.time()  # I store the time at the beginning of the case
     # NEWTON-RAPHSON LOOP:
+    # convert eps to u
+    M = d/(1+k*math.exp(-eps))
+    mixture_object.equilibrate(T, P)
+    a = mixture_object.equilibriumSoundSpeed()
+    u = M*a
     while (iter < max_newton_iter):
+        # print variables
+        print("T: "+str(T)+" K")
+        print("u: "+str(u)+" m/s")
+        print("M: "+str(M))
+        print("eps: "+str(eps))
+        print("T_t: "+str(T_t)+" K")
+        print("P_t: "+str(P_t)+" Pa")
         # The loop has a stop condition for safety reason, but inside the loop there is also a convergence condition.
         # The loop will stop when the end newton computation converges or when the maximum number of iterations is reached.
         iter += 1
@@ -314,6 +362,7 @@ while (n_case < n_lines):  # I loop through all the cases
         res.append(-(h_t-(h+0.5*pow(u,2))))  # Enthalpy residual
         res.append(-(s_t-s))  # Entropy residual
         res.append(-(P_b-P_stag))  # Barker's effect residual
+        #print("Residuals computed.")
         # Convergence criteria: Normalized residual
         cnv = 0 
         for i in range(0, n_eq):
@@ -353,39 +402,43 @@ while (n_case < n_lines):  # I loop through all the cases
             break
         #.................................................
         # If I did not converge, I compute the Jacobian matrix:
+        #print("Computing the Jacobian matrix...")
         try:
-            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u, mixture_object)
+            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, eps, k,d, mixture_object)
         except Exception as e:
             print("Error encountered during the jacobian computation: "+str(e))
             exit_due_error = True
             break
+        #print("Jacobian matrix computed.")
         #.................................................
         # Now I finally solve the system
+        #print("Solving the system...")
         try:
             d_vars = system_solve_file.system_solve(n_eq, jac, res)
         except Exception as e:
             print("Error encountered during the system solve: "+str(e))
             exit_due_error = True
             break
+        #print("System solved.")
         # I update the variables:
         T_star = T + d_vars[0] 
-        u_star = u + d_vars[1]
         T_t_star = T_t + d_vars[2]
         if (probes_object.barker_type != 0):
             P_t_star = P_t + d_vars[3]
         else:
             P_t_star = P_t
+        # new variables
         #.................................................
         # UNDER-RELAXATION SCHEME:
         # This scheme avoids that T_star, u_star, T_t_star and P_t_star
         # become negative or too high
         relax = 1.0  # Reset the relaxation factor
         # If the new valus are too low, we relax them:
-        while ( (T_star < settings_object.min_T_relax) or (u_star < 0) or (T_t_star < settings_object.min_T_relax) or (P_t_star < 0) or (T_t_star < probes_object.T_w) ): 
+        #print("Relaxing the variables...")
+        while ( (T_star < settings_object.min_T_relax) or (T_t_star < settings_object.min_T_relax) or (P_t_star < 0) or (T_t_star < probes_object.T_w) ): 
             relax = relax/2  # We halve the relaxation factor
             # New values:
             T_star = T + d_vars[0]*relax
-            u_star = u + d_vars[1]*relax
             T_t_star = T_t + d_vars[2]*relax
             if (probes_object.barker_type != 0):
                 P_t_star = P_t + d_vars[3]*relax
@@ -394,14 +447,35 @@ while (n_case < n_lines):  # I loop through all the cases
             relax = relax/2  # We halve the relaxation factor
             # New values:
             T_star = T + d_vars[0]*relax
-            u_star = u + d_vars[1]*relax
             T_t_star = T_t + d_vars[2]*relax
             if (probes_object.barker_type != 0):
                 P_t_star = P_t + d_vars[3]*relax
+        eps_star = eps + d_vars[1]
+        #print("eps_star: "+str(eps_star))
+        relax = 1.0
+        while(abs(eps_star) > 5):
+            relax = relax/2
+            eps_star = eps + d_vars[1]*relax
+        #print("Variables relaxed.")
         #.................................................
+        M_star = d/(1+k*math.exp(-eps_star))
+        mixture_object.equilibrate(T_star, P)
+        a_star = mixture_object.equilibriumSoundSpeed()
+        u_star = M_star*a_star
         # New values are now accepted:
         T = T_star
         u = u_star
+        a = a_star
+        M = M_star
+        M_v.append(M)
+        # if the last 3 mach number are greater than 0.99, halve M
+        if (len(M_v) > 3):
+            if (M_v[-1] > 1.18 and M_v[-2] > 1.18 and M_v[-3] > 1.18):
+                M = M/2
+                M_v = []
+            eps_star = math.log(k*M/(d-M))
+            u = M*a
+        eps = eps_star
         T_t = T_t_star
         if (probes_object.barker_type != 0):
             P_t = P_t_star
