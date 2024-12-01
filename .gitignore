@@ -15,3 +15,6 @@ src/*.h5
 src/*.csv
 .vscode/launch.json
 src/*.xml
+src/plot_interpolated.png
+src/plot.png
+src/Cp_vs_T.png
