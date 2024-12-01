@@ -206,8 +206,8 @@ res_out = []
 species_names_out = {}  # Dictionary to store the names of the species
 species_Y_out = {}  # Dictionary to store the mass fractions of the species
 M_v = []  # Vector to store the Mach number
-k=2
-d=1.2
+k=1
+d=1.3
 print("Starting main program loop...")
 while (n_case < n_lines):  # I loop through all the cases
     print("--------------------------------------------------")
@@ -346,14 +346,20 @@ while (n_case < n_lines):  # I loop through all the cases
             print("Skipping case...")
             exit_due_error = True
             break
+        #sigmas
+        sigmas = [0,0,0,0]
+        sigmas[0] = q_target
         # Now I compute the enthalpy:
         h = enthalpy_file.enthalpy(mixture_object, P, T)  # I compute the free stream enthalpy
         h_t = enthalpy_file.enthalpy(mixture_object, P_t, T_t)  # I compute the stagnation enthalpy
+        sigmas[1] = h_t
         # Now I compute the entropy:
         s = entropy_file.entropy(mixture_object,P,T)  # I compute the entropy at the free stream
         s_t = entropy_file.entropy(mixture_object,P_t,T_t)  # I compute the entropy at the stagnation point
+        sigmas[2] = s_t
         # I compute the Barker's effect pressure:
         P_b, Re = barker_effect_file.barker_effect(probes_object, mixture_object, P_t, P, T, u)
+        sigmas[3] = P_stag
         # Note: if barker_type==0 then P_b=P_stag, and the function will return P_stag
         #.................................................
         # I can now compute the residuals:
@@ -362,6 +368,10 @@ while (n_case < n_lines):  # I loop through all the cases
         res.append(-(h_t-(h+0.5*pow(u,2))))  # Enthalpy residual
         res.append(-(s_t-s))  # Entropy residual
         res.append(-(P_b-P_stag))  # Barker's effect residual
+        #scaling
+        for i in range(0, n_eq):
+            res[i] = res[i]/sigmas[i]
+        #print("Residuals:")
         #print("Residuals computed.")
         # Convergence criteria: Normalized residual
         cnv = 0 
@@ -369,10 +379,13 @@ while (n_case < n_lines):  # I loop through all the cases
             cnv += pow(res[i],2)
         if (iter == 1):  # I create the reference convergence criteria if it is the first iteration
             cnv_ref = math.sqrt(cnv)
-            cnv = 1
-            cnv_old = 1
+            #cnv = 1
+            #cnv_old = 1
+            cnv = cnv_ref
+            cnv_old = cnv_ref
         else:
-            cnv = math.sqrt(cnv)/cnv_ref
+            #cnv = math.sqrt(cnv)/cnv_ref
+            cnv = math.sqrt(cnv)
             dcnv = abs(cnv_old - cnv)
             if (dcnv/cnv < 0.01 and settings_object.jac_diff < JAC_DIFF_MAX): # A better criteria based on some percentage should be used
                 settings_object.jac_diff *= JAC_DIFF_INCREASE
@@ -404,7 +417,7 @@ while (n_case < n_lines):  # I loop through all the cases
         # If I did not converge, I compute the Jacobian matrix:
         #print("Computing the Jacobian matrix...")
         try:
-            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, eps, k,d, mixture_object)
+            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, T, T_t, P, P_t, eps, k,d, mixture_object,sigmas)
         except Exception as e:
             print("Error encountered during the jacobian computation: "+str(e))
             exit_due_error = True
@@ -421,10 +434,11 @@ while (n_case < n_lines):  # I loop through all the cases
             break
         #print("System solved.")
         # I update the variables:
-        T_star = T + d_vars[0] 
-        T_t_star = T_t + d_vars[2]
+        w = 0.4
+        T_star = w*T + (1-w)*d_vars[0] 
+        T_t_star = w*T_t + (1-w)*d_vars[2]
         if (probes_object.barker_type != 0):
-            P_t_star = P_t + d_vars[3]
+            P_t_star = w*P_t + (1-w)*d_vars[3]
         else:
             P_t_star = P_t
         # new variables
@@ -450,7 +464,7 @@ while (n_case < n_lines):  # I loop through all the cases
             T_t_star = T_t + d_vars[2]*relax
             if (probes_object.barker_type != 0):
                 P_t_star = P_t + d_vars[3]*relax
-        eps_star = eps + d_vars[1]
+        eps_star = w*eps + (1-w)*d_vars[1]
         #print("eps_star: "+str(eps_star))
         relax = 1.0
         while(abs(eps_star) > 5):

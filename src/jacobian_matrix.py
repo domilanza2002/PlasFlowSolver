@@ -9,7 +9,7 @@ import entropy as entropy_file  # Module to compute the entropy
 import barker_effect as barker_effect_file  # Module to compute the Barker's effect
 import heat_flux as heat_flux_file  # Module to compute the heat flux
 import math
-def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, eps, k,d,mixture_object):
+def jacobian_matrix(probes, settings, T, T_t, P, P_t, eps, k,d,mixture_object,sigmas):
     """This function returns the Jacobian matrix of the system in order to use 
     the Newton-Raphson's method.
 
@@ -64,67 +64,97 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, ep
     M = d/(1+k*math.exp(-eps))  # Mach number
     # DERIVATIVE WRT T:
     delta = T*jac_diff  # Temperature increment for the finite difference
-    T_star = T + delta  # New temperature for the finite difference
-    h_star = enthalpy_file.enthalpy(mixture_object, P, T_star)
-    s_star = entropy_file.entropy(mixture_object, P, T_star)
-    mixture_object.equilibrate(T_star, P)
-    a = mixture_object.equilibriumSoundSpeed()
-    u = M*a  # Velocity
-    P_b_star = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T_star, u)[0]  # I retrieve only the pressure
-    q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u, mixture_object)[0]
+    T_star_1 = T + delta  # New temperature for the finite difference
+    T_star_2 = T - delta  # New temperature for the finite difference
+    h_star_1 = enthalpy_file.enthalpy(mixture_object, P, T_star_1)
+    h_star_2 = enthalpy_file.enthalpy(mixture_object, P, T_star_2)
+    s_star_1 = entropy_file.entropy(mixture_object, P, T_star_1)
+    s_star_2 = entropy_file.entropy(mixture_object, P, T_star_2)
+    mixture_object.equilibrate(T_star_1, P)
+    a_star_1 = mixture_object.equilibriumSoundSpeed()
+    u_star_1 = M*a_star_1  # Velocity
+    mixture_object.equilibrate(T_star_2, P)
+    a_star_2 = mixture_object.equilibriumSoundSpeed()
+    u_star_2 = M*a_star_2  # Velocity
+    P_b_star_1 = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T_star_1, u_star_1)[0]  # I retrieve only the pressure
+    P_b_star_2 = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T_star_2, u_star_2)[0]  # I retrieve only the pressure
+    q_star_1 = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u_star_1, mixture_object)[0]
+    q_star_2 = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u_star_2, mixture_object)[0]
     # Derivatives:
-    dh_dt = (h_star-h)/delta  # Derivative of h(P, T) w.r.t. T
-    ds_dt = (s_star-s)/delta  # Derivative of s(P, T) w.r.t. T
-    db_dt = (P_b_star-P_b)/delta  # Derivative of P_b(P_t, P, T, u) w.r.t. T
-    dq_dt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. T
+    #dh_dt = (h_star-h)/delta  # Derivative of h(P, T) w.r.t. T
+    dh_dt = (h_star_1-h_star_2)/(2*delta)  # Derivative of h(P, T) w.r.t. T
+    #ds_dt = (s_star-s)/delta  # Derivative of s(P, T) w.r.t. T
+    ds_dt = (s_star_1-s_star_2)/(2*delta)  # Derivative of s(P, T) w.r.t. T
+    #db_dt = (P_b_star-P_b)/delta  # Derivative of P_b(P_t, P, T, u) w.r.t. T
+    db_dt = (P_b_star_1-P_b_star_2)/(2*delta)  # Derivative of P_b(P_t, P, T, u) w.r.t. T
+    #dq_dt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. T
+    dq_dt = (q_star_1-q_star_2)/(2*delta)  # Derivative of q(P_t, T_t, u) w.r.t. T
     # Derivative of a wrt T
-    mixture_object.equilibrate(T, P)
-    a_base = mixture_object.equilibriumSoundSpeed()
-    mixture_object.equilibrate(T_star, P)
-    a_star = mixture_object.equilibriumSoundSpeed()
-    da_dt = (a_star-a_base)/delta
+    da_dt = (a_star_1-a_star_2)/(2*delta)
     #.................................................
     # DERIVATIVE WRT xi:
-    delta = M*jac_diff/10  # Velocity increment for the finite difference
-    M_star = M + delta  # New velocity for the finite difference
+    delta = M*jac_diff  # Velocity increment for the finite difference
+    M_star_1 = M + delta  # New velocity for the finite difference
+    M_star_2 = M - delta  # New velocity for the finite difference
     mixture_object.equilibrate(T, P)
     a = mixture_object.equilibriumSoundSpeed()
-    u_star = M_star*a  # New velocity
-    q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u_star, mixture_object)[0]
-    P_b_star = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T, u_star)[0]
+    u_star_1 = M_star_1*a  # New velocity
+    u_star_2 = M_star_2*a  # New velocity
+    q_star_1 = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u_star_1, mixture_object)[0]
+    q_star_2 = heat_flux_file.heat_flux(probes, settings, P_t, T_t, u_star_2, mixture_object)[0]
+    P_b_star_1 = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T, u_star_1)[0]
+    P_b_star_2 = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T, u_star_2)[0]
     # Derivatives:
-    dq_dM = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. u
+    #dq_dM = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. u
+    dq_dM = (q_star_1-q_star_2)/(2*delta)  # Derivative of q(P_t, T_t, u) w.r.t. u
     dq_dxi = dq_dM*M*(d-M)  # Derivative of q(P_t, T_t, u) w.r.t. xi
-    db_dM = (P_b_star-P_b)/delta  # Derivative of P_b(P_t, P, T, u) w.r.t. u
+    #db_dM = (P_b_star-P_b)/delta  # Derivative of P_b(P_t, P, T, u) w.r.t. u
+    db_dM = (P_b_star_1-P_b_star_2)/(2*delta)  # Derivative of P_b(P_t, P, T, u) w.r.t. u
     db_dxi = db_dM*M*(d-M)  # Derivative of P_b(P_t, P, T, u) w.r.t. xi
     #.................................................
     # DERIVATIVE WRT T_t:
     delta = T_t*jac_diff  # Total temperature increment for the finite difference
-    T_t_star = T_t + delta  # New total temperature for the finite difference
+    T_t_star_1 = T_t + delta  # New total temperature for the finite difference
+    T_t_star_2 = T_t - delta  # New total temperature for the finite difference
     mixture_object.equilibrate(T, P)
     a = mixture_object.equilibriumSoundSpeed()
     u = M*a  # Velocity
-    q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t_star, u, mixture_object)[0]
-    h_t_star = enthalpy_file.enthalpy(mixture_object, P_t, T_t_star)
-    s_t_star = entropy_file.entropy(mixture_object, P_t, T_t_star)
+    q_star_1 = heat_flux_file.heat_flux(probes, settings, P_t, T_t_star_1, u, mixture_object)[0]
+    q_star_2 = heat_flux_file.heat_flux(probes, settings, P_t, T_t_star_2, u, mixture_object)[0]
+    h_t_star_1 = enthalpy_file.enthalpy(mixture_object, P_t, T_t_star_1)
+    h_t_star_2 = enthalpy_file.enthalpy(mixture_object, P_t, T_t_star_2)
+    s_t_star_1 = entropy_file.entropy(mixture_object, P_t, T_t_star_1)
+    s_t_star_2 = entropy_file.entropy(mixture_object, P_t, T_t_star_2)
     # Derivatives:
-    dq_dtt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. T_t
-    dht_dtt = (h_t_star-h_t)/delta  # Derivative of h_t(P_t, T_t) w.r.t. T_t
-    dst_dtt = (s_t_star-s_t)/delta  # Derivative of s_t(P_t, T_t) w.r.t. T_t
+    #dq_dtt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. T_t
+    dq_dtt = (q_star_1-q_star_2)/(2*delta)  # Derivative of q(P_t, T_t, u) w.r.t. T_t
+    #dht_dtt = (h_t_star-h_t)/delta  # Derivative of h_t(P_t, T_t) w.r.t. T_t
+    dht_dtt = (h_t_star_1-h_t_star_2)/(2*delta)  # Derivative of h_t(P_t, T_t) w.r.t. T_t
+    #dst_dtt = (s_t_star-s_t)/delta  # Derivative of s_t(P_t, T_t) w.r.t. T_t
+    dst_dtt = (s_t_star_1-s_t_star_2)/(2*delta)  # Derivative of s_t(P_t, T_t) w.r.t. T_t
     #.................................................
     # DERIVATIVE WRT P_t: ONLY IF BARKER CORRECTION IS ENABLED
     if (barker_type != 0):
         delta = P_t*jac_diff  # Total pressure increment for the finite difference
-        P_t_star = P_t + delta  # New total pressure for the finite difference
-        q_star = heat_flux_file.heat_flux(probes, settings, P_t_star, T_t, u, mixture_object)[0]
-        h_t_star = enthalpy_file.enthalpy(mixture_object, P_t_star, T_t)
-        s_t_star = entropy_file.entropy(mixture_object, P_t_star, T_t)
-        P_b_star = barker_effect_file.barker_effect(probes, mixture_object, P_t_star, P, T, u)[0]  # I retrieve only the pressure
+        P_t_star_1 = P_t + delta  # New total pressure for the finite difference
+        P_t_star_2 = P_t - delta  # New total pressure for the finite difference
+        q_star_1 = heat_flux_file.heat_flux(probes, settings, P_t_star_1, T_t, u, mixture_object)[0]
+        q_star_2 = heat_flux_file.heat_flux(probes, settings, P_t_star_2, T_t, u, mixture_object)[0]
+        h_t_star_1 = enthalpy_file.enthalpy(mixture_object, P_t_star_1, T_t)
+        h_t_star_2 = enthalpy_file.enthalpy(mixture_object, P_t_star_2, T_t)
+        s_t_star_1 = entropy_file.entropy(mixture_object, P_t_star_1, T_t)
+        s_t_star_2 = entropy_file.entropy(mixture_object, P_t_star_2, T_t)
+        P_b_star_1 = barker_effect_file.barker_effect(probes, mixture_object, P_t_star_1, P, T, u)[0]  # I retrieve only the pressure
+        P_b_star_2 = barker_effect_file.barker_effect(probes, mixture_object, P_t_star_2, P, T, u)[0]  # I retrieve only the pressure
         # Derivatives:
-        dq_dpt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. P_t
-        dht_dpt = (h_t_star-h_t)/delta  # Derivative of h_t(P_t, T_t) w.r.t. P_t
-        dst_dpt = (s_t_star-s_t)/delta  # Derivative of s_t(P_t, T_t) w.r.t. P_t
-        db_dpt = (P_b_star-P_b)/delta  # Derivative of P_b(P_t, P, T, u) w.r.t. P_t
+        #dq_dpt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. P_t
+        dq_dpt = (q_star_1-q_star_2)/(2*delta)  # Derivative of q(P_t, T_t, u) w.r.t. P_t
+        #dht_dpt = (h_t_star-h_t)/delta  # Derivative of h_t(P_t, T_t) w.r.t. P_t
+        dht_dpt = (h_t_star_1-h_t_star_2)/(2*delta)  # Derivative of h_t(P_t, T_t) w.r.t. P_t
+        #dst_dpt = (s_t_star-s_t)/delta  # Derivative of s_t(P_t, T_t) w.r.t. P_t
+        dst_dpt = (s_t_star_1-s_t_star_2)/(2*delta)  # Derivative of s_t(P_t, T_t) w.r.t. P_t
+        #db_dpt = (P_b_star-P_b)/delta  # Derivative of P_b(P_t, P, T, u) w.r.t. P_t
+        db_dpt = (P_b_star_1-P_b_star_2)/(2*delta)  # Derivative of P_b(P_t, P, T, u) w.r.t. P_t
     else:
         dq_dpt = 0
         dht_dpt = 0
@@ -150,6 +180,27 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, ep
     jac[3][1] = db_dxi
     jac[3][2] = 0
     jac[3][3] = db_dpt
+    #row 1 divided by sigmas[0]
+    jac[0][0] = jac[0][0]/sigmas[0]
+    jac[0][1] = jac[0][1]/sigmas[0]
+    jac[0][2] = jac[0][2]/sigmas[0]
+    jac[0][3] = jac[0][3]/sigmas[0]
+    #row 2 divided by sigmas[1]
+    jac[1][0] = jac[1][0]/sigmas[1]
+    jac[1][1] = jac[1][1]/sigmas[1]
+    jac[1][2] = jac[1][2]/sigmas[1]
+    jac[1][3] = jac[1][3]/sigmas[1]
+    #row 3 divided by sigmas[2]
+    jac[2][0] = jac[2][0]/sigmas[2]
+    jac[2][1] = jac[2][1]/sigmas[2]
+    jac[2][2] = jac[2][2]/sigmas[2]
+    jac[2][3] = jac[2][3]/sigmas[2]
+    #row 4 divided by sigmas[3]
+    jac[3][0] = jac[3][0]/sigmas[3]
+    jac[3][1] = jac[3][1]/sigmas[3]
+    jac[3][2] = jac[3][2]/sigmas[3]
+    jac[3][3] = jac[3][3]/sigmas[3]
+    #.................................................
     return jac
 #.................................................
 #   Possible improvements:
