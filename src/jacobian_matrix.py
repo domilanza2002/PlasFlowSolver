@@ -4,11 +4,12 @@
 #   This module is needed to compute the Jacobian matrix of the system
 #   in order to use the Newton-Raphson's method.
 #.................................................
+from math import exp
 import enthalpy as enthalpy_file  # Module to compute the enthalpy
 import entropy as entropy_file  # Module to compute the entropy
 import barker_effect as barker_effect_file  # Module to compute the Barker's effect
 import heat_flux as heat_flux_file  # Module to compute the heat flux
-def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u, mixture_object):
+def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u, mixture_object,beta_1,beta_2,beta_3,beta_4,lambda_p,pen_exp,M_c):
     """This function returns the Jacobian matrix of the system in order to use 
     the Newton-Raphson's method.
 
@@ -56,6 +57,9 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     s_t_star = None  # New value for the total entropy
     P_b_star = None  # New value for the barker pressure
     q_star = None  # New value for the heat flux
+    #current sound speed
+    mixture_object.equilibrate(T, P)
+    a_current = mixture_object.equilibriumSoundSpeed()
     # I retrieve some settings from the settings object
     jac_diff = settings.jac_diff  # I get the finite difference epsilon for the Jacobian matrix
     barker_type = probes.barker_type  # Type of Barker's correction
@@ -70,6 +74,15 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     dh_dt = (h_star-h)/delta  # Derivative of h(P, T) w.r.t. T
     ds_dt = (s_star-s)/delta  # Derivative of s(P, T) w.r.t. T
     db_dt = (P_b_star-P_b)/delta  # Derivative of P_b(P_t, P, T, u) w.r.t. T
+    # a computed with the new temperature
+    mixture_object.equilibrate(T_star, P)
+    a_new = mixture_object.equilibriumSoundSpeed()
+    da_dt = (a_new-a_current)/delta
+    if(M_c>1):
+        #derivative_term = pen_exp*pow(M_c,pen_exp-1)
+        derivative_term = pen_exp*exp(pen_exp*(M_c-1))
+        extra_term=-u/a_current/a_current*da_dt*lambda_p* derivative_term
+        extra_term_u = derivative_term*lambda_p/a_current
     #.................................................
     # DERIVATIVE WRT u:
     delta = u*jac_diff  # Velocity increment for the finite difference
@@ -113,20 +126,38 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     # JACOBIAN MATRIX:
     jac = [[0.0 for i in range(4)] for j in range(4)]  # Initialize the Jacobian matrix
     # According to the system of equations:
-    jac[0][0] = 0
-    jac[0][1] = dq_du
+    if(M_c>1):
+        e1=beta_1*extra_term
+        f1=beta_1*extra_term_u
+        e2=beta_2*extra_term
+        f2=beta_2*extra_term_u
+        e3=beta_3*extra_term
+        f3=beta_3*extra_term_u
+        e4=beta_4*extra_term
+        f4=beta_4*extra_term_u
+    else:
+        e1=0
+        f1=0
+        e2=0
+        f2=0
+        e3=0
+        f3=0
+        e4=0
+        f4=0
+    jac[0][0] = 0+e1
+    jac[0][1] = dq_du + f1
     jac[0][2] = dq_dtt
-    jac[1][0] = -dh_dt
-    jac[1][1] = -u
+    jac[1][0] = -dh_dt + e2
+    jac[1][1] = -u +f2
     jac[1][2] = dht_dtt
-    jac[2][0] = -ds_dt
-    jac[2][1] = 0
+    jac[2][0] = -ds_dt + e3
+    jac[2][1] = 0 + f3
     jac[2][2] = dst_dtt
     jac[0][3] = dq_dpt
     jac[1][3] = dht_dpt
     jac[2][3] = dst_dpt
-    jac[3][0] = db_dt 
-    jac[3][1] = db_du
+    jac[3][0] = db_dt + e4
+    jac[3][1] = db_du + f4
     jac[3][2] = 0
     jac[3][3] = db_dpt
     return jac

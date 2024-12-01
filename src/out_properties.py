@@ -45,13 +45,14 @@ def out_properties(mixture_object, T, P, u):
     h = None  # Enthalpy
     h_t = None  # Total enthalpy
     mfp = None  # Mean free path
-    h0 = enthalpy_shift(mixture_object, P)  # Enthalpy shift
+    #TEMP:h0 = enthalpy_shift(mixture_object, P)  # Enthalpy shift
     # Computation:
     mixture_object.equilibrate(T, P) 
     rho = mixture_object.density() 
     a = mixture_object.equilibriumSoundSpeed() 
     M = u/a 
-    h = mixture_object.mixtureHMass() + h0
+    #TEMPh = mixture_object.mixtureHMass() + h0
+    h = mixture_object.mixtureHMinusH0Mass() #TEMP
     h_t = h + 0.5*pow(u,2)
     mfp = mixture_object.meanFreePath()
     return rho, a, M, h, h_t, mfp

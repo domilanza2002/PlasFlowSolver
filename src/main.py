@@ -314,6 +314,39 @@ while (n_case < n_lines):  # I loop through all the cases
         res.append(-(h_t-(h+0.5*pow(u,2))))  # Enthalpy residual
         res.append(-(s_t-s))  # Entropy residual
         res.append(-(P_b-P_stag))  # Barker's effect residual
+        print(res)
+        #.................................................
+        # PENALIZATION SCHEME for MACH NUMBER>1
+        mixture_object.equilibrate(T,P)
+        a_temp = mixture_object.equilibriumSoundSpeed()
+        M_temp = u/a_temp
+        print("Mach temp: "+str(M_temp)) 
+        print("u: "+str(u))
+        print("T: "+str(T))
+        print("T_t: "+str(T_t))
+        beta_1 = 0
+        beta_2 = 0
+        beta_3 = 0
+        beta_4 = 0
+        lambda_p = 0   
+        pen_exp = 1
+        if(M_temp>1.0):
+            beta_1 = 0.5 #heat flux, strongly influenced by the mach number
+            beta_2 = 1.0 #enthalpy, strongly influenced by the mach number
+            beta_3 = 0.2 #entropy, weakly influenced by the mach number
+            beta_4 = 0.0 #barker effect, strongly influenced by the mach number
+            lambda_p = 100
+            pen_exp = 2
+            #penality = lambda_p*pow(M_temp-1,pen_exp)
+            penality = lambda_p*math.exp(pen_exp*(M_temp-1)) # new try
+            print("Penality: "+str(penality))
+            sign = -1
+            res[0] += sign*beta_1*penality
+            res[1] += sign*beta_2*penality
+            res[2] += sign*beta_3*penality
+            res[3] += sign*beta_4*penality
+            print(res)
+        #.................................................
         # Convergence criteria: Normalized residual
         cnv = 0 
         for i in range(0, n_eq):
@@ -345,6 +378,7 @@ while (n_case < n_lines):  # I loop through all the cases
             cnv_old = cnv
         #.................................................
         print("Case:"+str(n_case)+", Iteration "+str(iter)+", convergence criteria: "+str(cnv))
+        print("..................................................")
         # I check for the convergence:
         if (iter>max_newton_iter):  # If the maximum number of iterations is reached we break the loop
             break 
@@ -354,7 +388,7 @@ while (n_case < n_lines):  # I loop through all the cases
         #.................................................
         # If I did not converge, I compute the Jacobian matrix:
         try:
-            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u, mixture_object)
+            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u, mixture_object,beta_1,beta_2,beta_3,beta_4,lambda_p,pen_exp,M_temp)
         except Exception as e:
             print("Error encountered during the jacobian computation: "+str(e))
             exit_due_error = True
@@ -368,6 +402,7 @@ while (n_case < n_lines):  # I loop through all the cases
             exit_due_error = True
             break
         # I update the variables:
+        print("d_vars: "+str(d_vars))
         T_star = T + d_vars[0] 
         u_star = u + d_vars[1]
         T_t_star = T_t + d_vars[2]
@@ -398,6 +433,16 @@ while (n_case < n_lines):  # I loop through all the cases
             T_t_star = T_t + d_vars[2]*relax
             if (probes_object.barker_type != 0):
                 P_t_star = P_t + d_vars[3]*relax
+        #TEMPORARY MACH RELAXATION SCHEME-
+        # mixture_object.equilibrate(T_star,P)
+        # a_temp = mixture_object.equilibriumSoundSpeed()
+        # M_temp = u_star/a_temp
+        # if(M_temp>1.0):
+            #OLD RELAXATION SCHEME
+            # M_temp=0.3
+            # T_star+=1000
+            # T_t_star+=1000
+            # u_star = M_temp*a_temp        
         #.................................................
         # New values are now accepted:
         T = T_star
@@ -458,6 +503,7 @@ while (n_case < n_lines):  # I loop through all the cases
     u_out.append(u)
     a_out.append(a)
     M_out.append(M)
+    print("Mach number: "+str(M))
     h_t_out.append(h_t)
     P_t_out.append(P_t)
     T_t_out.append(T_t)
