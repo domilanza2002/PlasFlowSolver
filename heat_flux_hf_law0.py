@@ -1,27 +1,44 @@
 #.................................................
-#   HEAT_FLUX_HF_LAW0.PY, v1.0.0, April 2024, Domenico Lanza.
+#   HEAT_FLUX_HF_LAW0.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to compute the 
-#   heat flux for the exact heat flux law, hf_law=0
+#   heat flux for the exact heat flux law, hf_law=0,
+#   solving the boundary layer equations.
 #.................................................
 import math  # Library for mathematical operations
 import numpy as np  # Library for numerical operations
-import heat_flux_hf_law0_edge as heat_flux_hf_law0_edge_file  # Module to compute the edge properties of the flow for hflaw=0
-import heat_flux_hf_law0_wall as heat_flux_hf_law0_wall_file  # Module to compute the wall properties of the flow for hflaw=0
-import heat_flux_hf_law0_flow as heat_flux_hf_law0_flow_file  # Module to compute the flow properties of the flow for hflaw=0
+import heat_flux_hf_law0_properties as heat_flux_hf_law0_properties_file  # Module to compute the properties of the flow
 import continuity as continuity_file  # Module with the function to solve the continuity equation
 import first_deriv as first_deriv_file  # Module with the function to compute the first derivative of functions
 import eq_diff_solve as eq_diff_solve_file  # Module with the function to solve differential equations
 
-def stretched_eta(eta_new,eta_max):
-    return (eta_new / eta_max) * 6  # Scale by the original range (0 to 6)
+def f(eta):
+    """Function to compute the f starting profile for the boundary layer.
+    Hartree's profile is used.
+    Args:
+        eta (float): the eta value
 
-def f(eta_old):
-    return 0.007005 * eta_old**3 - 0.114439 * eta_old**2 + 0.598555 * eta_old
+    Returns:
+        float: the f value
+    """
+    return 0.007005 * eta**3 - 0.114439 * eta**2 + 0.598555 * eta
+
+
+def stretched_eta(eta_new, eta_max):
+    """Function to compute the stretched eta value.
+    
+    Args:
+        eta_new (float): the new eta value
+        eta_max (float): the maximum eta value
+        
+    Returns:
+        float: the stretched eta value
+    """
+    return (eta_new / eta_max) * 6  # Scale the eta value
 
 
 def reset_vars(deta, T_e, T_w, N_p, eta_max):
-    """Function to reset the x,y,z arrays
+    """Function to reset the x, y, z arrays
     for the heat flux computation.
 
     Args:
@@ -35,27 +52,18 @@ def reset_vars(deta, T_e, T_w, N_p, eta_max):
         y (list, float): the F array
         z (list, float): the g array
     """
-    # Variables:
-    x = None  # Array with the eta discretization
-    y = None  # Array with the F values
-    z = None  # Array with the g values
-    eta = None  # The eta_i-th value
-    stretched_eta_i = None  # The stretched eta_i-th value
-    f_i = None  # The F_i-th value
-    g_i = None  # The g_i-th value
     # Initialization:
-    x=[]
-    y=[] 
-    z=[] 
+    x = []  # Array with the eta discretization
+    y = []  # Array with the F values
+    z = []  # Array with the g values
     # Computing the arrays:
     for i in range(N_p):
-        eta = i * deta 
+        eta = i * deta  # Eta i-th value
         x.append(eta)
-        #f_i = 0.007005*pow(eta,3) - 0.114439*pow(eta,2) + 0.598555*eta  # Initial solution
         stretched_eta_i = stretched_eta(eta, eta_max)  # Stretched eta
-        f_i = f(stretched_eta_i)  # Initial solution
+        f_i = f(stretched_eta_i)  # f_i-th value
         y.append(f_i)
-        g_i = min(1, f_i+T_w/T_e*(eta_max-eta)/eta_max)  # Initial solution
+        g_i = min(1, f_i+T_w/T_e*(eta_max-eta)/eta_max)  # g_i-th value
         z.append(g_i)
     return x, y, z
 
@@ -79,32 +87,20 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, z, N_p, mixture_object, max_T_re
         C_p (list, float): the C_p array
         redo (boolean): the variable to understand if we need to redo the computation
     """
-    # Variables:
-    l_0 = None  # Vector to store the l_0 values, l_0 = rho*mu/(rho_e*mu_e)
-    rr = None  # Vector to store the rr values, rr = rho_e/rho
-    chi = None  # Vector to store the kpr values, kpr=lambda*rho/(rho_e*mu_e)
-    C_p = None  # Vector to store the C_p values
-    T = None  # Variable to store the current temperature
-    rho = None  # Density on the current point
-    mu = None  # Viscosity on the current point
-    lambda_eq = None  # Equilibrium thermal conductivity on the current point
-    l_0_i = None  # The l_0_i-th value
-    chi_i = None  # The chi_i-th value
-    C_p_i = None  # The C_p_i-th value
-    redo = None # Variable to understand if we need to redo the computation
-    
     # Initialization:
-    l_0 = []  # Reset the l_0 array
-    rr = []  # Reset the rr array
-    chi = []  # Reset the chi array
-    C_p = []  # Reset the C_p array
-    redo = False  
+    l_0 = []  # Vector to store the l_0 values, l_0 = rho*mu/(rho_e*mu_e)
+    rr = []  # Vector to store the rr values, rr = rho_e/rho
+    chi = []  # Vector to store the kpr values, kpr=lambda*rho/(rho_e*mu_e)
+    C_p = []  # Vector to store the C_p values
+    redo = False  # Flag to understand if we need to redo the computation
+    # Computation:
     for i in range(0, N_p):
         T = T_e*z[i]  # Current temperature
-        if (T<=4 or np.isnan(T) or T>max_T_relax):  #This should never happen
+        if (T<=4 or np.isnan(T) or T>max_T_relax):  # This should never happen, redo the computation
             redo = True
             return l_0, rr, chi, C_p, redo
-        rho, C_p_i, mu, lambda_eq = heat_flux_hf_law0_flow_file.heat_flux_hf_law0_flow(P_e, T, mixture_object)
+        # Compute the properties:
+        rho, C_p_i, mu, lambda_eq = heat_flux_hf_law0_properties_file.heat_flux_hf_law0_flow(P_e, T, mixture_object)
         l_0_i = rho*mu/(rho_e*mu_e)
         l_0.append(l_0_i)
         rr_i = rho_e/rho 
@@ -132,98 +128,66 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     Returns:
         q (float): the stagnation heat flux
     """
-    # Varibles:
+    # Constants:
     ORDER = 4  # Order of the central finite difference
-    USE_PREV_ITE_FILENAME = "hf_first_comp.var"
-    max_iter = settings.max_hf_iter  # Maximum number of iterations for the heat flux
+    USE_PREV_ITE_FILENAME = "hf_first_comp.var"  # Filename for the use_prev_ite variable
+    # Extract variables:
+    beta = probes.stag_var * u / probes.R_m  # Velocity gradient
+    eta_max = settings.eta_max  # Maximum value for the boundary layer eta
     hf_conv = settings.hf_conv  # Convergence criteria for the heat flux
     log_warning_hf = settings.log_warning_hf  # Log warning for when the heat flux does not converge
-    N_p = settings.N_p  # Number of points for the boundary layer eta discretization
-    eta_max = settings.eta_max  # Maximum value for the boundary layer eta
-    T_w = probes.T_w  # Probe wall temperature
+    max_iter = settings.max_hf_iter  # Maximum number of iterations for the heat flux
     max_T_relax = settings.max_T_relax  # Maximum value for the temperature used for relaxation
-    R_m = probes.R_m  # Heat flux probe external radius
-    stag_var = probes.stag_var  # Stagnation variable, beta*u/R_m
-    beta = stag_var * u/R_m  # Velocity gradient
-    q = None  # Variable to store the heat flux
-    deta = None  # Variable to store the step of eta
-    x = []  # Array to store the eta values
-    y = []  # Array to store the F values of the boundary layer
-    z = []  # Array to store the g values of the boundary layer
-    iter = None  # Variable to store the iteration number
-    redo = None  # Variable to understand if we need to reset the boundary layer variables
-    # Edge properties:
-    rho_e = None  # Density on the edge
-    mu_e = None  # Viscosity on the edge
-    # Wall properties:
-    rho_w = None  # Density on the wall
-    lambda_eq_wall = None  # Equilibrium thermal conductivity on the wall
-    # Loop variables:
-    l_0 = None  # Vector to store the l_0 values, l_0 = rho*mu/(rho_e*mu_e)
-    rr = None  # Vector to store the rr values, rr = rho_e/rho
-    chi = None  # Vector to store the chi values, chi=lambda*rho/(rho_e*mu_e)
-    C_p = None  # Vector to store the C_p values
-    aa = None  # Vector to store the aa values: coefficients for the continuity equation, and the differential equations
-    bb = None  # Vector to store the bb values: coefficients for the differential equations
-    dd = None  # Vector to store the dd values: coefficients for the differential equations
-    dl_0 = None  # Vector to store the dl_0 values: derivative of l_0 with respect to eta
-    V = None  # Vector to store the V values: solution of the continuity equation
-    new_f = None  # The new values of F
-    new_g = None  # The new values of g
-    hf_first_comp = None  # Variable to understand if the heat flux has been computed previously
-    stop = None  # Variable to understand if we need to stop the loop
-    dg_v = None  # Vector to store the derivative of g with respect to eta
-    dg = None  # The derivative of g with respect to eta
-    redo = None  # Variable to understand if we need to reset the boundary layer variables
-    already_reset = None  # Variable to understand if we already reset the boundary layer variables
-    bad_convergence = None  # Variable to understand if the heat flux computation did not converge
+    N_p = settings.N_p  # Number of points for the boundary layer eta discretization
+    T_w = probes.T_w  # Probe wall temperature
+    use_prev_ite = settings.use_prev_ite  # Variable to understand if we need to use the previous iteration
     #.................................................
     #START OF THE CODE:
-    bad_convergence = False
-    deta = eta_max/(N_p-1)  # Step of eta. We use N_p-1 because we need N_p points, not N_p+1 (we start from 0 and we end at eta_max)
-    # Now I check if the x, y, z exist, so if the heat flux has been computed previously
-    if (settings.use_prev_ite == True):  # If we want to use the previous iteration for the heat flux
-        hf_first_comp = np.loadtxt(USE_PREV_ITE_FILENAME, dtype=int)  # This file exist for sure, it has been created in the main code
+    bad_convergence = False  # Flag for heat flux convergence
+    deta = eta_max/(N_p-1)  # Discretization step
+    # Check if the heat flux has been computed previously
+    if (use_prev_ite == True): 
+        hf_first_comp = np.loadtxt(USE_PREV_ITE_FILENAME, dtype=int)  # This file exist for sure
     else:
         hf_first_comp = 0
-    if (hf_first_comp == 0):  # I need to compute a starting solution
+    if (hf_first_comp == 0):  # Compute starting solution
         x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
-    else:  # I need to read the x, y, z arrays from the x.var, y.var and z.var files using numpy
-        x = np.loadtxt('x.var')
-        y = np.loadtxt('y.var')
-        z = np.loadtxt('z.var')
+    else:  # Read the previous solution
+        x = np.loadtxt('x.var')  # Array to store the eta values
+        y = np.loadtxt('y.var')  # Array to store the F values of the boundary layer
+        z = np.loadtxt('z.var')  # Array to store the g values of the boundary layer
         x = x.tolist() 
         y = y.tolist() 
         z = z.tolist()
-    # I need to compute the edge properties:
-    rho_e, mu_e = heat_flux_hf_law0_edge_file.heat_flux_hf_law0_edge(P_e, T_e, mixture_object)
-    # I need to compute the wall properties:
-    rho_w, lambda_eq_wall = heat_flux_hf_law0_wall_file.heat_flux_hf_law0_wall(P_e, T_w, mixture_object)  # Remember, dP/dy = 0
-    # I start the convergence loop
+    # Compute the edge properties:
+    rho_e, mu_e = heat_flux_hf_law0_properties_file.heat_flux_hf_law0_edge(P_e, T_e, mixture_object)
+    # Compute the wall properties:
+    rho_w, lambda_eq_wall = heat_flux_hf_law0_properties_file.heat_flux_hf_law0_wall(P_e, T_w, mixture_object)  
+    # Start the convergence loop
     iter = 0
-    already_reset = False
+    already_reset = False  # Flag to understand if we already reset the boundary layer variables
     while (iter < max_iter):
-        # For safety reason, the loop has a maximum number of iterations, but inside the loop there is also
-        # a convergence criteria based on the succesive iteration method
         iter += 1
-        # I reset some vectors:
+        # Compute useful properties across the boundary layer:
         l_0, rr, chi, C_p, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, z, N_p, mixture_object, max_T_relax)
-        if (redo == True):
-            if (already_reset == True):
+        if (redo == True):  # We need to redo the computation
+            if (already_reset == True):  # If we already reset the BL variables, we stop the computation
                 raise ValueError("ERROR: T<=0, nan or T>T_max, resetting BL vars...FAILED")
             print("ERROR: T<=0, nan or T>T_max, resetting BL vars...")
+            # Reset the boundary layer variables
             x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
+            # Compute the properties across the boundary layer again
             l_0, rr, chi, C_p, redo = properties_across_BL(T_e, P_e, mu_e, rho_e, z, N_p, mixture_object, max_T_relax)
-            if (redo == True):
+            if (redo == True):  # The reset failed
                 raise ValueError("ERROR: T<=0, nan or T>T_max, resetting BL vars...FAILED")
             already_reset = True
         # Continuity equation:
         aa = []
         for i in range(0, N_p):
             aa.append(-y[i])  # Coefficients for the continuity equation
-        V = continuity_file.continuity(deta, aa)  # I solve the continuity equation
+        V = continuity_file.continuity(deta, aa)  # Slve the continuity equation
         # MOMENTUM EQUATION:
-        dl_0 = first_deriv_file.first_deriv_array(l_0, deta, ORDER)  # I compute dl_0/deta
+        dl_0 = first_deriv_file.first_deriv_array(l_0, deta, ORDER)  # Compute dl_0/deta
         # Reset the aa, bb and dd vectors
         aa = [] 
         bb = [] 
@@ -235,9 +199,9 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
             dd.append( 0.5*(pow(y[i],2)-rr[i]) )
         f_init = 0  # Initial condition for eta=0
         f_final = 1  # Final condition for eta=eta_max
-        new_f = eq_diff_solve_file.solver(aa, bb, dd, f_init, f_final)  # I solve it with the solver module
+        new_f = eq_diff_solve_file.solver(aa, bb, dd, f_init, f_final)  # Solve it
         # ENERGY EQUATION:
-        dchi = first_deriv_file.first_deriv_array(chi, deta, ORDER)  # I compute dchi/deta
+        dchi = first_deriv_file.first_deriv_array(chi, deta, ORDER)  # Compute dchi/deta
         # Reset the aa, bb and dd vectors
         aa = [] 
         bb = [] 
@@ -249,55 +213,49 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
             dd.append(0)
         g_init = T_w/T_e  # Initial condition for eta=0
         g_final = 1  # Final condition for eta=eta_max
-        new_g = eq_diff_solve_file.solver(aa,bb,dd, g_init, g_final)  # I solve it with the solver module
+        new_g = eq_diff_solve_file.solver(aa,bb,dd, g_init, g_final)  # Slve it
         stop = True 
-        # CONVERGENCE CHECK:
-        # I check the convergence for each point of the grid, using the succesive iteration convergence criteria
-        # If for every point of the grid, the following iteration criteria is reached, we stop the loop
-        res=0
+        # CONVERGENCE CHECK: for each point, I check if the residuals are below the convergence criteria
+        res = 0
         for i in range(0, N_p):
-            if( abs(new_f[i]-y[i]) > hf_conv or abs(new_g[i]-z[i]) > hf_conv ):  # If the convergence is not reached
-                res = max(res, abs(new_f[i]-y[i]), abs(new_g[i]-z[i]))  # I take the maximum value of the residuals
-                # if(abs(new_f[i]-y[i]) > abs(new_g[i]-z[i])):
-                #     print("f is worse than g")
-                stop = False  # We do not stop the loop
+            if( abs(new_f[i]-y[i]) > hf_conv or abs(new_g[i]-z[i]) > hf_conv ):  
+                res = max(res, abs(new_f[i]-y[i]), abs(new_g[i]-z[i])) 
+                stop = False  # Do not stop the loop
                 break
         if(stop or iter >= max_iter):  # If we converged or we reached the maximum number of iterations
-            if(stop == False and log_warning_hf==True):  # If we did not converge and we want to log the warning
+            if(stop == False and log_warning_hf == True):
                 print("Warning: a heat flux computation did not converge for the current iteration.")
-                print("The maximum residual is: "+str(res))
+                print("The maximum residual is: " + str(res))
                 bad_convergence = True
-            break  # We stop the loop
+            break  # Stop the loop
         # If we did not converge, we need to update the x,y,z arrays
-        w=0.5  # Relaxation factor
+        w = 0.5  # Relaxation factor
         for i in range(0, N_p):
-            # y[i] = new_f[i]
             y[i] = (1-w)*y[i]+w*new_f[i]
-            # z[i] = new_g[i]
             z[i] = (1-w)*z[i]+w*new_g[i]
     # HEAT FLUX COMPUTATION:
-    dg_v = first_deriv_file.first_deriv_array(z, deta, ORDER)  # I compute dg/deta
-    # I take the value of dg on the wall, eta=0
+    dg_v = first_deriv_file.first_deriv_array(z, deta, ORDER)  # Compute dg/deta
+    # Take the value of dg on the wall, eta=0
     dg = dg_v[0] 
-    # I compute the heat flux
+    # Compute the heat flux
     q = math.sqrt(2/(rho_e*mu_e))*dg*T_e*rho_w*lambda_eq_wall 
     q = q*math.sqrt(beta)  #beta=stagvar*u/Rm, velocity gradient
-    if (settings.use_prev_ite==True and stop==True):  # If we converged and we want to use this solution as starting solution
-        # for the next heat flux computation in this case, we save the new x,y,z arrays to the x.var,y.var and z.var files using numpy
+    if (use_prev_ite==True and stop==True):  
+        # If we converged and we want to use this solution as starting solution
+        # for the next heat flux computation in this case, we save it
         np.savetxt('x.var', x) 
         np.savetxt('y.var', y) 
         np.savetxt('z.var', z)
-        if (hf_first_comp==0):  # We need to update the hf_first_comp variable
-            hf_first_comp=np.array([1])
-            np.savetxt(USE_PREV_ITE_FILENAME, hf_first_comp, fmt="%1.1u")
+        if (hf_first_comp == 0):  # Update the hf_first_comp variable
+            hf_first_comp = np.array([1])
+            np.savetxt(USE_PREV_ITE_FILENAME, hf_first_comp, fmt = "%1.1u")
     return q, bad_convergence
 #.................................................
 #   Possible improvements:
-#   -Make the central finite derivative order variable
-#   -Improve the diff eq algorithm
-#   -Understand if we need to keep the x,y,z arrays to the files
-#.................................................
-# EXECUTION TIME: TBD
+#   - Make the central finite derivative order variable
+#   - Improve the diff eq algorithm
+#   - Dynamic relaxation factor
+#   - Better starting profile
 #.................................................
 #   KNOW PROBLEMS:
 #   None.

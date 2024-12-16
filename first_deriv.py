@@ -1,5 +1,5 @@
 #.................................................
-#   FIRST_DERIV, v1.0.0, April 2024, Domenico Lanza.
+#   FIRST_DERIV, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to compute the first derivative of a function,
 #   using the finite difference method.
@@ -14,11 +14,7 @@ def first_deriv_array(f, dx, order):
     Returns:
         df (array): first derivative of f
     """
-    # Variables:
-    df = None  # Variable to store the first derivative
-    ord = None  # Actual order used
-    n = None  # Number of points
-    # I check which order we can use
+    # Check which order we can use
     n= len(f)
     if (len(f) <= 2):  # Array too short for a 2nd order derivative
         raise Exception("Error: the array is too short to compute the central finite derivative.")
@@ -28,7 +24,9 @@ def first_deriv_array(f, dx, order):
         ord = 4  # Maximum order usable
     if (order < ord):  # Change the order if the user requires a lower one 
         ord = order 
-    df = [0.0]*n  # I initialize the df array
+    # Initialization
+    df = [0.0]*n 
+    # Compute the derivative
     match (ord): 
         case 2:  # 2nd order finite difference method
             df[0] = (-3*f[0]+4*f[1]-f[2])/(2*dx)  # Forward difference at the first point
@@ -48,8 +46,6 @@ def first_deriv_array(f, dx, order):
 #.................................................
 #   Possible improvements:
 #   - Add more finite difference methods, to improve the precision.
-#.................................................
-# EXECUTION TIME: TBD
 #.................................................
 #   KNOW PROBLEMS:
 #   None.

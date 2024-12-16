@@ -1,8 +1,8 @@
 #.................................................
-#   EQ_DIFF_SOLVE.PY, v1.0.0, April 2024, Domenico Lanza.
+#   EQ_DIFF_SOLVE.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to solve
-#   the differential equation of the model.
+#   the differential equations of the model.
 #.................................................
 def thomas(a, c, e, d): 
     """This function solves a tridiagonal system of equations
@@ -19,20 +19,15 @@ def thomas(a, c, e, d):
     Returns:
         x (float array): vector of the solution
     """
-    # Variables:
-    x = None  # Variable to return, the solution
-    y = None  # Intermediate variable
-    n = None  # Number of points
-    beta = None  # Variable to store the beta values, lower diagonal of L
-    alpha = None  # Variable to store the alpha values, diagonal of U
+    # Preliminary checks:
     n = len(a) # Number of points
     if (len(c) != n-1 or len(e) != n-1 or len(d) != n):  # Check the input length
         raise Exception('ERROR: wrong input size.')
     # Initialization:
-    alpha = [0.0]*n 
-    beta = [0.0]*(n-1)
-    y = [0.0]*n 
-    x = [0.0]*n 
+    alpha = [0.0]*n  # Diagonal of U
+    beta = [0.0]*(n-1)  # Lower diagonal of L
+    y = [0.0]*n  # Intermediate variable
+    x = [0.0]*n  # Solution
     alpha[0] = a[0] 
     # Coefficients:
     for i in range(0,n-1):
@@ -41,15 +36,14 @@ def thomas(a, c, e, d):
     # Forward substitution:
     y[0] = d[0] 
     for i in range(1,n):
-        y[i] = d[i]-beta[i-1]*y[i-1]
+        y[i] = d[i] - beta[i-1]*y[i-1]
     # Backward substitution:
     x[n-1] = y[n-1]/alpha[n-1] 
     for i in range(n-2,-1,-1): 
-        x[i] = (y[i]-c[i]*x[i+1])/alpha[i]
+        x[i] = (y[i] - c[i]*x[i+1])/alpha[i]
     return x 
-#..................................................
 
-def solver(a,b,d,f_init,f_final):
+def solver(a, b, d, f_init, f_final):
     """This function solves the differential equation of the model.
 
     Args:
@@ -64,27 +58,22 @@ def solver(a,b,d,f_init,f_final):
     Returns:
         res (float array): vector of the solution
     """
-    # Variables:
-    res = None  # variable to return
-    n = None  # Number of points
-    aa = None  # Vector to store the matrix values
-    bb = None  # Vector to store the matrix values
-    cc = None  # Vector to store the matrix values
-    dd = None  # Vector to store the matrix values
+    # Preliminary checks:
     n = len(a)  # Number of points
     if (len(b) != n or len(d) != n):  # Check the input length
         raise Exception('ERROR: wrong input size,')
-    # Let us remember that we have n points, but:
-    #   eta=0 has res=f_init
-    #   eta=eta_max has res=f_final
-    #   so we have n-2 points to solve
-    ns = n-2  # Number of points to solve
+    # We have n points, but:
+    #   eta = 0 has res = f_init
+    #   eta = eta_max has res = f_final
+    #   so we have n-2 points to solve for
+    ns = n-2  # Number of points to solve for
     # Initialization:
     aa = [0.0]*ns 
     bb = [0.0]*ns 
     cc = [0.0]*ns 
     dd = [0.0]*ns 
-    # P.S. In reality the aa and cc vectors have ns-1 points, because they are the upper and lower diagonals of the matrix
+    # P.S. In reality the aa and cc vectors have ns-1 points, because they are 
+    # the upper and lower diagonals of the matrix
     # Coefficients:
     for i in range(1, ns+1):
         mnp1p1 = a[i+1] + 1.5*b[i+1]
@@ -125,8 +114,6 @@ def solver(a,b,d,f_init,f_final):
 #.................................................
 #   Possible improvements:
 #   None
-#.................................................
-# EXECUTION TIME: TBD
 #.................................................
 #   KNOW PROBLEMS:
 #   None.
