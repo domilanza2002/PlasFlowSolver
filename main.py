@@ -7,13 +7,11 @@
 # Standard library imports:
 import math  # Standard library for math operations
 import time  # Standard library for time tracking operations
-import random  # Standard library for random operations
 # Third party library imports:
 import numpy as np  # Third party library for math operations
 import mutationpp as mpp  # Third party library for thermodynamic computations
 # Project file imports:
 # The format for the import is: "import filename as filename_file"
-import classes as classes_file  # Module with all the classes used in the program
 import presentation as presentation_file  # Module to print the presentation of the program
 import prompt_program_mode as prompt_program_mode_file  # Module to prompt the program mode to the user
 import script_run as script_run_file  # Module to execute a scripted run from a bash.pfs file
@@ -23,6 +21,7 @@ import heat_flux as heat_flux_file  # Module to compute the stagnation heat flux
 import thermodyn as thermodyn_file  # Module to compute the flow enthalpy
 import barker_effect as barker_effect_file  # Module to compute the Barker effect
 import jacobian_matrix as jacobian_matrix_file  # Module to compute the Jacobian matrix of the system of equations
+import newton_operations as newton_operations_file  # Module to perform the Newton-Raphson's method
 import system_solve as system_solve_file  # Module to solve the system of equations
 import out_properties as out_properties_file  # Module to compute the output properties
 import write_output as write_output  # Module to write the output file
@@ -32,14 +31,6 @@ from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix Mutation++ mem
 #.................................................
 # PROGRAM CONSTANTS: %TO REVIEW
 USE_PREV_ITE_FILENAME = "hf_first_comp.var"  # File to store the flag for the use_prev_ite option
-# Convergence threshold:
-CNV_THRESHOLD = 1e-4  # Convergence threshold for the Newton loop dynamic step size
-# Jacobian difference threshold:
-JAC_DIFF_MAX = 1e-1  # Maximum Jacobian step threshold
-JAC_DIFF_INCREASE = 4  # Jacobian step increase factor
-VARS_INCREASE = 0.1  # Variables increase factor
-OFFSET_T_T = 5000
-OFFSET_T = 500
 #.................................................
 #   PROGRAM START:
 # Preliminary operations:
@@ -198,24 +189,17 @@ while (n_case < n_lines):  # Loop through all the cases
             cnv_old = 1
         else:
             cnv = math.sqrt(cnv)/cnv_ref
-            dcnv = abs(cnv_old - cnv)
-            if (dcnv/cnv < 0.01 and settings_object.jac_diff < JAC_DIFF_MAX): # A better criteria based on some percentage should be used
-                settings_object.jac_diff *= JAC_DIFF_INCREASE
-                print("Jac_diff increased to "+str(settings_object.jac_diff))
-                T += T*VARS_INCREASE*random.choice([1,-1])
-                u += u*VARS_INCREASE*random.choice([1,-1])
-                T_t += T_t*VARS_INCREASE*random.choice([1,-1])
-                if (probes_object.barker_type != 0):
-                    P_t += P_t*VARS_INCREASE*random.choice([1,-1])
-                if (T < settings_object.min_T_relax):
-                    T = settings_object.min_T_relax
-                if (T_t < T):
-                    T_t = T + OFFSET_T_T
-                if(T_t>settings_object.max_T_relax):
-                    T_t = settings_object.max_T_relax - OFFSET_T_T
-                if(T > settings_object.max_T_relax):
-                    T = settings_object.max_T_relax - OFFSET_T
-                # Now residuals should probably be recomputed
+            try:
+                (
+                    cnv, res, settings_object, T, u, T_t, P_t, 
+                    h, h_t, s, s_t, P_b
+                ) = newton_operations_file.dynamic_jacobian_diff(
+                    cnv, cnv_old, cnv_ref, res, settings_object, probes_object, T, u, T_t, P_t, P,
+                    q_target, P_stag, mixture_object, h, h_t, s, s_t, P_b
+                )
+            except Exception as e:
+                print("Error encountered during the dynamic Jacobian computation: " + str(e))
+                print("Operation cancelled.")
             cnv_old = cnv
         #.................................................
         print("Case:" + str(n_case) + ", Iteration " + str(iter) + ", convergence criteria: " + str(cnv))
@@ -254,26 +238,10 @@ while (n_case < n_lines):  # Loop through all the cases
         else:
             P_t_star = P_t
         #.................................................
-        # UNDER-RELAXATION SCHEME:
-        relax = 1.0  # Reset the relaxation factor
-        # If the new valus are too low, we relax them:
-        while ( (T_star < settings_object.min_T_relax) or (u_star < 0) or (T_t_star < settings_object.min_T_relax) or (P_t_star < 0) or (T_t_star < probes_object.T_w) ): 
-            relax = relax/2  # We halve the relaxation factor
-            # New values:
-            T_star = T + d_vars[0]*relax
-            u_star = u + d_vars[1]*relax
-            T_t_star = T_t + d_vars[2]*relax
-            if (probes_object.barker_type != 0):
-                P_t_star = P_t + d_vars[3]*relax
-        # If the new values are too high, we relax them:
-        while ( (T_star > settings_object.max_T_relax) or (T_t_star > settings_object.max_T_relax)):
-            relax = relax/2  # We halve the relaxation factor
-            # New values:
-            T_star = T + d_vars[0]*relax
-            u_star = u + d_vars[1]*relax
-            T_t_star = T_t + d_vars[2]*relax
-            if (probes_object.barker_type != 0):
-                P_t_star = P_t + d_vars[3]*relax
+        # Under-relaxation scheme:
+        T_star, u_star, T_t_star, P_t_star = newton_operations_file.under_relaxation(
+            settings_object, probes_object, T_star, u_star, T_t_star, P_t_star, T, u, T_t, P_t, d_vars
+        )
         #.................................................
         # New variables' values:
         T = T_star

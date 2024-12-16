@@ -96,7 +96,7 @@ def properties_across_BL(T_e, P_e, mu_e, rho_e, z, N_p, mixture_object, max_T_re
     # Computation:
     for i in range(0, N_p):
         T = T_e*z[i]  # Current temperature
-        if (T<=4 or np.isnan(T) or T>max_T_relax):  # This should never happen, redo the computation
+        if (T <= 4 or np.isnan(T) or T > max_T_relax):  # This should never happen, redo the computation
             redo = True
             return l_0, rr, chi, C_p, redo
         # Compute the properties:
