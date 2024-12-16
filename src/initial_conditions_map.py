@@ -253,7 +253,10 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
         rfb4 = scipy_int.Rbf(points[:,0], points[:,1], points[:,2], values[:,2], function='thin_plate', smooth=5)
         u_0 = []
         u_0.append(rfb4(int_point[0], int_point[1], int_point[2]))
-        
+        if(T_0[0] < 0 or T_t_0[0] < 0 or u_0[0] < 0 or T_0[0] > 18000 or T_t_0[0] > 18000):
+            T_0 = scipy_int.griddata(points, values[:,0], int_point, method='nearest')
+            T_t_0 = scipy_int.griddata(points, values[:,1], int_point, method='nearest')
+            u_0 = scipy_int.griddata(points, values[:,2], int_point, method='nearest')
         warnings = "Linear interpolation failed, nearest interpolation used.|"
     # I create the object
     T_0 = T_0[0]*multiplication_factor
