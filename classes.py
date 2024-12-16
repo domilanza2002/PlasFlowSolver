@@ -2,18 +2,27 @@
 #   CLASSES.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module contains all the classes used in the program.
-#   There are currently 11 classes:
-#   -database_settings_class: class to store all the database settings
-#   -database_inputs_class: class to store all the database inputs
-#   -database_class: class to store all the database data
-#   -dataframe_class: class to store all the input variables
-#   -inputs_class: class to store all the inputs of the program for the current iteration
-#   -initial_conditions_db_class: class to store all the initial conditions database
-#   -initials_class: class to store all the initial conditions
-#   -probes_class: class to store all the probes properties
-#   -settings_class: class to store all the settings of the program
-#   -out_properties_class: class to store all the output properties
-#   -CF_constants: class to store all the conversion factors
+#   There are currently 13 classes:
+#   -CF_constants: contains the constants used to convert the read values to the SI units
+#   -database_settings_class: contains the database settings read from file
+#   -database_inputs_class: contains the database inputs
+#   -database_class: contains the database data to be stored
+#   -dataframe_class: contains all the variables read from the input files
+#   -inputs_class: contains the thermodynamic inputs of the program for the current case
+#   -initials_class: contains the initial conditions of the program for the current case
+#   -probes_class: contains the probe settings for the current case
+#   -settings_class: contains the settings of the program for the current case
+#   -initial_conditions_db_class: contains the initial conditions database for the current case
+#   -out_properties_class: contains the output properties of the program
+#.................................................
+class CF_constants:
+    """This class contains the constants used to convert
+    the read values to the SI units.
+    """
+    def __init__(self):
+        self.P_CF = 1e3  # Conversion factor for pressure (kPa->Pa)
+        self.Q_CF = 1e4  # Conversion factor for heat flux (W/cm^2->W/m^2)
+        self.L_CF = 1e-3  # Conversion factor for length (mm->m)
 #.................................................
 class database_settings_class:
     """This class contains the database settings read from file.
@@ -121,14 +130,6 @@ class inputs_class:
         self.q_target = None  # Target heat flux (float)
         self.mixture_name = None  # Mixture name (string)
 #.................................................
-class initial_conditions_db_class:
-    """This class contains the initial conditions 
-    database for the current case.
-    """
-    def __init__(self):  # Basic constructor
-        self.db_inputs = None
-        self.db_outputs = None
-#.................................................
 class initials_class:
     """This class contains the initial conditions 
     of the program for the current case.
@@ -171,6 +172,14 @@ class settings_class:
         self.min_T_relax = None #Minimum value for the temperature used for relaxation, float
         self.max_T_relax = None #Maximum value for the temperature used for relaxation, float
 #.................................................
+class initial_conditions_db_class:
+    """This class contains the initial conditions 
+    database for the current case.
+    """
+    def __init__(self):
+        self.db_inputs = None
+        self.db_outputs = None
+#.................................................
 class out_properties_class:
     """This class contains the output properties of the program.
     """
@@ -192,18 +201,9 @@ class out_properties_class:
         self.species_names_out = None  # Names of the species
         self.species_Y_out = None  # Mass fractions of the species
 #.................................................
-class CF_constants:
-    """This class contains the constants used to convert
-    the read values to the SI units.
-    """
-    def __init__(self):
-        self.P_CF = 1e3  # Conversion factor for pressure (kPa->Pa)
-        self.Q_CF = 1e4  # Conversion factor for heat flux (W/cm^2->W/m^2)
-        self.L_CF = 1e-3  # Conversion factor for length (mm->m)
-#.................................................
 #   Possible improvements:
-#   -Add getters and setters and make all the variable private
-#   -Add more constructors
+#   - Add getters and setters and make all the variable private
+#   - Improve organization
 #.................................................
 #   KNOW PROBLEMS:
 #   -None

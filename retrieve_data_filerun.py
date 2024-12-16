@@ -1,5 +1,5 @@
 #.................................................
-#   RETRIEVE_DATA_FILERUN.PY, v1.0.0, April 2024, Domenico Lanza.
+#   RETRIEVE_DATA_FILERUN.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to retrieve the needed
 #   data from the dataframe object for the current loop
@@ -23,54 +23,12 @@ def retrieve_data(df, n_case):
         probes_class (probes_class): the probes object containing the probes
         settings_class (settings_class): the settings object containing the settings
     """
-    
-    # Variables:
-    warnings = None  # Warnings for the reading process (string)
-    inputs_object = None  # Inputs object
-    initials_object = None  # Initials object
-    probes_object = None  # Probes object
-    settings_object = None  # Settings object
-    # Inputs:
-    comment = None  # Comment (string)
-    P = None  # Pressure (float)
-    P_dyn = None  # Dynamic pressure (float)
-    q_target = None  # Target heat flux (float)
-    # Initial conditions:
-    ic_db_name = None  # Initial conditions database name (string)
-    T_0 = None  # Initial static temperature (float)
-    T_t_0 = None  # Initial total temperature (float)
-    u_0 = None  # Initial flow velocity (float)
-    P_t_0 = None  # Initial total pressure (float)
-    # Probe settings:
-    T_w = None  # Probe wall temperature (float)
-    R_p = None  # Pitot external radius (float)
-    R_m = None  # External radius of the heat flux probe (float)
-    R_j = None  # Plasma jet radius (float)
-    stag_type = None  # Stagnation type (string)
-    hf_law = None  # Heat flux law (string)
-    barker_type = None  # Barker's correction type (string)
-    stag_var = None  # Stagnation variable (float)
-    # Program settings:
-    N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
-    max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
-    hf_conv = None  # Convergence criteria for the heat flux computation (float)
-    use_prev_ite = None  # Flag to indicate if the previous iteration for the heat flux computation should be
-    # used as initial guess for the new iteration (string)
-    eta_max = None  # Upper integration boundary for the normal coordinate of the boundary layer (float)
-    log_warning_hf = None  # Flag to indicate if a warning should be logged when the heat flux computation does not converge (string)
-    newton_conv = None  # Convergence criteria for the Newton-Raphson method (float)
-    max_newton_iter = None  # Maximum number of iterations for Newton-Raphson method (integer)
-    jac_diff = None  # Finite difference epsilon for the Jacobian matrix (float)
-    min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
-    max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
-
-    # Variables to return:
+    # Initialize the objects
     inputs_object = classes_file.inputs_class()  
     initials_object = classes_file.initials_class() 
     probes_object = classes_file.probes_class() 
     settings_object = classes_file.settings_class()
-    warnings = [] 
-    warnings = "None|"
+    warnings = ""
     # INPUTS:
     # Comment:
     comment = df.comment[n_case]  # comment (string)
@@ -111,7 +69,10 @@ def retrieve_data(df, n_case):
     ic_db_name = df.ic_db_name  # Initial conditions database name (string)
     # Initials:
     if (ic_db_name != ""):
-        initials_object, warnings_int = retrieve_ic(ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target, df.T_w)
+        initials_object, warnings_int = retrieve_ic(
+            ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target,
+            df.T_w, df.max_T_relax
+            )
         if (warnings_int is not None):
             warnings += warnings_int
     else:
@@ -124,7 +85,7 @@ def retrieve_data(df, n_case):
         P_t_0 = df.P_t_0  # Initial total pressure (float)
         if (P_t_0 == 0):  # If the initial total pressure is zero we set it as the stagnation pressure
             P_t_0 = inputs_object.P_stag
-        initials_object.P_t_0=P_t_0 
+        initials_object.P_t_0 = P_t_0 
     # Probe properties:
     # Wall temperature:
     T_w = df.T_w  # Wall temperature, float
@@ -188,12 +149,15 @@ def retrieve_data(df, n_case):
         initials_object.P_t_0 = inputs_object.P_stag
         warnings += "P_t_0 not consistent with the Barker's correction, set to P_stag|"
     # Return the objects
+    if (warnings == ""):
+        warnings = "None"
     return inputs_object, initials_object, probes_object, settings_object, warnings
 #.................................................
 #   Possible improvements:
-#   -Use getter and setter for the inputs, initials, probes and settings objects
-#.................................................
-# Execution time: Not relevant.
+#   - Use getter and setter for the inputs, initials, probes and settings objects
+#   - stagvar is being computed a lot of times uselessly
+#   - Improve efficiency
+#   - Better exception throwing
 #.................................................
 #   Known problems:
 #   None.

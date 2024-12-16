@@ -53,10 +53,10 @@ def db_inputs_append(db_inputs, inputs_object, probes_object):
 def db_inputs_append_null_line(db_inputs):
     """Function to append a line when the data are not valid.
 
-    Args:
+    Args and Returns:
         db_inputs (list): the database inputs
     """
-    # Depackaging the inputs and repackaging them
+    # Append the null line
     db_inputs.P.append(-1)
     db_inputs.P_dyn.append(-1)
     db_inputs.q_target.append(-1)
@@ -67,6 +67,7 @@ def db_inputs_append_null_line(db_inputs):
     db_inputs.R_j.append(-1)
     db_inputs.barker_type.append(-1)
     db_inputs.stag_type.append(-1)
+    
     return db_inputs
 
 def pfs_file_detected():

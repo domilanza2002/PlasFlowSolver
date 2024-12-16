@@ -4,8 +4,7 @@
 #   This module is needed to compute the Jacobian matrix of the system
 #   in order to use the Newton-Raphson's method.
 #.................................................
-import enthalpy as enthalpy_file  # Module to compute the enthalpy
-import entropy as entropy_file  # Module to compute the entropy
+import thermodyn as thermodyn_file  # Module to compute the enthalpy
 import barker_effect as barker_effect_file  # Module to compute the Barker's effect
 import heat_flux as heat_flux_file  # Module to compute the heat flux
 def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u, mixture_object):
@@ -63,8 +62,8 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     # DERIVATIVE WRT T:
     delta = T*jac_diff  # Temperature increment for the finite difference
     T_star = T + delta  # New temperature for the finite difference
-    h_star = enthalpy_file.enthalpy(mixture_object, P, T_star)
-    s_star = entropy_file.entropy(mixture_object, P, T_star)
+    h_star = thermodyn_file.enthalpy(mixture_object, P, T_star)
+    s_star = thermodyn_file.entropy(mixture_object, P, T_star)
     P_b_star = barker_effect_file.barker_effect(probes, mixture_object, P_t, P, T_star, u)[0]  # I retrieve only the pressure
     # Derivatives:
     dh_dt = (h_star-h)/delta  # Derivative of h(P, T) w.r.t. T
@@ -84,8 +83,8 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
     delta = T_t*jac_diff  # Total temperature increment for the finite difference
     T_t_star = T_t + delta  # New total temperature for the finite difference
     q_star = heat_flux_file.heat_flux(probes, settings, P_t, T_t_star, u, mixture_object)[0]
-    h_t_star = enthalpy_file.enthalpy(mixture_object, P_t, T_t_star)
-    s_t_star = entropy_file.entropy(mixture_object, P_t, T_t_star)
+    h_t_star = thermodyn_file.enthalpy(mixture_object, P_t, T_t_star)
+    s_t_star = thermodyn_file.entropy(mixture_object, P_t, T_t_star)
     # Derivatives:
     dq_dtt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. T_t
     dht_dtt = (h_t_star-h_t)/delta  # Derivative of h_t(P_t, T_t) w.r.t. T_t
@@ -96,8 +95,8 @@ def jacobian_matrix(probes, settings, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u,
         delta = P_t*jac_diff  # Total pressure increment for the finite difference
         P_t_star = P_t + delta  # New total pressure for the finite difference
         q_star = heat_flux_file.heat_flux(probes, settings, P_t_star, T_t, u, mixture_object)[0]
-        h_t_star = enthalpy_file.enthalpy(mixture_object, P_t_star, T_t)
-        s_t_star = entropy_file.entropy(mixture_object, P_t_star, T_t)
+        h_t_star = thermodyn_file.enthalpy(mixture_object, P_t_star, T_t)
+        s_t_star = thermodyn_file.entropy(mixture_object, P_t_star, T_t)
         P_b_star = barker_effect_file.barker_effect(probes, mixture_object, P_t_star, P, T, u)[0]  # I retrieve only the pressure
         # Derivatives:
         dq_dpt = (q_star-q)/delta  # Derivative of q(P_t, T_t, u) w.r.t. P_t

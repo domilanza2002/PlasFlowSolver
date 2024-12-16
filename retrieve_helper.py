@@ -41,8 +41,7 @@ def retrieve_mixture_name(plasma_gas):
     Returns:
         mixture_name (string): the mixture name
     """
-    mixture_name = None  # Variable to store the mixture name
-    mix_temp = None  # Variable to store the temporary mixture
+    # Match the plasma gas:
     match plasma_gas:
         case "n2":
             mixture_name = "nitrogen2"
@@ -54,7 +53,11 @@ def retrieve_mixture_name(plasma_gas):
             mixture_name = "air_13"
         case "air_11":
             mixture_name = "air_11"
-        case _:
+        case "co2":
+            mixture_name = "CO2_8"
+        case "CO2":
+            mixture_name = "CO2_8"
+        case _:  # If the plasma gas is not in the list, I have to check if it is a valid mixture
             try:
                 mix_temp = mpp.Mixture(plasma_gas)
                 mixture_name = plasma_gas
@@ -62,7 +65,7 @@ def retrieve_mixture_name(plasma_gas):
                 raise ValueError("Error: Invalid plasma gas. Check the input file.")
     return mixture_name
 #...................................................
-def retrieve_ic(db_name, P, P_dyn, q_target, T_w):
+def retrieve_ic(db_name, P, P_dyn, q_target, T_w, max_T_relax):
     """This function retrieves the initial conditions from the database.
 
     Args:
@@ -71,29 +74,28 @@ def retrieve_ic(db_name, P, P_dyn, q_target, T_w):
         P_dyn (float): the dynamic pressure
         q_target (float): the target heat flux
         T_w (float): the wall temperature
+        max_T_relax (float): maximum temperature allowed
 
     Returns:
         ic_db (initial_conditions_db_class): the initial conditions database object
     """
-    # Variables:
-    initials_object = None  # Variable to store the initials object
-    ic_db = None  # Variable to store the initial conditions database object
+    # Constants:
+    CF_CONSTANTS = CF_constants_class()  # Object with the conversion factors
     MULTIPLICATION_FACTOR = 1.15  # Multiplication factor for the interpolation
-    warnings = None  # Variable to store the warnings
+    # Load the initial conditions database:
     try:
         ic_db = ic_map_file.load_ic_db(db_name)
     except Exception as e:
         raise ValueError("Error: Cannot read the initial conditions database: " + str(e) + ".")
     
     # The inputs are not in the correct units, so I have to convert them:
-    CF_CONSTANTS = CF_constants_class()  # Object with the conversion factors
     # Conversion of the inputs:
     P *= CF_CONSTANTS.P_CF
     P_dyn *= CF_CONSTANTS.P_CF
     q_target *= CF_CONSTANTS.Q_CF
-    
+    # Retrieve the initial conditions:
     try:
-        initials_object, warnings = ic_map_file.interp_ic_db(ic_db, P, P_dyn, q_target, T_w, MULTIPLICATION_FACTOR)
+        initials_object, warnings = ic_map_file.interp_ic_db(ic_db, P, P_dyn, q_target, T_w, max_T_relax, MULTIPLICATION_FACTOR)
     except Exception as e:
         raise ValueError("Error: Interpolation failed: " + str(e) + ".")
     
@@ -111,9 +113,9 @@ def retrieve_stag_type(stag_type_string):
     Returns:
         stag_type (int): the stagnation type
     """
-    stag_type = None  # Variable to store the stagtype
+    # Match the stagnation type:
     match stag_type_string:
-        case "flat":
+        case "flat":  # Flat face probe, Kolesnikov's relation
             stag_type = 0
         case _:
             raise ValueError("Error: Invalid stagnation type. Check the input file.")
@@ -132,11 +134,11 @@ def retrieve_hf_law(hf_law_string):
     Returns:
         hf_law (int): the heat flux law
     """
-    hf_law = None  # Variable to store the heat flux law
+    # Match the heat flux law:
     match hf_law_string:
-            case "exact":
+            case "exact":  # Exact heat flux law, with boundary layer equations
                 hf_law = 0
-            case "fay_riddell":
+            case "fay_riddell":  # Fay-Riddell's heat flux law
                 hf_law = 1
             case _:
                 raise ValueError("Error: Invalid heat flux law. Check the input file.")
@@ -154,13 +156,13 @@ def retrieve_barker_type(barker_type_string):
     Returns:
         barker_type (int): the Barker's correction type
     """
-    barker_type = None  # Variable to store the barker type
+    # Match the Barker's correction type:
     match barker_type_string:
         case "none":
             barker_type = 0
-        case "homann":
+        case "homann":  # Homann's correction for spheres
             barker_type = 1
-        case "carleton":
+        case "carleton":  # Carleton's correction
             barker_type = 2
         case _:
             raise ValueError("Error: Invalid Barker's correction type. Check the input file.")
@@ -180,11 +182,11 @@ def retrieve_stag_var(stag_type, R_m, R_j):
     Returns:
         stag_var (float): the stagvar
     """
-    stag_var = None  # Variable to store the stagvar
-    ratio_L = None  # Variable to store the ratio of the lengths
-    den_sv = None  # Variable to store the denominator for the stagvar
+    # NOTE: R_m and R_j are not in the correct units, but in the current
+    # implementation, only the ratio is needed, so I can use them as they are.
+    # Match the stag_type:
     match stag_type:
-        case 0:
+        case 0:  # Flat plate, Kolesnikov's relation
             ratio_L = R_m/R_j
             if (ratio_L <= 1):
                 den_sv= 2 - ratio_L - 1.68 * pow ((ratio_L-1), 2) - 1.28 * pow((ratio_L-1), 3)
@@ -207,7 +209,7 @@ def retrieve_use_prev_ite(use_prev_ite_string):
     Returns:
         use_prev_ite (int): the use_prev_ite
     """
-    use_prev_ite = None  # Variable to store the use_prev_ite
+    # Match the use_prev_ite:
     match use_prev_ite_string:
         case "yes":
             use_prev_ite = 1
@@ -229,7 +231,7 @@ def retrieve_log_warning_hf(log_warning_hf_string):
     Returns:
         log_warning_hf (int): the log_warning_hf
     """
-    log_warning_hf = None  # Variable to store the log_warning_hf
+    # Match the log_warning_hf:
     match log_warning_hf_string:
         case "yes":
             log_warning_hf = 1
@@ -266,3 +268,10 @@ def retrieve_converted_inputs(inputs_object, initials_object, probes_object):
     probes_object.R_j *= CF_CONSTANTS.L_CF
     # Return the objects:
     return inputs_object, initials_object, probes_object
+#.................................................
+#   Possible improvements:
+#   - More specific exceptions
+#.................................................
+#   KNOW PROBLEMS:
+#   -None
+#.................................................
