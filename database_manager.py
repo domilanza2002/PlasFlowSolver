@@ -1,13 +1,13 @@
 #.................................................
-#   DATABASE_MANAGER.PY, v1.0.0, April 2024, Domenico Lanza.
+#   DATABASE_MANAGER.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
-#   This module is needed to database creation, update and management.
+#   This module is needed for the database creation, update and management.
 #.................................................
 import pandas as pd
 
 from classes import database_settings_class
+from classes import database_inputs_class
 from classes import database_class
-from classes import initial_conditions_db_class
 import initial_conditions_map as ic_map_file
 
 def db_inputs_init():
@@ -16,7 +16,7 @@ def db_inputs_init():
     Returns:
         object: the database inputs
     """
-    db_inputs = database_class()
+    db_inputs = database_inputs_class()
     db_inputs.P = []  # Pressure
     db_inputs.P_dyn = []  # Dynamic pressure
     db_inputs.q_target = []  # Target heat flux
@@ -77,7 +77,6 @@ def pfs_file_detected():
         bool: True if the file is present, False otherwise
     """
     FILENAME = "database_settings.pfs"  # Default filename for the database settings file
-    file = None  # Temporary file variable
     # I check if the file exists
     try:
         file = open(FILENAME, "r")
@@ -87,21 +86,29 @@ def pfs_file_detected():
         return False
     
 def read_pfs_file():
+    """Function to read the database_settings.pfs file.
+    
+    Raises:
+        Exception: FileError: The database_settings.pfs file cannot be read. This should not happen. Check the code.
+    
+    Returns:
+        db_settings (database_settings_class): the database settings
+    """
     # Variables:
-    file = None  # Temporary file variable
     db_settings = database_settings_class()
-    if(pfs_file_detected==False):
+    if (pfs_file_detected == False):
         raise Exception("FileError: The database_settings.pfs file cannot be read. This should not happen. Check the code.")
-    # I open the file
+    # Read the file
     file = open("database_settings.pfs", "r")
-    # I read the file
     # DB name
     line = file.readline()
-    db_settings.db_name = line.split(":")[1].strip()  # I take the part of the string after the ":", I strip it
-    # CREATE DB FLAG
+    db_settings.db_name = line.split(":")[1].strip()  # Take the part of the string after the ":", strip it
+    if (db_settings.db_name == ""):
+        return None  # Return None if the name is not valid
+    # Create DB flag
     line = file.readline()
-    db_settings.create_db_flag = line.split(":")[1].strip().lower()  # I take the part of the string after the ":", I strip it
-    match db_settings.create_db_flag:  # I check if the flag is valid
+    db_settings.create_db_flag = line.split(":")[1].strip().lower()
+    match db_settings.create_db_flag:
         case "true":
             db_settings.create_db_flag = True
         case "1":
@@ -111,11 +118,11 @@ def read_pfs_file():
         case "0":
             db_settings.create_db_flag = False
         case _:
-            return None
-    # LOWER TIME FLAG
+            return None  # Return None if the flag is not valid
+    # Lower time flag
     line = file.readline()
-    db_settings.lower_time_flag = line.split(":")[1].strip().lower()  # I take the part of the string after the ":", I strip it
-    match db_settings.lower_time_flag:  # I check if the flag is valid
+    db_settings.lower_time_flag = line.split(":")[1].strip().lower() 
+    match db_settings.lower_time_flag: 
         case "true":
             db_settings.lower_time_flag = True
         case "1":
@@ -126,10 +133,10 @@ def read_pfs_file():
             db_settings.lower_time_flag = False
         case _:
             return None
-    # GENERATE IC FLAG
+    # Generate IC flag
     line = file.readline()
-    db_settings.generate_ic_flag = line.split(":")[1].strip().lower()  # I take the part of the string after the ":", I strip it
-    match db_settings.generate_ic_flag:  # I check if the flag is valid
+    db_settings.generate_ic_flag = line.split(":")[1].strip().lower() 
+    match db_settings.generate_ic_flag:
         case "true":
             db_settings.generate_ic_flag = True
         case "1":
@@ -140,15 +147,15 @@ def read_pfs_file():
             db_settings.generate_ic_flag = False
         case _:
             return None
-    # IC MAP NAME
+    # IC map name
     line = file.readline()
-    db_settings.ic_map_name = line.split(":")[1].strip()  # I take the part of the string after the ":", I strip it
+    db_settings.ic_map_name = line.split(":")[1].strip()
     if (db_settings.ic_map_name == ""):
         return None
-    # IC MIXTURE SPLIT
+    # IC mixture split flag
     line = file.readline()
-    db_settings.ic_mixture_split_flag = line.split(":")[1].strip().lower()  # I take the part of the string after the ":", I strip it
-    match db_settings.ic_mixture_split_flag:  # I check if the flag is valid
+    db_settings.ic_mixture_split_flag = line.split(":")[1].strip().lower()
+    match db_settings.ic_mixture_split_flag:
         case "true":
             db_settings.ic_mixture_split_flag = True
         case "1":
@@ -159,7 +166,7 @@ def read_pfs_file():
             db_settings.ic_mixture_split_flag = False
         case _:
             return None
-    file.close()  # I close the file
+    file.close()
     return db_settings
 
 def init_database():
@@ -168,8 +175,8 @@ def init_database():
     Returns:
         db_settings (database_settings_class): the database settings
     """
-    if (pfs_file_detected()==False):
-        return None  # I return None if the file is not present. The database will not be used in this run.
+    if (pfs_file_detected() == False):
+        return None  # Return None if the file is not present. The database will not be used in this run.
     db_settings = read_pfs_file()  # I read the database settings. If the file is not in the correct format, none is returned.
     return db_settings  
 

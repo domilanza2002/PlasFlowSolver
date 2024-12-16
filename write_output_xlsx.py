@@ -55,7 +55,7 @@ def write_output_xlsx(output_filename, out_obj):
     df.insert(n_col, ("Output","temperature [K]"), T_out, False) 
     # ENTHALPY
     n_col = len(df.columns) 
-    df.insert(n_col, ("Output","enthalpy [kJ/Kg]"), h_out, False) 
+    df.insert(n_col, ("Output","enthalpy [kJ/kg]"), h_out, False) 
     # VELOCITY
     n_col = len(df.columns) 
     df.insert(n_col, ("Output","velocity [m/s]"), u_out, False)

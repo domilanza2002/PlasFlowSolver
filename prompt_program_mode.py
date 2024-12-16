@@ -1,5 +1,5 @@
 #.................................................
-#   PROMPT_PROGRAM_MODE.PY, v1.0.0, April 2024, Domenico Lanza.
+#   PROMPT_PROGRAM_MODE.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module contains the prompt_program_mode() function.
 #   This function prompts the user to select the program mode.
@@ -17,7 +17,7 @@ def is_int(s):
     Returns:
         Boolean: True if the input is an integer, False otherwise
     """
-    try:  # I check if the input is an integer 
+    try: 
         int(s)
         return True
     except:
@@ -29,27 +29,22 @@ def prompt_program_mode():
     Returns:
         program_mode (int): the program mode
     """
-    # Variables:
-    program_mode = None # the program mode, 1 for single run, 2 for excel run, 3 for file run
-    
-    # I prompt the user to select the program mode
+    # Prompt the user to select the program mode
     print("Please select the program mode:")
     print("1: Single run (.srun file)")
     print("2: Excel run (.xlsx file)")
     print("3: File run (.in file + .pfs file)")
     program_mode = input("Please enter your choice: ")
-    # I check if the input is valid
+    # Check if the input is valid
     while ( (is_int(program_mode) == False) or (int(program_mode) != 1 and int(program_mode) != 2 and int(program_mode) != 3)):
         print("Invalid choice. Please enter 1, 2 or 3.")
         program_mode = input("Please enter your choice: ")
-    # I return the program mode
+    # Return the program mode
     program_mode = int(program_mode)
     return program_mode
 #.................................................
 #   Possible improvements:
 #   None.
-#.................................................
-#   EXECUTION TIME: Not relevant.
 #.................................................
 #   KNOW PROBLEMS:
 #   None.

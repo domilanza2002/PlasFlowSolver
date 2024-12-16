@@ -1,14 +1,17 @@
 #.................................................
-#   READ_SRUN.PY, v1.0.0, April 2024, Domenico Lanza.
+#   READ_SRUN.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to read the
-#   .srun (Single Run) file and to create the the
-#   dataframe object.
+#   .srun (Single Run) file and create the the
+#   dataframe object. In particular, here all the
+#   inputs are read, but the settings are not retrieved.
+#   That is done in retrieve_data_srun.py.
 #.................................................
-import classes as classes_file  # Module that contains the classes of the program
-import bash_run as bash_run_file  # Module that contains the bash run functions
+from classes import dataframe_class  # Class that contains the dataframe object
+from script_run import retrieve_filename  # Module that contains the bash run functions
 from retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
-from initial_conditions_map import verify_db  # Function to verify the initial conditions database
+from initial_conditions_map import verify_ic_db  # Function to verify the initial conditions database
+
 def prompt_input_file():
     """This function prompts the user for the
     input filename.
@@ -17,7 +20,6 @@ def prompt_input_file():
         input_filename (string): the name of the input file
     """
     # Variables:
-    input_file_name = None  # Name of the input file
     print("Input the name of the .srun file to read.")
     input_file_name = input("Filename: ") 
     # I check if the extension is .srun, otherwise I add it
@@ -25,69 +27,23 @@ def prompt_input_file():
         input_file_name = input_file_name + ".srun"
     return input_file_name
 
-def read_srun(bash_run):
+def read_srun(script_run):
     """This function create a dataframe_class
     object from a srun file.
 
     Inputs:
-        bash_run (bool): True if the program is in bash mode, False otherwise
+        script_run (bool): True if the program is in bash mode, False otherwise
     
     Returns:
         df_object (dataframe_class) : the dataframe object from the .srun file
         output_filename (string): the name of the output file
     """
-    # Variables:
-    input_filename = None  # Name of the input file
-    file = None  # File object for I/O
-    file_found = None  # Boolean variable to check if the file is found
-    line = None  # Line of the file
-    P_dyn_used = None  # Boolean variable to check if the dynamic pressure is used
-    P_stag_used = None  # Boolean variable to check if the stagnation pressure is used
-    
-    # Variables to be read from the file:
-    # Inputs:
-    comment = None  # Comment (string)
-    P = None  # Pressure (float)
-    P_dyn = None  # Dynamic pressure (float)
-    P_stag = None  # Stagnation pressure (float)
-    q_target = None  # Target heat flux (float)
-    plasma_gas = None  # Plasma gas (string)
-    # Initial conditions:
-    ic_db_name = None  # Initial conditions database name (string)
-    T_0 = None  # Initial static temperature (float)
-    T_t_0 = None  # Initial total temperature (float)
-    u_0 = None  # Initial flow velocity (float)
-    P_t_0 = None  # Initial total pressure (float)
-    # Probe settings:
-    T_w = None  # Probe wall temperature (float)
-    R_p = None  # Pitot external radius (float)
-    R_m = None  # External radius of the heat flux probe (float)
-    R_j = None  # Plasma jet radius (float)
-    stag_type = None  # Stagnation type (string)
-    hf_law = None  # Heat flux law (string)
-    barker_type = None  # Barker's correction type (string)
-    # Program settings:
-    N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
-    max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
-    hf_conv = None  # Convergence criteria for the heat flux computation (float)
-    use_prev_ite = None  # Flag to indicate if the previous iteration for the heat flux computation should be
-    # used as initial guess for the new iteration (string)
-    eta_max = None  # Upper integration boundary for the normal coordinate of the boundary layer (float)
-    log_warning_hf = None  # Flag to indicate if a warning should be logged when the heat flux computation does not converge (string)
-    newton_conv = None  # Convergence criteria for the Newton-Raphson method (float)
-    max_newton_iter = None  # Maximum number of iterations for Newton-Raphson method (integer)
-    jac_diff = None  # Finite difference epsilon for the Jacobian matrix (float)
-    min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
-    max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
-    # Variables to return:
-    df_object = classes_file.dataframe_class() # I create the dataframe object to be returned
-    output_filename = None  # Name of the output file
-    # I start the reading process:
+    # Reading process:
     file_found = False
-    # I check if the program is in bash mode
-    if (bash_run == True):
-        input_filename = bash_run_file.retrieve_filename()  # I retrieve the filename from the bash.pfs file
+    # Check if the program is in bash mode
+    if (script_run == True):
         try:  # I try to read the file
+            input_filename = retrieve_filename()  # Retrieve the filename from the script.pfs file
             file = open(input_filename, "r")
             file_found = True
             file.close()
@@ -96,7 +52,7 @@ def read_srun(bash_run):
             print("The program will continue in manual mode.")
     # If the bash mode file was not found or the program is not in bash mode, I prompt the user for the input file
     while (file_found == False):
-        input_filename = prompt_input_file()  # I prompt the user for the input filename
+        input_filename = prompt_input_file()
         try:  # I check if the file exists
             file = open(input_filename, "r")
             file_found = True
@@ -120,7 +76,7 @@ def read_srun(bash_run):
     line = file.readline()
     try:  # I try to read the dynamic pressure
         P_dyn = float(line.split("=")[1].strip())  # The dynamic pressure is the float after the "=" sign
-        P_dyn_used = True  # If the user has set the dynamic pressure, I set the variable to True
+        P_dyn_used = True  # If the user has set the dynamic pressure
     except:
         pass  # Nothing has to be done
     # Stagnation pressure:
@@ -128,7 +84,7 @@ def read_srun(bash_run):
     line = file.readline()
     try:  # I try to read the stagnation pressure
         P_stag = float(line.split("=")[1].strip())  # The stagnation pressure is the float after the "=" sign
-        P_stag_used = True  # If the user has set the stagnation pressure, I set the variable to True
+        P_stag_used = True  # If the user has set the stagnation pressure
     except:
         pass  # Nothing has to be done
     # Stagnation heat flux:
@@ -153,14 +109,20 @@ def read_srun(bash_run):
     # Initial conditions database name:
     line = file.readline()
     ic_db_name = line.split("=")[1].strip()  # The initial conditions database name is the string after the "=" sign
-    if(verify_db(ic_db_name) == True):
+    if(verify_ic_db(ic_db_name) == True):  # If the initial conditions database is specified and valid, it is used, and 
+        # the initial conditions are not read from the file
         print("Initial database " + ic_db_name + " verified.")
+        # I skip the lines that contain the initial conditions
         line = file.readline()
         line = file.readline()
         line = file.readline()
         line = file.readline()
+        T_0 = None
+        T_t_0 = None
+        u_0 = None
+        P_t_0 = None
     else:
-        if(ic_db_name != ""):
+        if(ic_db_name != ""):  # If the initial conditions database is specified but invalid, a warning is printed
             print("Initial database " + ic_db_name + " invalid. Initial conditions will be read from the file.")
         ic_db_name = ""
         # Initial static temperature:
@@ -204,7 +166,7 @@ def read_srun(bash_run):
     # Barker correction:
     line = file.readline()
     barker_type = line.split("=")[1].strip().lower()  # The Barker correction is the string after the "=" sign
-    # Prorgam settings:
+    # Program settings:
     line = file.readline()  # I skip the line, that is the section title (PROGRAM SETTINGS)
     # Number of point for the boundary layer eta discretization:
     line = file.readline()
@@ -241,6 +203,7 @@ def read_srun(bash_run):
     max_T_relax = float(line.split("=")[1].strip())  # It is the float after the "=" sign
     file.close()    
     # I now store the variables in the dataframe object
+    df_object = dataframe_class() # I create the dataframe object to be returned
     df_object.n = 1  # Number of cases (integer)
     df_object.comment = comment  # Comment (string)
     df_object.P = P  # Static pressure (float)
@@ -271,15 +234,14 @@ def read_srun(bash_run):
     df_object.jac_diff = jac_diff  # Jacobian finite difference epsilon (float)
     df_object.min_T_relax = min_T_relax  # Minimum value for the temperature used for relaxation (float)
     df_object.max_T_relax = max_T_relax  # Maximum value for the temperature used for relaxation (float)
-    return df_object,output_filename
+    return df_object, output_filename
 #.................................................
 #   Possible improvements:
-#   -Add getter and setter for the dataframe object
-#   -Throw specific exceptions for each read error
-#   -Move the pressure check in retrieve, to
+#   - Add getter and setter for the dataframe object
+#   - Throw specific exceptions for each read error
+#   - Move the pressure check in retrieve, to
 #   be consistent with the other file reading functions
-#.................................................
-# EXECUTION TIME: Not relevant
+#   -More error checking
 #.................................................
 #   Known problems:
 #   - None

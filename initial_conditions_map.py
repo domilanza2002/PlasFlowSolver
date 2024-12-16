@@ -1,15 +1,15 @@
 #.................................................
-#   INITIAL_CONDITIONS_MAP.PY, v1.0.0, April 2024, Domenico Lanza.
+#   INITIAL_CONDITIONS_MAP.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to manage the initial
-#   conditions database map.
+#   conditions database.
 #.................................................
 import h5py  # Library to manage the database files
 import numpy as np  # Library to manage arrays
 import scipy.interpolate as scipy_int  # Library to interpolate data
 import classes as classes_file  # Module with the classes
 
-def verify_db(db_name):
+def verify_ic_db(db_name):
     """This function verifies if the database specified
     by the user exists and it is accessible.
 
@@ -20,8 +20,7 @@ def verify_db(db_name):
         bool: True if the database exists and it is accessible, False otherwise
     """
     # Variables:
-    tmp = None  # Temporary variable
-    try:
+    try:  # I try to open the file
         with h5py.File(db_name, 'r') as f:
             tmp = f['points'][:]
             tmp = f['values'][:]

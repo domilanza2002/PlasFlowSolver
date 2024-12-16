@@ -1,30 +1,28 @@
 #.................................................
 #       PlasFlowSolver Program
 #       main.py: main script
-#       Version 1.0.0, Domenico Lanza
+#       Version 2.0.0, Domenico Lanza
 #.................................................
 # LIBRARY IMPORTS:
-# I import here the libraries I will use in the program
 # Standard library imports:
 import math  # Standard library for math operations
 import time  # Standard library for time tracking operations
 import random  # Standard library for random operations
-#   Third party library imports:
+# Third party library imports:
 import numpy as np  # Third party library for math operations
 import mutationpp as mpp  # Third party library for thermodynamic computations
 # Project file imports:
-# I import here all the modules I will use in the program
 # The format for the import is: "import filename as filename_file"
-import classes as classes_file  # Module with all the classes that I will use in the program
+import classes as classes_file  # Module with all the classes used in the program
 import presentation as presentation_file  # Module to print the presentation of the program
 import prompt_program_mode as prompt_program_mode_file  # Module to prompt the program mode to the user
-import bash_run as bash_run_file  # Module to execute a bashrun
+import script_run as script_run_file  # Module to execute a scripted run from a bash.pfs file
 import read_data as read_data_file  # Module to read the data from the input file
 import retrieve_data as retrieve_data_file  # Module to retrieve the data from the dataframe
 import heat_flux as heat_flux_file  # Module to compute the stagnation heat flux
 import enthalpy as enthalpy_file  # Module to compute the flow enthalpy
 import entropy as entropy_file  # Module to compute the flow entropy
-import barker_effect as barker_effect_file  # Module to compute the Barker's effect
+import barker_effect as barker_effect_file  # Module to compute the Barker effect
 import jacobian_matrix as jacobian_matrix_file  # Module to compute the Jacobian matrix of the system of equations
 import system_solve as system_solve_file  # Module to solve the system of equations
 import out_properties as out_properties_file  # Module to compute the output properties
@@ -32,29 +30,20 @@ import write_output_srun as write_output_srun_file  # Module to write the output
 import write_output_xlsx as write_output_xlsx_file  # Module to write the output file in a .xlsx run
 import write_output_filerun as write_output_filerun_file  # Module to write the output file in a .in run
 import database_manager as database_manager_file  # Module to manage the database
-from exit_program import exit_program, clean_files  # Module to kill and clean the program
-from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix the memory leak
+from exit_program import exit_program, clean_files  # Module to kill the program and kill the temporary files
+from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix Mutation++ memory leak (if any, due to Python wrapper)
 #.................................................
-# PROGRAM CONSTANTS:
-# I declare here all the constants I will use in this script
+# PROGRAM CONSTANTS: %TO REVIEW
 # Convergence threshold:
-CNV_THRESHOLD = 1e-4  # Convergence threshold for the Newton loop
+CNV_THRESHOLD = 1e-4  # Convergence threshold for the Newton loop dynamic step size
 # Jacobian difference threshold:
-JAC_DIFF_MAX = 1e-1  # Maximum Jacobian difference threshold
-JAC_DIFF_INCREASE = 4  # Jacobian difference increase factor
+JAC_DIFF_MAX = 1e-1  # Maximum Jacobian step threshold
+JAC_DIFF_INCREASE = 4  # Jacobian step increase factor
 VARS_INCREASE = 0.1  # Variables increase factor
 OFFSET_T_T = 5000
 OFFSET_T = 500
 #.................................................
 # PROGRAM VARIABLES:
-# I declare here all the variables I will use in this script
-# Variables to manage the program mode:
-program_mode = None  # Variable to store the program mode
-bash_run = None  # Variable to store if a bashrun has to be executed
-t1 = None  # Variable to store the time at the beginning of the program
-t2 = None  # Variable to store the time at the end of the program
-# Variables for the output file:
-output_filename = None  # Name of the output file
 # Dataframe variables:
 n_lines = None  # Number of lines of the dataframe
 check = None  # Variable to check if the line must be skipped
@@ -84,7 +73,7 @@ relax = None  # Relaxation factor
 mixture_object = None  #Mixture object from Mutation++ library
 q = None  # Current stagnation heat flux
 P_t = None  # Current total pressure of the flow
-P_b = None  # Current Barker's effect pressure (Current stagnation pressure) (P_b = P_t+0.5*rho*pow(u,2)*Cp)
+P_b = None  # Current Barker effect pressure (Current stagnation pressure) (P_b = P_t+0.5*rho*pow(u,2)*Cp)
 T = None  # Current static temperature of the flow
 T_t = None  # Current total temperature of the flow
 u = None  # Current flow speed
@@ -96,8 +85,8 @@ T_star = None  # Variable to store the new T value, before the relaxation
 u_star = None  # Variable to store the new u value, before the relaxation
 T_t_star = None  # Variable to store the new T_t value, before the relaxation
 P_t_star = None  # Variable to store the new P_t value, before the relaxation
-Re = None  # Pitot Reynolds number for the Barker's effect
-mfp = None  # Mean free path for the Barker's effect
+Re = None  # Pitot Reynolds number for the Barker effect
+mfp = None  # Mean free path for the Knudsen number
 # Output properties:
 rho = None  # Final density of the flow
 a = None  # Final sound speed of the flow
@@ -125,65 +114,55 @@ exit_due_error = None  # Variable to exit the Newton loop if an error occurs dur
 hf_first_comp = None  # Variable to store if it is the first time that we compute the heat flux for the current case
 bad_hf = None  # Variable to store if the heat flux is bad
 # Variable to manage the database
-db_settings = None  # Database settings object
-db_used = None  # Flag to indicate if the database is used
 t_start_case = None  # Variable to store the time at the beginning of the case
 t_end_case = None  # Variable to store the time at the end of the case
 run_time_vect = None  # Vector to store the run time of each case
-db_inputs = None  # Database inputs
-#
 #.................................................
 # CLASS INSTANCES:
-# I will create here the instances of the classes I will use in the program
 inputs_object = classes_file.inputs_class()  # Object with the inputs for the current iteration
 settings_object = classes_file.settings_class()  # Object with the settings for the current iteration
 probes_object = classes_file.probes_class()  # Object with the probe properties for the current iteration
 initials_object = classes_file.initials_class()  # Object with the initial conditions for the current iteration
-df_object = classes_file.dataframe_class()  # Object to store the dataframe, independently from the program mode
 out_object = classes_file.out_properties_class()  # Object to store the output properties
-db_settings = classes_file.database_settings_class()  # Object to store the database settings
-db_inputs = classes_file.database_inputs_class()  # Object to store the database inputs
 #.................................................
-#
-#   Here the program starts
-t1 = time.time()  # I store the time at the beginning of the program, to keep track of the execution time
-presentation_file.presentation()  # I call the presentation module, to present the program to the user
-# Fix the memory leak in the MPP library:
-fix_mpp_memory_leak()
-# Bashrun check:
-bash_run = bash_run_file.bash_file_detected()  # I check if a bashrun has to be executed
-if (bash_run == False):  # If the program is in manual mode
-    print("No valid bash.pfs file detected, the program will run in manual mode.")
-    program_mode = prompt_program_mode_file.prompt_program_mode()  # I prompt the user for the program mode
-else:  # If the program is in bash mode
-    print("A valid bash.pfs file detected, the program will run in bash mode.")
+#   PROGRAM START:
+# Preliminary operations:
+t1 = time.time()  # I store the time at the beginning of the program to keep track of the execution time
+presentation_file.presentation()  # I write the presentation of the program
+fix_mpp_memory_leak()  # Fix the memory leak in the MPP library:
+# Program scripting check:
+script_run = script_run_file.script_file_detected()  # Check if a scripted run has to be executed
+if (script_run == False):  # If the program is in manual mode
+    print("No valid script.pfs file detected, the program will run in manual mode.")
+    program_mode = prompt_program_mode_file.prompt_program_mode()  # Prompt the user for the program mode
+else:  # The program is in bash mode
+    print("A valid script.pfs file detected, the program will run in scripted mode.")
     try:
-        program_mode = bash_run_file.retrieve_program_mode()  # I retrieve the program mode from the bashrun file
+        program_mode = script_run_file.retrieve_program_mode()  # Trying to retrieve the program mode
     except Exception as e:
-        print("Invalid program mode: "+str(e))
-        print("The program will continue in normal mode")
-        program_mode = prompt_program_mode_file.prompt_program_mode()  # I prompt the program mode to the user
-        bash_run = False  # I set the program to manual mode
-# Database check:
+        print("Invalid program mode: " + str(e))
+        print("The program will continue in manual mode.")
+        program_mode = prompt_program_mode_file.prompt_program_mode()  # Prompt the program mode to the user
+        script_run = False
+# Check if a database must be used and retrieve its settings:
 db_settings = database_manager_file.init_database()  # The initial operations for the database are performed
 if (db_settings is None):
-    db_used = False
-    print("No valid database_settings.pfs file detected, the program will not use the database.")
+    db_used = False  # Flag to check if the database is used
+    print("No valid database_settings.pfs file detected, the program will not use a database.")
 else:
     db_used = True
-    print("A valid database_settings.pfs file detected, the program will use the database.")
+    print("Valid database_settings.pfs file detected, the program will use the database.")
     db_inputs = database_manager_file.db_inputs_init()  # The initial operations for the database inputs are performed
 # Now I read the data:
 try:
-    df_object, output_filename = read_data_file.read_data(program_mode, bash_run)
+    df_object, output_filename = read_data_file.read_data(program_mode, script_run)
 except Exception as e:
-    print(e)
+    print("Error while reading the data: " + str(e))
     print("The program will now terminate.")
     exit_program()
     
 #.................................................
 #   MAIN PROGRAM LOOP:
-#   Here the main program loop starts.
 n_case = 0
 n_lines = df_object.n  # I store the number of cases to be executed
 print("Number of cases to be executed: "+str(n_lines)+".")

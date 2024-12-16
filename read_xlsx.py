@@ -1,12 +1,17 @@
 #.................................................
-#   READ_XLSX.PY, v1.0.0, April 2024, Domenico Lanza.
+#   READ_XLSX.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to read the
-#   dataframe from a xlsx file.
+#   .xlsx (xlsx Run) file and create the the
+#   dataframe object. In particular, the data
+#   are extracted from the xlsx file, but not
+#   retrieved(checked) except for pressure
+#   consistency check. The rest is done in the
+#   retrieve_data_xlsx.py module.
 #.................................................
 import pandas as pd  # Library to read the xlsx file
-import classes as classes_file  # Module that contains the classes used in the program
-import bash_run as bash_run_file  # Module for the bash run
+from classes import dataframe_class  # Module that contains the classes used in the program
+from script_run import retrieve_filename  # Module for the script run
 
 def prompt_input_file():
     """This function prompts the user and 
@@ -15,8 +20,7 @@ def prompt_input_file():
     Returns:
         input_filename (string): the name of the input file
     """
-    #Variables:
-    input_file_name = None  # Input filename to return
+    
     print("Please input the name of the xlsx file with the data.")
     input_file_name = input("Filename: ") 
     # I check if the extension is .xlsx, otherwise I add it
@@ -24,71 +28,25 @@ def prompt_input_file():
         input_file_name = input_file_name + ".xlsx"
     return input_file_name
 
-def read_xlsx(bash_run):
+def read_xlsx(script_run):
     """This function reads the dataframe from the xlsx file.
     
     Args:
-        bash_run (boolean): True if the bash.pfs file is present, False otherwise    
+        script_run (boolean): True if the bash.pfs file is present, False otherwise    
 
     Returns:
         df_object (dataframe_class): the dataframe from the xlsx file
         output_filename (string): the name of the output file
     """
-    #Variables:
-    input_filename = None  # Input filename
-    df = None  # The dataframe object from Pandas
-    df_dropped = None  # The dataframe from which we extract the data
-    file_found = None  # Variable to check if the file is found (boolean)
-    #Variables to be read:
-    # To be computed:
-    n = None  # Number of cases (integer)
-    # To be read from the file:
-    # Inputs:
-    comment = None  # Comment (string)
-    P = None  # Pressure (float)
-    P_dyn = None  # Dynamic pressure (float)
-    P_stag = None  # Stagnation pressure (float)
-    q_target = None  # Target heat flux (float)
-    plasma_gas = None  # Plasma gas (string)
-    # Initial conditions:
-    ic_db_name = None  # Initial conditions database name (string)
-    T_0 = None  # Initial static temperature (float)
-    T_t_0 = None  # Initial total temperature (float)
-    u_0 = None  # Initial flow velocity (float)
-    P_t_0 = None  # Initial total pressure (float)
-    # Probe settings:
-    T_w = None  # Probe wall temperature (float)
-    R_p = None  # Pitot external radius (float)
-    R_m = None  # External radius of the heat flux probe (float)
-    R_j = None  # Plasma jet radius (float)
-    stag_type = None  # Stagnation type (string)
-    hf_law = None  # Heat flux law (string)
-    barker_type = None  # Barker's correction type (string)
-    # Program settings:
-    N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
-    max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
-    hf_conv = None  # Convergence criteria for the heat flux computation (float)
-    use_prev_ite = None  # Flag to indicate if the previous iteration for the heat flux computation should be
-    # used as initial guess for the new iteration (string)
-    eta_max = None  # Upper integration boundary for the normal coordinate of the boundary layer (float)
-    log_warning_hf = None  # Flag to indicate if a warning should be logged when the heat flux computation does not converge (string)
-    newton_conv = None  # Convergence criteria for the Newton-Raphson method (float)
-    max_newton_iter = None  # Maximum number of iterations for Newton-Raphson method (integer)
-    jac_diff = None  # Finite difference epsilon for the Jacobian matrix (float)
-    min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
-    max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
-    #Variables to return
-    df_object = classes_file.dataframe_class()  # The dataframe object to be returned
-    output_filename = None  # The output filename
-    # Start:
+    # Read the xlsx filename
     file_found = False
-    if (bash_run == True):  # If we are in bash mode
-        input_filename = bash_run_file.retrieve_filename()  # I retrieve the filename from the bash.pfs file
+    if (script_run == True):  # If we are in script mode
         try:  # If we can read the file:
-            df = pd.read_excel(input_filename, engine="openpyxl", header=[0,1])
+            input_filename = retrieve_filename()  # I retrieve the filename from the script.pfs file
+            df = pd.read_excel(input_filename, engine="openpyxl", header=[0,1])  # I read the excel using pandas
             file_found = True 
         except:  # If we cannot read the file:
-            print("Error: the file in bash.pfs does not exist or is not an xlsx file.")
+            print("Error: the file in script.pfs does not exist, is not an xlsx file, or cannot be read.")
             print("The program will continue in manual mode.")
     # If we are not in bash mode or the file is not found:
     while (file_found == False):
@@ -100,11 +58,11 @@ def read_xlsx(bash_run):
             print("Error: the file does not exist or is not an xlsx file.")
     output_filename = input_filename[:-5]+"_out.xlsx"  # I set the output filename
     # DATA EXTRACTION:
-    # If the excel is multiindex on the rows, I drop the first row level
+    # The excel is multiindex on the rows, I drop the first row level
     try: 
         df_dropped = df.droplevel(level=0, axis=1)  # I drop the first row level
     except:
-        df_dropped = df
+        raise ValueError("Error: The excel file is not in the correct format. Cannot drop the first row level.")
     n = df_dropped.shape[0]  # Number of the test
     # INPUTS:
     # comment:
@@ -169,6 +127,7 @@ def read_xlsx(bash_run):
     # Maximum value for the temperature used for relaxation:
     max_T_relax = df_dropped['max_T_relax [K]']
     # I store the values in the dataframe object
+    df_object = dataframe_class()  # The dataframe object to be returned
     df_object.n = n
     df_object.comment = comment
     df_object.P = P
@@ -202,9 +161,9 @@ def read_xlsx(bash_run):
     return df_object, output_filename 
 #.................................................
 #   Possible improvements:
-#   -Add getter and setter for the dataframe object
-#.................................................
-#   EXECUTION TIME: Not relevant
+#   - Add getter and setter for the dataframe object
+#   - Maybe drop the first row level directly in excel
+#   -More error checking
 #.................................................
 #   Known problems:
 #   - None

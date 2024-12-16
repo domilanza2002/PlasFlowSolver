@@ -1,12 +1,16 @@
 #.................................................
-#   READ_FILERUN.PY, v1.0.0, April 2024, Domenico Lanza.
+#   READ_FILERUN.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to read the
-#   database in File Run mode.
+#   .in and .pfs (File Run) file and create the the
+#   dataframe object. In particular, all the 
+#   data are read and checked for consistency,
+#   except for specific case data, checked in
+#   the retrieve_data_filerun.py module.
 #.................................................
-import classes as classes_file  # Module that contains the classes of the program
-import bash_run as bash_run_file  # Module that contains the functions to detect if a bashrun must be executed
-from initial_conditions_map import verify_db  # Function to verify if the database exists
+from classes import dataframe_class  # Module that contains the classes of the program
+import script_run as script_run_file  # Module that contains the functions to detect if a scriptrun must be executed
+from initial_conditions_map import verify_ic_db  # Function to verify if the database exists
 from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
 from retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
 from retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
@@ -21,8 +25,7 @@ def prompt_input_file():
     Returns:
         input_filename (string): the input filename
     """
-    #Variables:
-    input_file_name = None
+
     print("Please input the name of the .in file with the data.")
     input_file_name = input("Filename: ") 
     # I check if the extension is .in, otherwise I add it
@@ -37,8 +40,6 @@ def prompt_settings_file():
     Returns:
         settings_filename (string): the settings filename
     """
-    #Variables:
-    settings_file_name = None
     print("Please input the name of the .pfs file with the settings.")
     settings_file_name = input("Filename: ") 
     # I check if the extension is .pfs, otherwise I add it
@@ -46,77 +47,31 @@ def prompt_settings_file():
         settings_file_name = settings_file_name + ".pfs"
     return settings_file_name 
 
-def read_filerun(bash_run):
+def read_filerun(script_run):
     """ This function reads the dataframe from the .in input
     file and from the .pfs settings file.
     
     Args:
-        bash_run (bool): boolean to check if the program is in bash run mode.
+        script_run (bool): boolean to check if the program is in script run mode.
     
     Returns:
         df_object (dataframe_class): dataframe object containing the input data.
         output_filename (string): name of the output file.
     """
-    #Variables:
-    input_filename = None  # Input filename
-    settings_filename = None  # Settings filename
-    input_file = None  # Input file object
-    settings_file = None  # Settings file object
-    file_found = None  # Boolean to check if the file is found
-    line = None  # Line read from the file
-    # To be computed:
-    n = None  # Number of cases (integer)
-    # To be read from the file:
-    # Inputs:
-    comment = None  # Comment (string)
-    P = None  # Pressure (float)
-    P_dyn = None  # Dynamic pressure (float)
-    P_stag = None  # Stagnation pressure (float)
-    q_target = None  # Target heat flux (float)
-    plasma_gas = None  # Plasma gas (string)
-    # Initial conditions:
-    ic_db_name = None  # Initial conditions database name (string)
-    T_0 = None  # Initial static temperature (float)
-    T_t_0 = None  # Initial total temperature (float)
-    u_0 = None  # Initial flow velocity (float)
-    P_t_0 = None  # Initial total pressure (float)
-    # Probe settings:
-    T_w = None  # Probe wall temperature (float)
-    R_p = None  # Pitot external radius (float)
-    R_m = None  # External radius of the heat flux probe (float)
-    R_j = None  # Plasma jet radius (float)
-    stag_type = None  # Stagnation type (string)
-    hf_law = None  # Heat flux law (string)
-    barker_type = None  # Barker's correction type (string)
-    # Program settings:
-    N_p = None  # Number of point for the discretization of normal coordinate of the boundary layer (integer)
-    max_hf_iter = None  # Maximum number of iterations for the heat flux computation (integer)
-    hf_conv = None  # Convergence criteria for the heat flux computation (float)
-    use_prev_ite = None  # Flag to indicate if the previous iteration for the heat flux computation should be
-    # used as initial guess for the new iteration (string)
-    eta_max = None  # Upper integration boundary for the normal coordinate of the boundary layer (float)
-    log_warning_hf = None  # Flag to indicate if a warning should be logged when the heat flux computation does not converge (string)
-    newton_conv = None  # Convergence criteria for the Newton-Raphson method (float)
-    max_newton_iter = None  # Maximum number of iterations for Newton-Raphson method (integer)
-    jac_diff = None  # Finite difference epsilon for the Jacobian matrix (float)
-    min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
-    max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
-    #Variables to return:
-    df_object = classes_file.dataframe_class()  # Object with all the variables
-    output_filename = None  # Name of the output file
+    # I read the filenames
     file_found = False
-    #I check if the program is in bash run mode
-    if (bash_run == True):
-        input_filename = bash_run_file.retrieve_filename()  #I retrieve the filename from the bash.pfs file
+    #I check if the program is in script run mode
+    if (script_run == True):
         try:  #I try to read the file
+            input_filename = script_run_file.retrieve_filename()  #I retrieve the filename from the script.pfs file
             file = open(input_filename, "r")
             file_found = True
             file.close()
         except:  #If the file is not found, we continue in manual mode
-            print("Error: the input file specified in bash.pfs does not exist or it is not an .in file.")
+            print("Error: the input file specified in script.pfs does not exist or it is not an .in file.")
             print("The program will continue in manual mode.")
-            bash_run = False
-    # If the program is not in bash more or the file is not found, we prompt the user for the input file
+            script_run = False
+    # If the program is not in script mode or the file is not found, we prompt the user for the input file
     while (file_found == False):
         input_filename = prompt_input_file()
         try:  #I try to read the file
@@ -129,18 +84,17 @@ def read_filerun(bash_run):
     output_filename = input_filename[:-3] + ".out"
     # I read the settings filename
     file_found = False
-    # I check if the program is still in bash run mode
-    if (bash_run == True):
-        settings_filename = bash_run_file.retrieve_settings()  # I retrieve the filename from the bash.pfs file
+    # I check if the program is still in script run mode
+    if (script_run == True):
         try:  # I try to read the file
+            settings_filename = script_run_file.retrieve_settings()  # I retrieve the filename from the script.pfs file
             file = open(settings_filename, "r") 
             file_found = True
             file.close() 
         except:
-            print("Error: the settings file in bash.pfs does not exist or is not an .pfs file.")
+            print("Error: the settings file in script.pfs does not exist or is not an .pfs file.")
             print("The program will continue in manual mode.")
-            bash_run = False 
-    # If the program is not in bash mode or the file is not found, we prompt the user for the settings file
+    # If the program is not in script mode or the file is not found, we prompt the user for the settings file
     while (file_found == False):
         settings_filename = prompt_settings_file()
         try:  # I try to read the file
@@ -156,44 +110,53 @@ def read_filerun(bash_run):
     # Initial conditions database name:
     line = settings_file.readline()
     ic_db_name = line.split("=")[1].strip()  # Initial conditions database name (string)
-    if (verify_db(ic_db_name) == True):
+    if (verify_ic_db(ic_db_name) == True):
         print("Initial database " + ic_db_name + " verified.")
+        # I skip the lines that contain the initial conditions
+        line = file.readline()
+        line = file.readline()
+        line = file.readline()
+        line = file.readline()
+        T_0 = None
+        T_t_0 = None
+        u_0 = None
+        P_t_0 = None
     else:
         if (ic_db_name != ""):
             print("Initial database " + ic_db_name + " invalid. Initial conditions will be read from the file.")
         ic_db_name = ""
-    # Initial static temperature:
-    line = settings_file.readline() 
-    try:
-        T_0 = float(line.split("=")[1].strip())  # Initial static temperature (float)
-        if (T_0 <= 0 and ic_db_name == ""):
-            raise ValueError("Error: the initial static temperature is not positive.")
-    except:
-        raise ValueError("Error: the initial static temperature is not a number.")
-    # Initial total temperature:
-    line = settings_file.readline() 
-    try:
-        T_t_0 = float(line.split("=")[1].strip()) 
-        if (T_t_0 <= 0 and ic_db_name == ""):
-            raise ValueError("Error: the initial total temperature is not positive.")
-    except:
-        raise ValueError("Error: the initial total temperature is not a number.")
-    # Initial velocity:
-    line = settings_file.readline() 
-    try:
-        u_0 = float(line.split("=")[1].strip())  # Initial velocity (float)
-        if (u_0 <= 0 and ic_db_name == ""):
-            raise ValueError("Error: the initial velocity is not positive.")
-    except:
-        raise ValueError("Error: the initial velocity is not a number.")
-    # Initial total pressure:
-    line = settings_file.readline() 
-    try:
-        P_t_0 = float(line.split("=")[1].strip())  # Initial total pressure (float)
-        if (P_t_0 < 0 and ic_db_name == ""):
-            raise ValueError("Error: the initial total pressure is negative.")
-    except:
-        raise ValueError("Error: the initial total pressure is not a number.")
+        # Initial static temperature:
+        line = settings_file.readline() 
+        try:
+            T_0 = float(line.split("=")[1].strip())  # Initial static temperature (float)
+            if (T_0 <= 0 and ic_db_name == ""):
+                raise ValueError("Error: the initial static temperature is not positive.")
+        except:
+            raise ValueError("Error: the initial static temperature is not a number.")
+        # Initial total temperature:
+        line = settings_file.readline() 
+        try:
+            T_t_0 = float(line.split("=")[1].strip()) 
+            if (T_t_0 <= 0 and ic_db_name == ""):
+                raise ValueError("Error: the initial total temperature is not positive.")
+        except:
+            raise ValueError("Error: the initial total temperature is not a number.")
+        # Initial velocity:
+        line = settings_file.readline() 
+        try:
+            u_0 = float(line.split("=")[1].strip())  # Initial velocity (float)
+            if (u_0 <= 0 and ic_db_name == ""):
+                raise ValueError("Error: the initial velocity is not positive.")
+        except:
+            raise ValueError("Error: the initial velocity is not a number.")
+        # Initial total pressure:
+        line = settings_file.readline() 
+        try:
+            P_t_0 = float(line.split("=")[1].strip())  # Initial total pressure (float)
+            if (P_t_0 < 0 and ic_db_name == ""):
+                raise ValueError("Error: the initial total pressure is negative.")
+        except:
+            raise ValueError("Error: the initial total pressure is not a number.")
     # Probes properties:
     settings_file.readline()  # I skip the line, which is the title
     # Wall temperature:
@@ -358,6 +321,7 @@ def read_filerun(bash_run):
     input_file.close() 
     n = len(comment)  # Number of cases
     # I now save the variables in the dataframe object
+    df_object = dataframe_class()  # Object with all the variables
     df_object.n = n
     df_object.comment = comment
     df_object.P = P
@@ -387,11 +351,11 @@ def read_filerun(bash_run):
     df_object.jac_diff = jac_diff
     df_object.min_T_relax = min_T_relax
     df_object.max_T_relax = max_T_relax
-    # I return the dataframe object and the output filename
     return df_object, output_filename
 #.................................................
 #   Possible improvements:
 #   -Add getter and setter for the dataframe object
+#   -More error checking
 #.................................................
 #   EXECUTION TIME: Not relevant
 #.................................................
