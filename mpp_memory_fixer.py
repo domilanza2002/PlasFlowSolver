@@ -1,5 +1,5 @@
 #.................................................
-#   MPP_MEMORY_FIXER.PY, v1.0.0, April 2024, Domenico Lanza.
+#   MPP_MEMORY_FIXER.PY, v2.0.0, April 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to temporarily fix a memory leak in the MPP library.
 #.................................................
@@ -7,18 +7,19 @@
 import mutationpp as mpp
 import os
 
-def create_mixture_file(MIXTURE_NAME):
+def create_mixture_file(mixture_name):
     """This function is used to create a mixture file.
 
     Args:
-        MIXTURE_NAME (str): The name of the mixture
+        mixture_name (str): The name of the mixture, without the extension (".xml")
     """
-    # Variables
-    f = None  # File object
-    filename = None  # File name
-    # Create a file
-    filename = MIXTURE_NAME + ".xml"
-    f = open(filename, "w")
+    # Create the mixture file
+    filename = mixture_name + ".xml"
+    try:
+        f = open(filename, "w")
+    except:
+        print("Error: Unable to create the mixture file.")
+        return False
     # Write the mixture
     f.write("<!-- Temporary mixture-->\n")
     f.write("<mixture state_model=\"EquilTP\">\n")
@@ -31,17 +32,16 @@ def create_mixture_file(MIXTURE_NAME):
     f.write("\t</element_compositions>\n")
     f.write("</mixture>\n")
     f.close()
+    return True
     
-def delete_mixture_file(MIXTURE_NAME):  
+def delete_mixture_file(mixture_name):  
     """This function is used to delete the mixture file.
 
     Args:
-        MIXTURE_NAME (str): The name of the mixture
+        mixture_name (str): The name of the mixture, without the extension (".xml")
     """
-    # Variables
-    filename = None  # File name
     # Delete the file
-    filename = MIXTURE_NAME + ".xml"
+    filename = mixture_name + ".xml"
     try:
         os.remove(filename)
     except:
@@ -52,10 +52,18 @@ def fix_mpp_memory_leak():
     """
     # Constants
     MIXTURE_NAME = "temporarily_mixture_file"
-    # Variables
-    mix = None  # Mixture object
-    # I create the mixture file
-    create_mixture_file(MIXTURE_NAME)
-    # Create a Mixture object
+    # Create the mixture file
+    if(create_mixture_file(MIXTURE_NAME) == False):
+        print("Error: Unable to create the mixture file.")
+        print("Memory leak in the MPP library could happen.")
+    # Create the Mixture object
     mix = mpp.Mixture(MIXTURE_NAME)
+    # Delete the mixture file
     delete_mixture_file(MIXTURE_NAME)
+#.................................................
+#   Possible improvements:
+#   - Indagate the memory leak in the MPP library.
+#.................................................
+#   KNOW PROBLEMS:
+#   None.
+#.................................................

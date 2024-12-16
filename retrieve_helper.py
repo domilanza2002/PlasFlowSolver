@@ -1,5 +1,5 @@
 #.................................................
-#   RETRIEVE_HELPER.PY, v1.0.0, April 2024, Domenico Lanza.
+#   RETRIEVE_HELPER.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to retrieve the some 
 #   of the data from the dataframe object, in 
@@ -11,7 +11,8 @@ import initial_conditions_map as ic_map_file  # Module with the initial conditio
 from classes import CF_constants as CF_constants_class  # Class with the conversion factors
 
 def pressure_consistency_check(P, P_dyn, P_stag):
-    """This function checks the consistency of the pressures.
+    """This function checks the consistency between the
+    static, dynamic and stagnation pressures.
 
     Args:
         P (float): the pressure
