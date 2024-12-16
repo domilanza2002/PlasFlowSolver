@@ -256,6 +256,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
 #   - Improve the diff eq algorithm
 #   - Dynamic relaxation factor
 #   - Better starting profile
+#   - The reset for failed computations could be improved
 #.................................................
 #   KNOW PROBLEMS:
 #   None.
