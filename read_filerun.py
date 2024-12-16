@@ -113,10 +113,10 @@ def read_filerun(script_run):
     if (verify_ic_db(ic_db_name) == True):
         print("Initial database " + ic_db_name + " verified.")
         # I skip the lines that contain the initial conditions
-        line = file.readline()
-        line = file.readline()
-        line = file.readline()
-        line = file.readline()
+        line = settings_file.readline()
+        line = settings_file.readline()
+        line = settings_file.readline()
+        line = settings_file.readline()
         T_0 = None
         T_t_0 = None
         u_0 = None

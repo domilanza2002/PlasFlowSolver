@@ -1,5 +1,5 @@
 INITIAL CONDITIONS:
-ic_db_name = 
+ic_db_name = db_air_11.h5
 T_0 [K] = 3000
 T_t_0 [K] = 4000
 u_0 [m/s] = 300
@@ -11,7 +11,7 @@ R_m [mm] = 10.1e0
 R_j [mm] = 50e0
 stagtype = flat
 hf_law = exact
-barker_type = carleton
+barker_type = none
 PROGRAMS SETTINGS:
 mixture_name = air_11
 N_p = 251

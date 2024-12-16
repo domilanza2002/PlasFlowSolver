@@ -86,6 +86,8 @@ def retrieve_data(df):
         initials_object.P_t_0 = inputs_object.P_stag
         warnings += "P_t_0 not consistent with the Barker's correction, set to P_stag|"
     # I return the result
+    if (warnings != "" and warnings[-1] == "|"):  # I remove the last character
+        warnings = warnings[:-1]
     if(warnings == ""):
         warnings = "None"
     return inputs_object, initials_object, probes_object, settings_object, warnings

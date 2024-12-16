@@ -448,6 +448,8 @@ def retrieve_data(df,n_case):
     else:
         settings_object.min_T_relax = df.min_T_relax[n_case] 
     # Return the objects:
+    if (warnings != "" and warnings[-1] == "|"):  # I remove the last character
+        warnings = warnings[:-1]
     if(warnings == ""):
         warnings = "None"
     return inputs_object, initials_object, probes_object, settings_object, warnings

@@ -1,9 +1,11 @@
 #.................................................
-#   WRITE_OUTPUT_SRUN.PY, v1.0.0, April 2024, Domenico Lanza.
+#   WRITE_OUTPUT_SRUN.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
-#   This Module is needed to write the output file.
+#   This Module is needed to write the output file
+#   for the srun mode of the program.
 #.................................................
 from classes import CF_constants as CF_constants_class  # Class with the conversion factors
+
 def write_output_srun(output_filename, out_obj):
     """This function writes the output file for the srun mode of the program.
 
@@ -13,8 +15,6 @@ def write_output_srun(output_filename, out_obj):
     """
     # Constants:
     P_CF = CF_constants_class().P_CF  # Conversion factor for the pressure
-    # Variables:
-    file = None # File object
     # Extracting the output properties:
     has_converged_out = out_obj.has_converged_out  # Has converged flag
     rho_out = out_obj.rho_out  # Density
@@ -37,12 +37,12 @@ def write_output_srun(output_filename, out_obj):
     file.write("has_converged_out: " + str(has_converged_out[0]) + "\n")
     file.write("rho_out: " + str(rho_out[0]*1000) + " g/m^3\n")
     file.write("T_out: " + str(T_out[0]) + " K\n")
-    file.write("h_out: " + str(h_out[0]/1000) + " kJ/Kg\n")
+    file.write("h_out: " + str(h_out[0]/1000) + " kJ/kg\n")
     file.write("u_out: " + str(u_out[0]) + " m/s\n")
     file.write("a_out: " + str(a_out[0]) + " m/s\n")
     file.write("M_out: " + str(M_out[0]) + "\n")
     file.write("T_t_out: " + str(T_t_out[0]) + " K\n")
-    file.write("h_t_out: " + str(h_t_out[0]/1000) + " kJ/Kg\n")
+    file.write("h_t_out: " + str(h_t_out[0]/1000) + " kJ/kg\n")
     file.write("P_t_out: " + str(P_t_out[0]/P_CF) + " kPa\n")  # From Pa to kPa
     file.write("Re_out: " + str(Re_out[0]) + "\n")
     file.write("Kn_out: " + str(Kn_out[0]) + "\n")
@@ -55,8 +55,6 @@ def write_output_srun(output_filename, out_obj):
 #.................................................
 #   Possible improvements:
 #   None.
-#.................................................
-# Execution time: Not relevant.
 #.................................................
 #   Known problems:
 #   None.
