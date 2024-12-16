@@ -18,3 +18,4 @@ src/*.xml
 src/Cp_vs_T.png
 src/plot_interpolated.png
 src/plot.png
+src/sens/*.xlsx
