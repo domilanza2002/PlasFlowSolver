@@ -313,7 +313,7 @@ while (n_case < n_lines):  # Loop through all the cases
     # Output properties computation:
     rho, a, M, h, h_t, mfp = out_properties_file.out_properties(mixture_object, T, P, u)
     species_names, species_Y = out_properties_file.mass_fraction_composition(mixture_object, T, P)
-    Kn = mfp/(probes_object.R_m)  # Knudsen number
+    Kn = mfp/(probes_object.R_j)  # Knudsen number
     # NOTE: The sensible enthalpy is shifted to 0 K
     if (has_converged):
         has_converged_out.append("yes")
@@ -325,8 +325,8 @@ while (n_case < n_lines):  # Loop through all the cases
         rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out,
         Re_out, Kn_out, warnings_out, res_out
     ) = out_properties_file.append_output_case(
-        has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out,
-        Re_out, Kn_out, warnings_out, res_out, rho, T, h, u, a, M, T_t, h_t, P_t, Re, Kn, cnv
+        rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out,
+        Re_out, Kn_out, warnings_out, res_out, rho, T, h, u, a, M, T_t, h_t, P_t, Re, Kn, warnings, cnv
     )
     species_names_out[n_case] = species_names
     species_Y_out[n_case] = species_Y
