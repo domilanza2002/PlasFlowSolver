@@ -20,20 +20,18 @@ import script_run as script_run_file  # Module to execute a scripted run from a 
 import read_data as read_data_file  # Module to read the data from the input file
 import retrieve_data as retrieve_data_file  # Module to retrieve the data from the dataframe
 import heat_flux as heat_flux_file  # Module to compute the stagnation heat flux
-import enthalpy as enthalpy_file  # Module to compute the flow enthalpy
-import entropy as entropy_file  # Module to compute the flow entropy
+import thermodyn as thermodyn_file  # Module to compute the flow enthalpy
 import barker_effect as barker_effect_file  # Module to compute the Barker effect
 import jacobian_matrix as jacobian_matrix_file  # Module to compute the Jacobian matrix of the system of equations
 import system_solve as system_solve_file  # Module to solve the system of equations
 import out_properties as out_properties_file  # Module to compute the output properties
-import write_output_srun as write_output_srun_file  # Module to write the output file in a .srun run
-import write_output_xlsx as write_output_xlsx_file  # Module to write the output file in a .xlsx run
-import write_output_filerun as write_output_filerun_file  # Module to write the output file in a .in run
+import write_output as write_output  # Module to write the output file
 import database_manager as database_manager_file  # Module to manage the database
 from exit_program import exit_program, clean_files  # Module to kill the program and kill the temporary files
 from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix Mutation++ memory leak (if any, due to Python wrapper)
 #.................................................
 # PROGRAM CONSTANTS: %TO REVIEW
+USE_PREV_ITE_FILENAME = "hf_first_comp.var"  # File to store the flag for the use_prev_ite option
 # Convergence threshold:
 CNV_THRESHOLD = 1e-4  # Convergence threshold for the Newton loop dynamic step size
 # Jacobian difference threshold:
@@ -42,88 +40,6 @@ JAC_DIFF_INCREASE = 4  # Jacobian step increase factor
 VARS_INCREASE = 0.1  # Variables increase factor
 OFFSET_T_T = 5000
 OFFSET_T = 500
-#.................................................
-# PROGRAM VARIABLES:
-# Dataframe variables:
-n_lines = None  # Number of lines of the dataframe
-check = None  # Variable to check if the line must be skipped
-# Counter variables:
-n_case = None  # Counter of the number of cases to be run
-# Input variables read from the file:
-comment = None  # Comment of the case
-P = None  # Static pressure of the flow
-P_stag = None  # Stagnation pressure ("Target" if the Barker's effect is considered) of the flow
-q_target = None  # Target stagnation heat flux
-mixture_name = None # Mixture name
-warnings = None  # Warnings due to the input file
-# Newton loop variables:
-iter = None  # Current number of iterations
-max_newton_iter = None  # Maximum number of iterations for the Newton loop
-has_converged = None  # Boolean to check if the iteration has converged
-res = None  # Residuals array
-cnv = None  # Current convergence criteria
-cnv_old = None  # Old convergence criteria
-dcnv = None  # Current convergence criteria increment
-cnv_ref = None  # Reference convergence criteria
-jac = None  # Jacobian matrix of the system
-d_vars = None  # Variable to store the variable increments
-n_eq = None  # Number of equations to solve
-relax = None  # Relaxation factor
-# Newton loop thermodynamic variables:
-mixture_object = None  #Mixture object from Mutation++ library
-q = None  # Current stagnation heat flux
-P_t = None  # Current total pressure of the flow
-P_b = None  # Current Barker effect pressure (Current stagnation pressure) (P_b = P_t+0.5*rho*pow(u,2)*Cp)
-T = None  # Current static temperature of the flow
-T_t = None  # Current total temperature of the flow
-u = None  # Current flow speed
-h = None  # Current flow enthalpy
-h_t = None  # Current flow stagnation enthalpy
-s = None  # Current flow entropy
-s_t = None  # Current flow stagnation entropy
-T_star = None  # Variable to store the new T value, before the relaxation
-u_star = None  # Variable to store the new u value, before the relaxation
-T_t_star = None  # Variable to store the new T_t value, before the relaxation
-P_t_star = None  # Variable to store the new P_t value, before the relaxation
-Re = None  # Pitot Reynolds number for the Barker effect
-mfp = None  # Mean free path for the Knudsen number
-# Output properties:
-rho = None  # Final density of the flow
-a = None  # Final sound speed of the flow
-M = None  # Final Mach number of the flow
-species_names = None  # Names of the species
-species_Y = None  # Mass fractions of the species
-has_converged_out = None  # Variable to store if the iteration has converged
-rho_out = None  # Edge density to be written on the output file
-T_out = None  # Edge temperature to be written on the output file
-h_out = None  # Edge enthalpy to be written on the output file
-u_out = None  # Edge velocity to be written on the output file
-a_out = None  # Edge sound speed to be written on the output file
-M_out = None  # Edge Mach number to be written on the output file
-T_t_out = None  # Total temperature to be written on the output file
-h_t_out = None  # Total enthalpy to be written on the output file
-P_t_out = None  # Total pressure to be written on the output file
-Re_out = None  # Pitot Reynolds number to be written on the output file
-Kn_out = None  # Knudsen number to be written on the output file
-warnings_out=None  # Warnings to be written on the output file
-res_out = None  # Final convergence criteria to be written on the output file
-species_names_out = None  # Names of the species
-species_Y_out = None  # Mass fractions of the species
-# Variables to manage the heat flux computation:
-exit_due_error = None  # Variable to exit the Newton loop if an error occurs during the computation
-hf_first_comp = None  # Variable to store if it is the first time that we compute the heat flux for the current case
-bad_hf = None  # Variable to store if the heat flux is bad
-# Variable to manage the database
-t_start_case = None  # Variable to store the time at the beginning of the case
-t_end_case = None  # Variable to store the time at the end of the case
-run_time_vect = None  # Vector to store the run time of each case
-#.................................................
-# CLASS INSTANCES:
-inputs_object = classes_file.inputs_class()  # Object with the inputs for the current iteration
-settings_object = classes_file.settings_class()  # Object with the settings for the current iteration
-probes_object = classes_file.probes_class()  # Object with the probe properties for the current iteration
-initials_object = classes_file.initials_class()  # Object with the initial conditions for the current iteration
-out_object = classes_file.out_properties_class()  # Object to store the output properties
 #.................................................
 #   PROGRAM START:
 # Preliminary operations:
@@ -152,7 +68,8 @@ if (db_settings is None):
 else:
     db_used = True
     print("Valid database_settings.pfs file detected, the program will use the database.")
-    db_inputs = database_manager_file.db_inputs_init()  # The initial operations for the database inputs are performed
+    # The initial operations for the database inputs are performed
+    db_inputs = database_manager_file.db_inputs_init()  
 # Now I read the data:
 try:
     df_object, output_filename = read_data_file.read_data(program_mode, script_run)
@@ -160,116 +77,94 @@ except Exception as e:
     print("Error while reading the data: " + str(e))
     print("The program will now terminate.")
     exit_program()
-    
 #.................................................
 #   MAIN PROGRAM LOOP:
-n_case = 0
-n_lines = df_object.n  # I store the number of cases to be executed
-print("Number of cases to be executed: "+str(n_lines)+".")
+n_case = 0  # Case counter
+n_lines = df_object.n  # I store the number of cases to be executed = number of lines in the dataframe object
+print("Number of cases to be executed: " + str(n_lines) + ".")
 # I initialize the output vectors
-run_time_vect = []
-has_converged_out = []
-rho_out = []
-T_out = []
-h_out = []
-u_out = []
-a_out = []
-M_out = []
-T_t_out = []
-h_t_out = []
-P_t_out = []
-Re_out = []
-Kn_out = []
-warnings_out=[]
-res_out = []
-species_names_out = {}  # Dictionary to store the names of the species
-species_Y_out = {}  # Dictionary to store the mass fractions of the species
+(
+    has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, 
+    h_t_out, P_t_out, Re_out, Kn_out, warnings_out, res_out, 
+    species_names_out, species_Y_out, run_time_vect
+) = out_properties_file.initialize_output_vectors()
 print("Starting main program loop...")
-while (n_case < n_lines):  # I loop through all the cases
+while (n_case < n_lines):  # Loop through all the cases
     print("--------------------------------------------------")
-    # Now I retrieve the data
+    # Now I retrieve the data for the current case
     try:
-        inputs_object, initials_object, probes_object, settings_object, warnings = retrieve_data_file.retrieve_data(df_object, program_mode, n_case)
+        (
+            inputs_object, initials_object, probes_object, 
+            settings_object, warnings
+        ) = retrieve_data_file.retrieve_data(df_object, program_mode, n_case)
     except Exception as e:
         if (program_mode == 1):
             print("Error while retrieving the data from the .srun file: " + str(e))
             print("The program will now terminate.")
             exit_program()
         elif (program_mode == 2 or program_mode == 3):
-            has_converged_out.append("Error: invalid data")
-            rho_out.append(-1)
-            T_out.append(-1)
-            h_out.append(-1)
-            u_out.append(-1)
-            a_out.append(-1)
-            M_out.append(-1)
-            T_t_out.append(-1)
-            h_t_out.append(-1)
-            P_t_out.append(-1)
-            Re_out.append(-1)
-            Kn_out.append(-1)
-            warnings_out.append("Error: invalid data")
-            res_out.append(-1)
-            n_case += 1
+            (
+                has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out,
+                h_t_out, P_t_out, Re_out, Kn_out, warnings_out, res_out
+            ) = out_properties_file.append_error_case(
+                has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out,
+                h_t_out, P_t_out, Re_out, Kn_out, warnings_out, res_out, 0
+            )
+            n_case += 1  # Since these are usually assigned after n_case is increased, I increase it here
             species_names_out[n_case] = None
             species_Y_out[n_case] = None
             if (db_used):
                 db_inputs = database_manager_file.db_inputs_append_null_line(db_inputs)
                 run_time_vect.append(-1)
             continue
-    n_case += 1 #we increase the number of cases
-    print("Executing case number "+str(n_case)+"...")
+    n_case += 1 # Increase counter
+    print("Executing case number "+str(n_case) + "...")
     # I store the data from the inputs object
     comment = inputs_object.comment
     P = inputs_object.P
     P_stag = inputs_object.P_stag
     q_target = inputs_object.q_target
     mixture_name = inputs_object.mixture_name
-    # print inputs
-    print("Comment: "+comment)
-    print("Static pressure: "+str(P)+" Pa")
-    print("Stagnation pressure: "+str(P_stag)+" Pa")
-    print("Target heat flux: "+str(q_target)+" W/m^2")
-    print("Mixture name: "+mixture_name)
-    if (probes_object.barker_type == 0): 
-        n_eq = 3  # If we do not consider the barker effect, we need to solve 3 equations
+    # Print the data for the current case
+    print("Comment: " + comment)
+    print("Static pressure: " + str(P) + " Pa")
+    print("Stagnation pressure: " + str(P_stag) + " Pa")
+    print("Target heat flux: " + str(q_target) + " W/m^2")
+    print("Mixture name: " + mixture_name)
+    # Premilimary operation:
+    if (probes_object.barker_type == 0):
+        n_eq = 3 
     else:
-        n_eq = 4  # If we consider the barker effect, we need to solve 4 equations
-    #   Premilimary operation:
+        n_eq = 4  # If the Barker effect is considered, 4 equations must be solved
+    # Manage the use_prev_ite flag:
     if (probes_object.hf_law == 0 and settings_object.use_prev_ite == 1):
-        # If we use the "exact" heat flux law and we want to use the previous iteration, we need to create
-        # a file to understand if we have already computed the heat flux for the current case
-        # For now, we want to inizialize the variable hf_first_comp, that stores 0 or 1:
-        #   0: We have never computed the heat flux
-        #   1: We have already computed the heat flux previously, so we have a x,y,z file (with the previous result)
+        # Flag that indicates if the heat flux has been previously computed
+        # in this case (and if it has converged)
         hf_first_comp = np.array([0])
-        # We store this variable in a file using numpy.savetxt
-        np.savetxt("hf_first_comp.var", hf_first_comp, fmt="%1.1u")
-    # I reset some variables useful for the upcoming loops:
-    bad_hf = False  # Variable to store if the heat flux is bad
-    iter = 0  # I reset the iteration counter
-    has_converged = False  # I reset the convergence boolean
-    # I initialize the variables for the Newton loop:
+        # Store this variable in a file
+        np.savetxt(USE_PREV_ITE_FILENAME, hf_first_comp, fmt="%1.1u")
+    # Initial conditions:
     T = initials_object.T_0
     T_t = initials_object.T_t_0
     u = initials_object.u_0
     P_t = initials_object.P_t_0
-    # We start the Newton-Raphson loop to obtain the flow parameters from the probes
-    exit_due_error = False  # Variable to exit the Newton loop if an error occurs during the computation
-    max_newton_iter = settings_object.max_newton_iter  # I retrieve the maximum number of iterations for the Newton loop
-    newton_conv = settings_object.newton_conv  # I retrieve the convergence criteria for the Newton loop
+    # Reset variables useful for the upcoming Newton loop:
+    bad_hf = False  # Variable to store if the heat flux did not converge
+    iter = 0  # Counter for the Newton loop
+    has_converged = False  # Convergence flag
+    exit_due_error = False  # Flag to exit the Newton loop if an error occurs during the computation
+    max_newton_iter = settings_object.max_newton_iter  # Maximum number of iterations for the Newton loop
+    newton_conv = settings_object.newton_conv  # Conv. criteria for the Newton loop
+    mixture_object = mpp.Mixture(mixture_name) # Mixture object for the current case
     print("Executing Newton loop...")
-    mixture_object = mpp.Mixture(mixture_name) # I create the mixture object
     # Database operation:
     if(db_used):
         db_inputs = database_manager_file.db_inputs_append(db_inputs, inputs_object, probes_object)
         t_start_case = time.time()  # I store the time at the beginning of the case
     # NEWTON-RAPHSON LOOP:
     while (iter < max_newton_iter):
-        # The loop has a stop condition for safety reason, but inside the loop there is also a convergence condition.
-        # The loop will stop when the end newton computation converges or when the maximum number of iterations is reached.
         iter += 1
-        # I compute the heat flux:
+        # Compute the heat flux
         try:
             q, bad_hf = heat_flux_file.heat_flux(probes_object, settings_object, P_t, T_t, u, mixture_object)
         except Exception as e:
@@ -277,27 +172,27 @@ while (n_case < n_lines):  # I loop through all the cases
             print("Skipping case...")
             exit_due_error = True
             break
-        # Now I compute the enthalpy:
-        h = enthalpy_file.enthalpy(mixture_object, P, T)  # I compute the free stream enthalpy
-        h_t = enthalpy_file.enthalpy(mixture_object, P_t, T_t)  # I compute the stagnation enthalpy
-        # Now I compute the entropy:
-        s = entropy_file.entropy(mixture_object,P,T)  # I compute the entropy at the free stream
-        s_t = entropy_file.entropy(mixture_object,P_t,T_t)  # I compute the entropy at the stagnation point
-        # I compute the Barker's effect pressure:
+        # Compute the enthalpy:
+        h = thermodyn_file.enthalpy(mixture_object, P, T)  # Free stream enthalpy
+        h_t = thermodyn_file.enthalpy(mixture_object, P_t, T_t)  # Total enthalpy
+        # Compute the entropy:
+        s = thermodyn_file.entropy(mixture_object,P,T)  # Free stream entropy
+        s_t = thermodyn_file.entropy(mixture_object,P_t,T_t)  # Total entropy
+        # Compute the Barker effect:
         P_b, Re = barker_effect_file.barker_effect(probes_object, mixture_object, P_t, P, T, u)
-        # Note: if barker_type==0 then P_b=P_stag, and the function will return P_stag
+        # NOTE: if barker_type==0 then P_b=P_stag, and the function will return P_stag
         #.................................................
         # I can now compute the residuals:
         res = []
         res.append(-(q-q_target))  # Heat flux residual
         res.append(-(h_t-(h+0.5*pow(u,2))))  # Enthalpy residual
         res.append(-(s_t-s))  # Entropy residual
-        res.append(-(P_b-P_stag))  # Barker's effect residual
+        res.append(-(P_b-P_stag))  # Barker effect residual
         # Convergence criteria: Normalized residual
         cnv = 0 
         for i in range(0, n_eq):
             cnv += pow(res[i],2)
-        if (iter == 1):  # I create the reference convergence criteria if it is the first iteration
+        if (iter == 1):  # Create reference convergence criteria for the first iteration
             cnv_ref = math.sqrt(cnv)
             cnv = 1
             cnv_old = 1
@@ -323,30 +218,34 @@ while (n_case < n_lines):  # I loop through all the cases
                 # Now residuals should probably be recomputed
             cnv_old = cnv
         #.................................................
-        print("Case:"+str(n_case)+", Iteration "+str(iter)+", convergence criteria: "+str(cnv))
-        # I check for the convergence:
-        if (iter>max_newton_iter):  # If the maximum number of iterations is reached we break the loop
+        print("Case:" + str(n_case) + ", Iteration " + str(iter) + ", convergence criteria: " + str(cnv))
+        # Check for convergence:
+        # If the maximum number of iterations is reached, the loop is broken
+        if (iter > max_newton_iter):  
             break 
-        if (cnv<newton_conv):  # If the convergence criteria is reached we break the loop
+        # If the method converged, the loop is broken
+        if (cnv < newton_conv): 
             has_converged = True
             break
-        #.................................................
-        # If I did not converge, I compute the Jacobian matrix:
+        # If the method did not converge, the loop is continued
+        # Compute the Jacobian matrix:
         try:
-            jac = jacobian_matrix_file.jacobian_matrix(probes_object, settings_object, T, T_t, P, P_t, P_b, q, h, h_t, s, s_t, u, mixture_object)
+            jac = jacobian_matrix_file.jacobian_matrix(
+                probes_object, settings_object, T, T_t, P, P_t, P_b, 
+                q, h, h_t, s, s_t, u, mixture_object
+                )
         except Exception as e:
-            print("Error encountered during the jacobian computation: "+str(e))
+            print("Error encountered during the jacobian computation: " + str(e))
             exit_due_error = True
             break
-        #.................................................
-        # Now I finally solve the system
+        # The linear system is solved:
         try:
             d_vars = system_solve_file.system_solve(n_eq, jac, res)
         except Exception as e:
-            print("Error encountered during the system solve: "+str(e))
+            print("Error encountered while solving the system: " + str(e))
             exit_due_error = True
             break
-        # I update the variables:
+        # Variables update:
         T_star = T + d_vars[0] 
         u_star = u + d_vars[1]
         T_t_star = T_t + d_vars[2]
@@ -356,8 +255,6 @@ while (n_case < n_lines):  # I loop through all the cases
             P_t_star = P_t
         #.................................................
         # UNDER-RELAXATION SCHEME:
-        # This scheme avoids that T_star, u_star, T_t_star and P_t_star
-        # become negative or too high
         relax = 1.0  # Reset the relaxation factor
         # If the new valus are too low, we relax them:
         while ( (T_star < settings_object.min_T_relax) or (u_star < 0) or (T_t_star < settings_object.min_T_relax) or (P_t_star < 0) or (T_t_star < probes_object.T_w) ): 
@@ -378,113 +275,82 @@ while (n_case < n_lines):  # I loop through all the cases
             if (probes_object.barker_type != 0):
                 P_t_star = P_t + d_vars[3]*relax
         #.................................................
-        # New values are now accepted:
+        # New variables' values:
         T = T_star
         u = u_star
         T_t = T_t_star
         if (probes_object.barker_type != 0):
             P_t = P_t_star
+    # END OF NEWTON LOOP
     #.................................................
-    # The Newton's loop has ended
     # Database operation:
     if (db_used):
-        t_end_case = time.time()  # I store the time at the end of the case
-        run_time_vect.append(t_end_case-t_start_case)  # I store the run time
-    # Bad heat flux check:
+        t_end_case = time.time()  # Store the time at the end of the case
+        run_time_vect.append(t_end_case - t_start_case)  # Store the run time
+    # Check if the heat flux converged in the last iteration:
     if (bad_hf):
-        print("The heat flux is bad. The case did not converge.")
+        print("The heat flux did not converge in the last iteration. The case did not converge.")
         has_converged = False
-    # I check if the case has converged or not
-    if (exit_due_error == True and program_mode != 1):  # If we have skipped the case and we are not in single run
-        # We only skip the case, but we do not exit the program
-        print("The case number "+str(n_case)+" has encountered an error during the computation. The case will be skipped.")
-        has_converged_out.append("Error detected during the computation.")
-        rho_out.append(-1)
-        T_out.append(-1)
-        h_out.append(-1)
-        u_out.append(-1)
-        a_out.append(-1)
-        M_out.append(-1)
-        T_t_out.append(-1)
-        h_t_out.append(-1)
-        P_t_out.append(-1)
-        Re_out.append(-1)
-        Kn_out.append(-1)
-        warnings_out.append("Error detected during the computation.")
-        res_out.append(-1)
+    # Check if an error occurred during the computation:
+    if (exit_due_error == True and program_mode != 1):  # If we are not in single run
+        # The case will be skipped
+        print("Case number " + str(n_case) + " has encountered an error during computation.")
+        print("The case will be skipped.")
+        (
+                has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out,
+                h_t_out, P_t_out, Re_out, Kn_out, warnings_out, res_out
+            ) = out_properties_file.append_error_case(
+                has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out,
+                h_t_out, P_t_out, Re_out, Kn_out, warnings_out, res_out, 1
+        )
         species_names_out[n_case] = None
         species_Y_out[n_case] = None
-        continue
+        continue  # We go to the next case
     if (exit_due_error == True and program_mode==1):  # If we have skipped the case and we are in single run
         print("Error detected during the computation of the case. The program will now terminate.")
         exit_program()
     print("Executing Newton loop...done")
-    # Flow properties to output:
+    # Output properties computation:
     rho, a, M, h, h_t, mfp = out_properties_file.out_properties(mixture_object, T, P, u)
     species_names, species_Y = out_properties_file.mass_fraction_composition(mixture_object, T, P)
     Kn = mfp/(probes_object.R_m)  # Knudsen number
-    # P.S. The enthalpy is shifted to 0 K
-    # Now we append the results to the output vectors:
+    # NOTE: The sensible enthalpy is shifted to 0 K
     if (has_converged):
         has_converged_out.append("yes")
         print("Iteration has converged.")
     else:
         has_converged_out.append("no")
         print("Iteration has not converged.")
-    rho_out.append(rho)
-    T_out.append(T)
-    h_out.append(h)
-    u_out.append(u)
-    a_out.append(a)
-    M_out.append(M)
-    h_t_out.append(h_t)
-    P_t_out.append(P_t)
-    T_t_out.append(T_t)
-    Re_out.append(Re)
-    Kn_out.append(Kn)
-    warnings_out.append(warnings)
-    res_out.append(cnv)
+    (
+        rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out,
+        Re_out, Kn_out, warnings_out, res_out
+    ) = out_properties_file.append_output_case(
+        has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out,
+        Re_out, Kn_out, warnings_out, res_out, rho, T, h, u, a, M, T_t, h_t, P_t, Re, Kn, cnv
+    )
     species_names_out[n_case] = species_names
     species_Y_out[n_case] = species_Y
     print("Executing case number "+str(n_case)+"...done")
 print("--------------------------------------------------")
+print("End of main program loop...")
+# END OF MAIN PROGRAM LOOP
+# Output file writing:
 print("Writing output file...")
 # Packing the output data:
-out_object.has_converged_out = has_converged_out
-out_object.rho_out = rho_out
-out_object.T_out = T_out
-out_object.h_out = h_out
-out_object.u_out = u_out
-out_object.a_out = a_out
-out_object.M_out = M_out
-out_object.T_t_out = T_t_out
-out_object.h_t_out = h_t_out
-out_object.P_t_out = P_t_out
-out_object.Re_out = Re_out
-out_object.warnings_out = warnings_out
-out_object.res_out = res_out
-out_object.Kn_out = Kn_out
-out_object.species_names_out = species_names_out
-out_object.species_Y_out = species_Y_out
+out_object = out_properties_file.return_out_object(
+    has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, h_t_out, P_t_out,
+    Re_out, Kn_out, warnings_out, res_out, species_names_out, species_Y_out
+)
 # Writing the output file:
-if program_mode == 1:  # Single run
-    write_output_srun_file.write_output_srun(output_filename, out_object)
-elif program_mode == 2:  # xlsx run
-    write_output_xlsx_file.write_output_xlsx(output_filename, out_object)
-elif program_mode == 3:  # File run
-    write_output_filerun_file.write_output_filerun(df_object, output_filename, out_object)
-else:
-    print("ERROR: Invalid program mode. You should never see this message...")
-    print("The program will now terminate.")
-    exit_program()
+write_output.write_output(output_filename, out_object, program_mode, df_object)
 print("Writing output file...done")
-# Database operation:
+# Database operations:
 if (db_used):
     print("Generating database...")
     database_manager_file.update_database(db_settings, db_inputs, out_object, run_time_vect)
     print("Generating database...done")
-# We clean the temporary files for use_prev_ite:
+# Clean temporary files:
 clean_files()
 print("Program terminated.")
-t2=time.time()
-print("Execution time: "+str(t2-t1)+" seconds.")
+t2 = time.time()
+print("Execution time: " + str(t2 - t1) + " seconds.")

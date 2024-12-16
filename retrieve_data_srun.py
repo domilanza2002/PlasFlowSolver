@@ -1,8 +1,9 @@
 #.................................................
-#   RETRIEVE_DATA_SRUN.PY, v1.0.0, April 2024, Domenico Lanza.
+#   RETRIEVE_DATA_SRUN.PY, v2.0.0, December 2024, Domenico Lanza.
 #.................................................
 #   This module is needed to retrieve the needed
 #   data from the dataframe object for the srun case.
+#   In particular, the remaining checks are performed
 #.................................................
 import classes as classes_file  # Module with the classes
 from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
@@ -13,6 +14,7 @@ from retrieve_helper import retrieve_barker_type  # Function to retrieve the bar
 from retrieve_helper import retrieve_stag_var  # Function to retrieve the stagvar
 from retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
 from retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
+
 def retrieve_data(df):
     """This function retrieves the needed data from 
     the dataframe object for the srun case.
@@ -29,21 +31,12 @@ def retrieve_data(df):
         probes_object (probes_class): the probes object
         settings_object (settings_class): the settings object
     """
-    # Variables to return:
-    inputs_object = None  # Variable to store the inputs object 
-    initials_object = None # Variable to store the initials object
-    probes_object = None  # Variable to store the probes object
-    settings_object = None  # Variable to store the settings object
-    warnings = None  # Variable to store the warnings
-    mixture_name = None  # Variable to store the mixture name
-    stag_type = None  # Variable to store the stagtype
-    stag_var = None  # Variable to store the stagvar
     # I create the objects
     inputs_object = classes_file.inputs_class()
     initials_object = classes_file.initials_class() 
     probes_object = classes_file.probes_class()
     settings_object = classes_file.settings_class()
-    warnings = "None|" 
+    warnings = "" 
     # Inputs:
     inputs_object.comment = df.comment
     inputs_object.P = df.P
@@ -59,7 +52,10 @@ def retrieve_data(df):
         initials_object.u_0 = df.u_0
         initials_object.P_t_0 = df.P_t_0
     else:  # We have to read the initial conditions from the database
-        initials_object, warnings_int = retrieve_ic(df.ic_db_name, df.P, df.P_dyn, df.q_target, df.T_w)
+        initials_object, warnings_int = retrieve_ic(
+            df.ic_db_name, df.P, df.P_dyn, df.q_target,
+            df.T_w, df.max_T_relax
+            )
         if(warnings_int is not None):
             warnings += warnings_int
     probes_object.T_w = df.T_w
@@ -84,9 +80,21 @@ def retrieve_data(df):
     settings_object.jac_diff = df.jac_diff
     settings_object.min_T_relax = df.min_T_relax
     settings_object.max_T_relax = df.max_T_relax
-    # Barker's effect and P_t_0 consistency check:
+    # Barker effect and P_t_0 consistency check:
     if (probes_object.barker_type == 0 and initials_object.P_t_0 != inputs_object.P_stag):
+        # If the Barker effect is not considered, the P_t_0 must be equal to P_stag
         initials_object.P_t_0 = inputs_object.P_stag
         warnings += "P_t_0 not consistent with the Barker's correction, set to P_stag|"
     # I return the result
+    if(warnings == ""):
+        warnings = "None"
     return inputs_object, initials_object, probes_object, settings_object, warnings
+#.................................................
+#   Possible improvements:
+#   - More specific exceptions
+#   - More checks
+#   - Move all the checks in this module or in read_data_srun.py
+#.................................................
+#   KNOW PROBLEMS:
+#   -None
+#.................................................

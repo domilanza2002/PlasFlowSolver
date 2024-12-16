@@ -38,17 +38,13 @@ def load_ic_db(db_name):
     Returns:
         ic_db (initial_conditions_db_class): the initial conditions database object
     """
-    # Variables:
-    ic_db = None  # Initial conditions database
-    points = None  # Points of the database
-    values = None  # Values of the database
-    
-    # I create the object
+    # Create the object
     ic_db = classes_file.initial_conditions_db_class()
+    # Read the h5py file
     with h5py.File(db_name, 'r') as f:
         points = f['points'][:]
         values = f['values'][:]
-    
+    # Assign the data
     ic_db.db_inputs = points
     ic_db.db_outputs = values
     
@@ -197,7 +193,7 @@ def update_ic_db(ic_obj, db_obj):
     
     
 
-def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
+def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, max_T_relax, multiplication_factor):
     """This function interpolates the initial conditions
     database to retrieve the initial conditions for the
     current case.
@@ -208,6 +204,7 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
         P_dyn (float): the dynamic pressure
         q_target (float): the target heat flux
         T_w (float): the wall temperature
+        max_T_relax (float): the maximum temperature allowed
         multiplication_factor (float): the multiplication factor for the initial conditions
 
     Returns:
@@ -218,29 +215,19 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
     OFFSET_T = 100.0  # Offset for the static temperature
     OFFSET_T_T = 100.0  # Offset for the total temperature
     MIN_U = 10  # Minimum flow velocity
-    # Variables:
-    initial_conditions = None  # Initial conditions object
-    int_point = None  # Interpolation point
-    points = None  # Points of the database
-    values = None  # Values of the database
-    T_0 = None  # Initial static temperature
-    T_t_0 = None  # Initial total temperature
-    u_0 = None  # Initial flow velocity
-    warnings = None  # Warnings
-    
-    initial_conditions = classes_file.initials_class()
-    int_point = [P, P_dyn, q_target]
-    points = ic_db.db_inputs
-    values = ic_db.db_outputs
+    # Preliminary operations
+    initial_conditions = classes_file.initials_class()  # Object with the initial conditions
+    int_point = [P, P_dyn, q_target]  # The point to interpolate
+    points = ic_db.db_inputs  # The points of the database
+    values = ic_db.db_outputs  # The values of the database
+    warnings = ""  # The warnings
+    # We try to interpolate the data by linear interpolation
     T_0 = scipy_int.griddata(points, values[:,0], int_point, method='linear', fill_value=-1.0)
     T_t_0 = scipy_int.griddata(points, values[:,1], int_point, method='linear', fill_value=-1.0)
     u_0 = scipy_int.griddata(points, values[:,2], int_point, method='linear', fill_value=-1.0)
-    
-    if (T_0 == -1.0 or T_t_0 == -1.0 or u_0 == -1.0):  # If the linear interpolation fails, I use the nearest interpolation
-        #T_0 = scipy_int.griddata(points, values[:,0], int_point, method='nearest')
-        #T_t_0 = scipy_int.griddata(points, values[:,1], int_point, method='nearest')
-        #u_0 = scipy_int.griddata(points, values[:,2], int_point, method='nearest')
-        print("Linear interpolation failed, nearest interpolation used.")
+    # If the linear interpolation fails, extrapolation is used
+    if (T_0 == -1.0 or T_t_0 == -1.0 or u_0 == -1.0): 
+        warnings += "Linear interpolation failed, nearest interpolation used."
         rfb4 = scipy_int.Rbf(points[:,0], points[:,1], points[:,2], values[:,0], function='thin_plate', smooth=5)
         T_0 = []
         T_0.append(rfb4(int_point[0], int_point[1], int_point[2]))
@@ -252,11 +239,12 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
         rfb4 = scipy_int.Rbf(points[:,0], points[:,1], points[:,2], values[:,2], function='thin_plate', smooth=5)
         u_0 = []
         u_0.append(rfb4(int_point[0], int_point[1], int_point[2]))
-        if(T_0[0] < 0 or T_t_0[0] < 0 or u_0[0] < 0 or T_0[0] > 18000 or T_t_0[0] > 18000):
+        # If extrapolation is out of bounds, nearest interpolation is used
+        if(T_0[0] < 0 or T_t_0[0] < 0 or u_0[0] < 0 or T_0[0] > max_T_relax or T_t_0[0] > max_T_relax):
             T_0 = scipy_int.griddata(points, values[:,0], int_point, method='nearest')
             T_t_0 = scipy_int.griddata(points, values[:,1], int_point, method='nearest')
             u_0 = scipy_int.griddata(points, values[:,2], int_point, method='nearest')
-        warnings = "Linear interpolation failed, nearest interpolation used.|"
+            warnings += "Linear interpolation failed, nearest interpolation used.|"
     # I create the object
     T_0 = T_0[0]*multiplication_factor
     if(T_0 < T_w):
@@ -271,6 +259,8 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, multiplication_factor):
     initial_conditions.T_t_0 = T_t_0
     initial_conditions.u_0 = u_0
     initial_conditions.P_t_0 = P + P_dyn
+    if (warnings == ""):
+        warnings = None
     # I return the object
     return initial_conditions, warnings
 
