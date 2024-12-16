@@ -12,8 +12,9 @@ def clean_files():
     """
     # Constants
     MIXTURE_NAME = "temporarily_mixture_file"
+    USE_PREV_ITE_FILENAME = "hf_first_comp.var"
     try:
-        os.remove("hf_first_comp.var") 
+        os.remove(USE_PREV_ITE_FILENAME) 
     except:
         pass
     try: 

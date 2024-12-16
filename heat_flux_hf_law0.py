@@ -134,6 +134,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     """
     # Varibles:
     ORDER = 4  # Order of the central finite difference
+    USE_PREV_ITE_FILENAME = "hf_first_comp.var"
     max_iter = settings.max_hf_iter  # Maximum number of iterations for the heat flux
     hf_conv = settings.hf_conv  # Convergence criteria for the heat flux
     log_warning_hf = settings.log_warning_hf  # Log warning for when the heat flux does not converge
@@ -182,7 +183,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     deta = eta_max/(N_p-1)  # Step of eta. We use N_p-1 because we need N_p points, not N_p+1 (we start from 0 and we end at eta_max)
     # Now I check if the x, y, z exist, so if the heat flux has been computed previously
     if (settings.use_prev_ite == True):  # If we want to use the previous iteration for the heat flux
-        hf_first_comp = np.loadtxt('hf_first_comp.var', dtype=int)  # This file exist for sure, it has been created in the main code
+        hf_first_comp = np.loadtxt(USE_PREV_ITE_FILENAME, dtype=int)  # This file exist for sure, it has been created in the main code
     else:
         hf_first_comp = 0
     if (hf_first_comp == 0):  # I need to compute a starting solution
@@ -288,7 +289,7 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         np.savetxt('z.var', z)
         if (hf_first_comp==0):  # We need to update the hf_first_comp variable
             hf_first_comp=np.array([1])
-            np.savetxt("hf_first_comp.var", hf_first_comp, fmt="%1.1u")
+            np.savetxt(USE_PREV_ITE_FILENAME, hf_first_comp, fmt="%1.1u")
     return q, bad_convergence
 #.................................................
 #   Possible improvements:
