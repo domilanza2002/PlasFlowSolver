@@ -307,7 +307,7 @@ def generate_ic_map(db, ic_name, ic_split_flag):
     if (ic_split_flag == False):  # We do not split the mixtures
         ic_filename = ic_name + ".h5"
         # Verify the database
-        if(ic_map_file.verify_db(ic_filename) == False):
+        if(ic_map_file.verify_ic_db(ic_filename) == False):
             try:
                 ic_map_file.create_ic_db(ic_filename, db)
             except Exception as e:
@@ -336,7 +336,7 @@ def generate_ic_map(db, ic_name, ic_split_flag):
         for mixture in mixtures:
             ic_filename = ic_name + "_" + mixture + ".h5"
             # Verify the database
-            if(ic_map_file.verify_db(ic_filename) == False):
+            if(ic_map_file.verify_ic_db(ic_filename) == False):
                 try:
                     current_ic = db[db["mixture_name"] == mixture]
                     ic_map_file.create_ic_db(ic_filename, current_ic)
