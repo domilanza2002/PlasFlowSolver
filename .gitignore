@@ -1,9 +1,5 @@
-src/__pycache__/
-src/*.test.py
-src/inputs/
-src/*.xlsx
-src/*.in
-src/*.out
-src/*.srun
-src/*.pfs
-src/*.var
+__pycache__/*.pyc
+heat_flux/__pycache__/*.pyc
+IO_operations/__pycache__/*.pyc
+system_resolution/__pycache__/*.pyc
+utils/__pycache__/*.pyc
