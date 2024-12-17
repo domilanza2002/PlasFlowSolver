@@ -8,7 +8,7 @@ from utils.exit_program import exit_program  # Function to exit the program
 import IO_operations.retrieve_data_srun as retrieve_data_srun_file  # Module to retrieve the data from the .srun file
 import IO_operations.retrieve_data_xlsx as retrieve_data_xlsx_file  # Module to retrieve the data from the .xlsx file
 import IO_operations.retrieve_data_filerun as retrieve_data_filerun_file  # Module to retrieve the data from the .in and .pfs files
-from utils.retrieve_helper import retrieve_converted_inputs  # Function to retrieve the converted inputs
+from IO_operations.retrieve_helper import retrieve_converted_inputs  # Function to retrieve the converted inputs
 
 def retrieve_data(df_object, program_mode, n_case):
     """This function retrieves the needed data from the dataframe object

@@ -53,6 +53,10 @@ def write_output_xlsx(output_filename, out_obj):
     # Has converged
     n_col = len(df.columns)
     df.insert(n_col, ("Output", "has converged"), has_converged_out, False)
+    
+    # Residuals
+    n_col = len(df.columns)
+    df.insert(n_col, ("Output", "residual"), res_out, False)
 
     # Density
     n_col = len(df.columns)
@@ -121,11 +125,9 @@ def write_output_xlsx(output_filename, out_obj):
     n_col = len(df.columns)
     df.insert(n_col, ("Output", "warnings"), warnings_out, False)
 
-    # Residuals
-    n_col = len(df.columns)
-    df.insert(n_col, ("Output", "residual"), res_out, False)
     # Replace <NA> values with empty strings
-    df = df.fillna('')
+    with pd.option_context("future.no_silent_downcasting", True):
+        df = df.fillna('').infer_objects(copy=False)
 
     # Opening an excel workbook and worksheet
     wb = Workbook()
@@ -155,47 +157,10 @@ def write_output_xlsx(output_filename, out_obj):
     for row in ws.iter_rows():
         for cell in row:
             cell.alignment = Alignment(horizontal="center", vertical="center")
-    # Adjust the column width to fit the text in the second row automatically for the first 41 columns
-    for col in ws.iter_cols(min_row=2, max_row=2, min_col=1, max_col=41):
+    # Adjust the column width to fit the text in each cell
+    for col in ws.iter_cols(min_row=2, max_row=df.shape[0]+2, min_col=1, max_col=df.shape[1]):
         max_length = 0
         column = col[0].column_letter  # Get the column name
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
-
-    # Adjust the column width to fit the text in the second row automatically for the last 2 columns
-    for col in ws.iter_cols(min_row=2, max_row=2, min_col=df.shape[1]-1, max_col=df.shape[1]):
-        max_length = 0
-        column = col[0].column_letter  # Get the column name
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
-    # For column 30 and for the one before the last column, base on the rows after the second row
-    for col in ws.iter_cols(min_row=3, max_row=df.shape[0]+2, min_col=30, max_col=30):
-        max_length = 0
-        column = col[0].column_letter
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
-    # For the column before the last, base on the rows after the second row
-    for col in ws.iter_cols(min_row=3, max_row=df.shape[0]+2, min_col=df.shape[1]-1, max_col=df.shape[1]-1):
-        max_length = 0
-        column = col[0].column_letter
         for cell in col:
             try:
                 if len(str(cell.value)) > max_length:

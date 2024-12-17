@@ -6,14 +6,14 @@
 #   In particular, the remaining checks are performed
 #.................................................
 import utils.classes as classes_file  # Module with the classes
-from utils.retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
-from utils.retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions
-from utils.retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
-from utils.retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
-from utils.retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
-from utils.retrieve_helper import retrieve_stag_var  # Function to retrieve the stagvar
-from utils.retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
-from utils.retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
+from IO_operations.retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
+from IO_operations.retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions
+from IO_operations.retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
+from IO_operations.retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
+from IO_operations.retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
+from IO_operations.retrieve_helper import retrieve_stag_var  # Function to retrieve the stagvar
+from IO_operations.retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
+from IO_operations.retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
 
 def retrieve_data(df):
     """This function retrieves the needed data from 

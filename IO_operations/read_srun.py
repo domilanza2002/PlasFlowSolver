@@ -9,7 +9,7 @@
 #.................................................
 from utils.classes import DataframeClass  # Class that contains the dataframe object
 from utils.script_run import retrieve_filename  # Module that contains the bash run functions
-from utils.retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
+from IO_operations.retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
 from utils.initial_conditions_map import verify_ic_db  # Function to verify the initial conditions database
 
 def prompt_input_file():
