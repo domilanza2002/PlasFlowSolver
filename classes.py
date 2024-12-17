@@ -17,14 +17,53 @@
 #.................................................
 from types import SimpleNamespace
 
-class CF_constants:
-    """This class contains the constants used to convert
-    the read values to the SI units.
+class ProgramConstants:
+    """This class contains the constants
+    used in the program.
     """
     def __init__(self):
-        self.P_CF = 1e3  # Conversion factor for pressure (kPa->Pa)
-        self.Q_CF = 1e4  # Conversion factor for heat flux (W/cm^2->W/m^2)
-        self.L_CF = 1e-3  # Conversion factor for length (mm->m)
+        # Unit conversion constants:
+        self.UnitConversion = SimpleNamespace()  # Unit conversion constants
+        self.UnitConversion.P_CF = 1e3  # Conversion factor for pressure (kPa->Pa)
+        self.UnitConversion.Q_CF = 1e4  # Conversion factor for heat flux (W/cm^2->W/m^2)
+        self.UnitConversion.L_CF = 1e-3  # Conversion factor for length (mm->m)
+        # Database settings:
+        self.DatabaseSettings = SimpleNamespace()  # Database settings
+        self.DatabaseSettings.DB_SETTINGS_FILENAME = "database_settings.pfs"  # Database settings file name
+        self.DatabaseSettings.TOL = 1e-1  # Tolerance for the comparison of 2 values
+        # Script run:
+        self.ScriptRun = SimpleNamespace()  # Script run
+        self.ScriptRun.SCRIPT_FILENAME = "script.pfs"  # Script file name
+        # Program temporary files:
+        self.TemporaryFiles = SimpleNamespace()  # Temporary files
+        self.TemporaryFiles.TEMP_MIXTURE_NAME = "temporarily_mixture_file"  # Temporary mixture file name
+        self.TemporaryFiles.USE_PREV_ITE_FILENAME = "hf_first_comp.var"  # Temporary file for the heat flux computation
+        self.TemporaryFiles.X_VAR_FILENAME = "x.var"  # Temporary file for the x variable
+        self.TemporaryFiles.Y_VAR_FILENAME = "y.var"  # Temporary file for the y variable
+        self.TemporaryFiles.Z_VAR_FILENAME = "z.var"  # Temporary file for the z variable
+        # Heat flux computation:
+        self.HeatFlux = SimpleNamespace()
+        self.HeatFlux.ORDER = 4  # Order for the finite difference method
+        # IC database:
+        self.IC_DB = SimpleNamespace()
+        self.IC_DB.N = 1  # Number of decimal digits for the rounding
+        self.IC_DB.OFFSET_T = 100.0  # Offset for the static temperature
+        self.IC_DB.OFFSET_T_T = 100.0  # Offset for the total temperature
+        self.IC_DB.MIN_U = 10  # Minimum flow velocity
+        self.IC_DB.MULTIPLICATION_FACTOR = 1.15  # Multiplication factor for the interpolation
+        # Dynamic jacobian step size:
+        self.DynJac = SimpleNamespace()
+        self.DynJac.DCNV_PERCENT = 0.01  # Threshold under which the Jacobian step is increased
+        self.DynJac.JAC_DIFF_MAX = 1e-1  # Maximum Jacobian step allowed
+        self.DynJac.JAC_DIFF_INCREASE = 4  # Jacobian step increase factor
+        self.DynJac.VARS_INCREASE = 0.05  # Variables increase factor
+        self.DynJac.OFFSET_T_T = 5000  # Offset for the total temperature if problems arise
+        # XLSX mode
+        self.XLSX = SimpleNamespace()
+        self.XLSX.STD_VALUES_FILENAME = "std_values.pfs"  # Settings file name
+        # Retriever helper:
+        self.RetrieverHelper = SimpleNamespace()
+        self.RetrieverHelper.P_TOL = 1e-3  # Tolerance for the pressure difference, P_stag = P + P_dyn
 #.................................................
 class DatabaseSettings:
     """This class contains the database settings read from file.

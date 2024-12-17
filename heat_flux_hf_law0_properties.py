@@ -4,7 +4,6 @@
 #   This module is needed to compute the 
 #   flow properties in the heat flux model with hf_law=0
 #.................................................
-import mutationpp as mpp  # Thermodynamic library
 
 def heat_flux_hf_law0_edge(P_e,T_e,mixture):
     """This function computes the flow edge 

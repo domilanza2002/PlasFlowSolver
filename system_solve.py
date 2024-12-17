@@ -18,30 +18,24 @@ def system_solve(n, A, b):
     Returns:
         x (float list): solution
     """
-    # Variables:
-    x = None  # Variable to store the solution
-    AA = None  # Variable to store the reducted A matrix
-    bb = None  # Variable to store the reducted b vector
     # AA must be A[1:n,1:n]
     # bb must be b[1:n]
-    # I extract AA and bb from A and b
+    # Extract AA and bb from A and b
     AA = [[0.0 for i in range(n)] for j in range(n)]
     bb = [0.0]*n
     for i in range(n):
         for j in range(n):
             AA[i][j] = A[i][j]
         bb[i] = b[i]
-    # I solve the system by using the linalg.solve function
+    # Solve the system by using the linalg.solve function
     try: 
         x = np.linalg.solve(AA, bb)
     except Exception as e:
-        raise Exception("Error detected in system_solve.py, the linear system cannot be solved: "+str(e))
+        raise Exception("Error detected in system_solve.py, the linear system cannot be solved: " + str(e))
     return x 
 #.................................................
 #   Possible improvements:
 #   - Improve the efficiency of the code
-#.................................................
-# EXECUTION TIME: TBD
 #.................................................
 #   KNOW PROBLEMS:
 #   None.

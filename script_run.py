@@ -4,6 +4,7 @@
 #   This module is used to detect if a scripted run 
 #   must be executed.
 #.................................................
+from classes import ProgramConstants
 
 def script_file_detected():
     """This function checks if a script.pfs file is present 
@@ -12,7 +13,9 @@ def script_file_detected():
     Returns:
         bool: True if the file is present, False otherwise
     """
-    FILENAME = "script.pfs"  # Default filename for the script file
+    # Constants:
+    program_constants = ProgramConstants()
+    FILENAME = program_constants.ScriptRun.SCRIPT_FILENAME  # Default filename for the script file
     # Check if the file exists
     try:
         file = open(FILENAME, "r")
@@ -32,8 +35,9 @@ def retrieve_program_mode():
     Returns:
         program_mode (int): the program mode
     """
-    # Variables:
-    FILENAME = "script.pfs"  # Default filename for the script file
+    # Constants:
+    program_constants = ProgramConstants()
+    FILENAME = program_constants.ScriptRun.SCRIPT_FILENAME  # Default filename for the script file
     # Try to open the file
     try:
         file = open(FILENAME, "r")
@@ -59,8 +63,9 @@ def retrieve_filename():
     Returns:
         filename (string): the input filename
     """
-    # Variables:
-    SCRIPT_FILENAME = "script.pfs"  # Default filename for the bash file
+    # Constants:
+    program_constants = ProgramConstants()
+    SCRIPT_FILENAME = program_constants.ScriptRun.SCRIPT_FILENAME  # Default filename for the script file
     # I start reading the file
     file = open(SCRIPT_FILENAME, "r")
     line = file.readline()  # I skip the first line, that was the program mode
@@ -78,8 +83,9 @@ def retrieve_settings():
     Returns:
         settings_filename (string): the settings filename
     """
-    # Variables:
-    FILENAME = "script.pfs"  # Default filename for the bash file
+    # Constants:
+    program_constants = ProgramConstants()
+    FILENAME = program_constants.ScriptRun.SCRIPT_FILENAME  # Default filename for the script file
     # I start reading the file
     file = open(FILENAME, "r")
     line = file.readline()  # I skip the first line, that was the program mode

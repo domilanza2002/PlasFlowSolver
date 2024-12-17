@@ -8,6 +8,7 @@ import pandas as pd
 from classes import DatabaseSettings
 from classes import DatabaseInputs
 from classes import DatabaseClass
+from classes import ProgramConstants
 import initial_conditions_map as ic_map_file
 
 def db_inputs_init():
@@ -77,7 +78,10 @@ def pfs_file_detected():
     Returns:
         bool: True if the file is present, False otherwise
     """
-    FILENAME = "database_settings.pfs"  # Default filename for the database settings file
+    # Constants:
+    program_constants = ProgramConstants()
+    # Default filename for the database settings file
+    FILENAME = program_constants.DatabaseSettings.DB_SETTINGS_FILENAME  
     # I check if the file exists
     try:
         file = open(FILENAME, "r")
@@ -95,12 +99,16 @@ def read_pfs_file():
     Returns:
         db_settings (database_settings_class): the database settings
     """
+    # Constants:
+    program_constants = ProgramConstants()
+    # Default filename for the database settings file
+    FILENAME = program_constants.DatabaseSettings.DB_SETTINGS_FILENAME
     # Variables:
     db_settings = DatabaseSettings()
     if (pfs_file_detected == False):
         raise Exception("FileError: The database_settings.pfs file cannot be read. This should not happen. Check the code.")
     # Read the file
-    file = open("database_settings.pfs", "r")
+    file = open(FILENAME, "r")
     # DB name
     line = file.readline()
     db_settings.db_name = line.split(":")[1].strip()  # Take the part of the string after the ":", strip it
@@ -250,7 +258,8 @@ def database_updater(db_name, db, lower_time_flag):
         dataframe (pandas dataframe): The updated database
     """
     # Constants:
-    TOL = 1e-1  # Tolerance for the comparison of the values
+    program_constants = ProgramConstants()
+    TOL = program_constants.DatabaseSettings.TOL  # Tolerance for the comparison of the values
     # Read the current database
     try:
         current_db = pd.read_csv(db_name)
@@ -393,9 +402,6 @@ def update_database(db_settings, db_inputs, out_vars, run_time):
     """
     # Variables:
     db_data = DatabaseClass()
-    data = None  # Dictionary to store the data
-    db = None  # Dataframe to store the data
-    updated_db = None  # Dataframe to store the updated database
     # Unpackaging the database settings
     db_name = db_settings.db_name
     create_db_flag = db_settings.create_db_flag

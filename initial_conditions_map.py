@@ -122,11 +122,8 @@ def concatenate_ic_db(db_obj1, db_obj2):
         ic_db (initial_conditions_db_class): the initial conditions database object
     """
     # Constants:
-    N = 1  # Number of decimal digits for the rounding
-    # Variables:
-    ic_db = None  # Initial conditions database
-    points = None  # Points of the database
-    values = None  # Values of the database
+    program_constants = classes_file.ProgramConstants()  # Program constants
+    N = program_constants.IC_DB.N  # Number of decimal digits for the rounding
     # New ic database
     ic_db = classes_file.InitialConditionsDB()
     # Concatenate the data
@@ -167,8 +164,6 @@ def update_ic_db(ic_obj, db_obj):
     # Return the new database
     return new_ic_db
     
-    
-
 def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, max_T_relax, multiplication_factor):
     """This function interpolates the initial conditions
     database to retrieve the initial conditions for the
@@ -188,9 +183,10 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, max_T_relax, multiplication_fac
         warnings (string): the warnings
     """
     # Constants:
-    OFFSET_T = 100.0  # Offset for the static temperature
-    OFFSET_T_T = 100.0  # Offset for the total temperature
-    MIN_U = 10  # Minimum flow velocity
+    program_constants = classes_file.ProgramConstants()  # Program constants
+    OFFSET_T = program_constants.IC_DB.OFFSET_T  # Offset for the temperature
+    OFFSET_T_T = program_constants.IC_DB.OFFSET_T_T  # Offset for the temperature gradient
+    MIN_U = program_constants.IC_DB.MIN_U  # Minimum value for the velocity
     # Preliminary operations
     initial_conditions = classes_file.Initials()  # Object with the initial conditions
     int_point = [P, P_dyn, q_target]  # The point to interpolate

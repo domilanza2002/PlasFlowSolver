@@ -8,6 +8,7 @@
 import classes as classes_file  # Module with the classes
 from retrieve_helper import retrieve_stag_var  # Function to retrieve the stagnation variable
 from retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions database
+
 def retrieve_data(df, n_case):
     """This function retrieves the needed data 
     from the dataframe object from the current loop iteration
