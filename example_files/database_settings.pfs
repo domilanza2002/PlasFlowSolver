@@ -1,4 +1,4 @@
-Database name: new_db.csv
+Database name: example_db.csv
 Create database if not found: true
 Update if lower time: true
 Generate ic map: true

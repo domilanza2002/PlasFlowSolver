@@ -6,8 +6,8 @@
 #   iteration using the filerun mode.
 #.................................................
 import utils.classes as classes_file  # Module with the classes
-from utils.retrieve_helper import retrieve_stag_var  # Function to retrieve the stagnation variable
-from utils.retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions database
+from IO_operations.retrieve_helper import retrieve_stag_var  # Function to retrieve the stagnation variable
+from IO_operations.retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions database
 
 def retrieve_data(df, n_case):
     """This function retrieves the needed data 

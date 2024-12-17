@@ -11,12 +11,12 @@
 from utils.classes import DataframeClass  # Module that contains the classes of the program
 import utils.script_run as script_run_file  # Module that contains the functions to detect if a scriptrun must be executed
 from utils.initial_conditions_map import verify_ic_db  # Function to verify if the database exists
-from utils.retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
-from utils.retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
-from utils.retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
-from utils.retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
-from utils.retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
-from utils.retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
+from IO_operations.retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
+from IO_operations.retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
+from IO_operations.retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
+from IO_operations.retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
+from IO_operations.retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
+from IO_operations.retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
 
 def prompt_input_file():
     """This function prompts the user for the input file 

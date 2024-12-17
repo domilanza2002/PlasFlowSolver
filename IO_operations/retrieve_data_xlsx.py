@@ -10,15 +10,15 @@ import pandas as pd  # Library to read the xlsx file
 import mutationpp as mpp  # Thermodynamic library
 import utils.classes as classes_file  # Module with the classes
 from utils.initial_conditions_map import verify_ic_db  # Function to verify the database
-from utils.retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
-from utils.retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
-from utils.retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions
-from utils.retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
-from utils.retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
-from utils.retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
-from utils.retrieve_helper import retrieve_stag_var  # Function to retrieve the stag_var
-from utils.retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
-from utils.retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
+from IO_operations.retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
+from IO_operations.retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
+from IO_operations.retrieve_helper import retrieve_ic  # Function to retrieve the initial conditions
+from IO_operations.retrieve_helper import retrieve_stag_type  # Function to retrieve the stagtype
+from IO_operations.retrieve_helper import retrieve_hf_law  # Function to retrieve the hf_law
+from IO_operations.retrieve_helper import retrieve_barker_type  # Function to retrieve the barker type
+from IO_operations.retrieve_helper import retrieve_stag_var  # Function to retrieve the stag_var
+from IO_operations.retrieve_helper import retrieve_use_prev_ite  # Function to retrieve the use_prev_iter
+from IO_operations.retrieve_helper import retrieve_log_warning_hf  # Function to retrieve the log_warning_hf
 
 def generate_std_file(FILENAME):
     """This function generate the standard values file if it does not exist 
