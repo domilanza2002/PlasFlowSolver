@@ -9,6 +9,7 @@ import math  # Standard library for mathematical operations
 import thermodyn as thermodyn_file  # Thermodynamic functions
 import barker_effect as barker_effect_file  # Barker effect functions
 import heat_flux as heat_flux_file  # Heat flux functions
+from classes import ProgramConstants
 
 def under_relaxation(settings_object, probes_object, T_star, u_star, T_t_star, P_t_star, T, u, T_t, P_t, d_vars):
     """ This function is used to relax the new values of the variables
@@ -61,11 +62,12 @@ def dynamic_jacobian_diff(cnv, cnv_old, cnv_ref, res, settings_object, probes_ob
     to avoid situations in which the Newton-Raphson's method gets stuck.
     """
     # Constants:
-    DCNV_PERCENT = 0.01  # Threshold under which the Jacobian step is increased
-    JAC_DIFF_MAX = 1e-1  # Maximum Jacobian step allowed
-    JAC_DIFF_INCREASE = 4  # Jacobian step increase factor
-    VARS_INCREASE = 0.05  # Variables increase factor
-    OFFSET_T_T = 5000  # Offset for the total temperature if problems arise
+    program_constants = ProgramConstants()
+    DCNV_PERCENT = program_constants.DynJac.DCNV_PERCENT  # Percentage difference of the convergence
+    JAC_DIFF_MAX = program_constants.DynJac.JAC_DIFF_MAX  # Maximum Jacobian step
+    JAC_DIFF_INCREASE = program_constants.DynJac.JAC_DIFF_INCREASE  # Jacobian step increase factor
+    VARS_INCREASE = program_constants.DynJac.VARS_INCREASE  # Variables increase factor
+    OFFSET_T_T = program_constants.DynJac.OFFSET_T_T  # Offset for the temperature of the turbine
     # Initialize:
     cnv_new = cnv
     # Compute the percentage difference of the convergence:

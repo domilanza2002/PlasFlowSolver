@@ -9,7 +9,7 @@ def runner(xlsx_to_run):
     for xlsx in xlsx_to_run:  # Select each xlsx file in the list
         print("Running file: ", xlsx)
         # Create a bash.pfs file to run PlasFlowSolver
-        f = open("bash.pfs", "w")
+        f = open("script.pfs", "w")
         f.write("Mode: xlsx\n")
         f.write("File: " + xlsx + "\n")
         f.write("Settings: NA\n")

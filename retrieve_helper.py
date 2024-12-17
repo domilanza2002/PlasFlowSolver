@@ -8,7 +8,7 @@
 #.................................................
 import mutationpp as mpp
 import initial_conditions_map as ic_map_file  # Module with the initial conditions map functions
-from classes import CF_constants as CF_constants_class  # Class with the conversion factors
+from classes import ProgramConstants  # Class with the program constants
 
 def pressure_consistency_check(P, P_dyn, P_stag):
     """This function checks the consistency between the
@@ -22,8 +22,9 @@ def pressure_consistency_check(P, P_dyn, P_stag):
     Returns:
         bool: True if the pressures are consistent, False otherwise
     """
-    # Variables:
-    P_TOL = 1e-3  # Tolerance for the pressure difference, P_stag = P + P_dyn
+    # Constants:
+    program_constants = ProgramConstants()
+    P_TOL = program_constants.RetrieverHelper.P_TOL  # Tolerance for the pressure difference, P_stag = P + P_dyn
     if (abs(P_stag - P - P_dyn) > P_TOL):
         return False
     else:
@@ -80,8 +81,10 @@ def retrieve_ic(db_name, P, P_dyn, q_target, T_w, max_T_relax):
         ic_db (initial_conditions_db_class): the initial conditions database object
     """
     # Constants:
-    CF_CONSTANTS = CF_constants_class()  # Object with the conversion factors
-    MULTIPLICATION_FACTOR = 1.15  # Multiplication factor for the interpolation
+    program_constants = ProgramConstants()
+    CF_CONSTANTS = program_constants.UnitConversion  # Object with the conversion factors
+    # Multiplication factor for the initial conditions
+    MULTIPLICATION_FACTOR = program_constants.IC_DB.MULTIPLICATION_FACTOR
     # Load the initial conditions database:
     try:
         ic_db = ic_map_file.load_ic_db(db_name)
@@ -254,7 +257,9 @@ def retrieve_converted_inputs(inputs_object, initials_object, probes_object):
         initials_object (initials_class): the converted initials object
         probes_object (probes_class): the converted probes object
     """
-    CF_CONSTANTS = CF_constants_class()  # Object with the conversion factors
+    # Constants:
+    program_constants = ProgramConstants()
+    CF_CONSTANTS = program_constants.UnitConversion  # Object with the conversion factors
     # Conversion of the inputs:
     inputs_object.P *= CF_CONSTANTS.P_CF
     inputs_object.P_dyn *= CF_CONSTANTS.P_CF

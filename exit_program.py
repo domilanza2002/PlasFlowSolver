@@ -6,21 +6,26 @@
 #.................................................
 import os
 from mpp_memory_fixer import delete_mixture_file  # Function to delete the mixture file
+from classes import ProgramConstants
 
 def clean_files():
     """This function is used to clean the temporary files.
     """
     # Constants
-    MIXTURE_NAME = "temporarily_mixture_file"
-    USE_PREV_ITE_FILENAME = "hf_first_comp.var"
+    program_constants = ProgramConstants()
+    MIXTURE_NAME = program_constants.TemporaryFiles.TEMP_MIXTURE_NAME
+    USE_PREV_ITE_FILENAME = program_constants.TemporaryFiles.USE_PREV_ITE_FILENAME
+    X_VAR_FILENAME = program_constants.TemporaryFiles.X_VAR_FILENAME
+    Y_VAR_FILENAME = program_constants.TemporaryFiles.Y_VAR_FILENAME
+    Z_VAR_FILENAME = program_constants.TemporaryFiles.Z_VAR_FILENAME
     try:
         os.remove(USE_PREV_ITE_FILENAME) 
     except:
         pass
     try: 
-        os.remove("x.var") 
-        os.remove("y.var") 
-        os.remove("z.var") 
+        os.remove(X_VAR_FILENAME) 
+        os.remove(Y_VAR_FILENAME) 
+        os.remove(Z_VAR_FILENAME) 
     except:
         pass
     delete_mixture_file(MIXTURE_NAME)

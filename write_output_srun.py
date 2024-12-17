@@ -4,7 +4,7 @@
 #   This Module is needed to write the output file
 #   for the srun mode of the program.
 #.................................................
-from classes import CF_constants as CF_constants_class  # Class with the conversion factors
+from classes import ProgramConstants
 
 def write_output_srun(output_filename, out_obj):
     """This function writes the output file for the srun mode of the program.
@@ -14,7 +14,8 @@ def write_output_srun(output_filename, out_obj):
         out_obj (out_properties_class): the object containing all the output properties
     """
     # Constants:
-    P_CF = CF_constants_class().P_CF  # Conversion factor for the pressure
+    program_constants = ProgramConstants()
+    P_CF = program_constants.UnitConversion.P_CF  # Conversion factor for pressure
     # Extracting the output properties:
     has_converged_out = out_obj.has_converged_out  # Has converged flag
     rho_out = out_obj.rho_out  # Density

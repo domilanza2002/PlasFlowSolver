@@ -7,6 +7,8 @@
 import mutationpp as mpp
 import os
 
+from classes import ProgramConstants
+
 def create_mixture_file(mixture_name):
     """This function is used to create a mixture file.
 
@@ -51,7 +53,8 @@ def fix_mpp_memory_leak():
     """This function is needed to temporarily fix a memory leak in the MPP library.
     """
     # Constants
-    MIXTURE_NAME = "temporarily_mixture_file"
+    program_constants = ProgramConstants()
+    MIXTURE_NAME = program_constants.TemporaryFiles.TEMP_MIXTURE_NAME
     # Create the mixture file
     if(create_mixture_file(MIXTURE_NAME) == False):
         print("Error: Unable to create the mixture file.")

@@ -11,6 +11,7 @@ import heat_flux_hf_law0_properties as heat_flux_hf_law0_properties_file  # Modu
 import continuity as continuity_file  # Module with the function to solve the continuity equation
 import first_deriv as first_deriv_file  # Module with the function to compute the first derivative of functions
 import eq_diff_solve as eq_diff_solve_file  # Module with the function to solve differential equations
+from classes import ProgramConstants
 
 def f(eta):
     """Function to compute the f starting profile for the boundary layer.
@@ -129,8 +130,13 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
         q (float): the stagnation heat flux
     """
     # Constants:
-    ORDER = 4  # Order of the central finite difference
-    USE_PREV_ITE_FILENAME = "hf_first_comp.var"  # Filename for the use_prev_ite variable
+    program_constants = ProgramConstants()
+    ORDER = program_constants.HeatFlux.ORDER  # Order of the central finite difference
+    # Filename for the use_prev_ite variable
+    USE_PREV_ITE_FILENAME = program_constants.TemporaryFiles.USE_PREV_ITE_FILENAME  
+    X_VAR_FILENAME = program_constants.TemporaryFiles.X_VAR_FILENAME  # Filename for the x variable
+    Y_VAR_FILENAME = program_constants.TemporaryFiles.Y_VAR_FILENAME  # Filename for the y variable
+    Z_VAR_FILENAME = program_constants.TemporaryFiles.Z_VAR_FILENAME  # Filename for the z variable
     # Extract variables:
     beta = probes.stag_var * u / probes.R_m  # Velocity gradient
     eta_max = settings.eta_max  # Maximum value for the boundary layer eta
@@ -153,9 +159,9 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     if (hf_first_comp == 0):  # Compute starting solution
         x, y, z = reset_vars(deta, T_e, T_w, N_p, eta_max)
     else:  # Read the previous solution
-        x = np.loadtxt('x.var')  # Array to store the eta values
-        y = np.loadtxt('y.var')  # Array to store the F values of the boundary layer
-        z = np.loadtxt('z.var')  # Array to store the g values of the boundary layer
+        x = np.loadtxt(X_VAR_FILENAME)  # Array to store the eta values
+        y = np.loadtxt(Y_VAR_FILENAME)  # Array to store the F values of the boundary layer
+        z = np.loadtxt(Z_VAR_FILENAME)  # Array to store the g values of the boundary layer
         x = x.tolist() 
         y = y.tolist() 
         z = z.tolist()
@@ -243,9 +249,9 @@ def heat_flux(probes, settings, P_e, T_e, u, mixture_object):
     if (use_prev_ite==True and stop==True):  
         # If we converged and we want to use this solution as starting solution
         # for the next heat flux computation in this case, we save it
-        np.savetxt('x.var', x) 
-        np.savetxt('y.var', y) 
-        np.savetxt('z.var', z)
+        np.savetxt(X_VAR_FILENAME, x) 
+        np.savetxt(Y_VAR_FILENAME, y) 
+        np.savetxt(Z_VAR_FILENAME, z)
         if (hf_first_comp == 0):  # Update the hf_first_comp variable
             hf_first_comp = np.array([1])
             np.savetxt(USE_PREV_ITE_FILENAME, hf_first_comp, fmt = "%1.1u")

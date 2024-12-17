@@ -28,9 +28,11 @@ import write_output as write_output  # Module to write the output file
 import database_manager as database_manager_file  # Module to manage the database
 from exit_program import exit_program, clean_files  # Module to kill the program and kill the temporary files
 from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix Mutation++ memory leak (if any, due to Python wrapper)
+from classes import ProgramConstants
 #.................................................
 # PROGRAM CONSTANTS:
-USE_PREV_ITE_FILENAME = "hf_first_comp.var"  # File to store the flag for the use_prev_ite option
+program_constants = ProgramConstants()  # Program constants object
+USE_PREV_ITE_FILENAME = program_constants.TemporaryFiles.USE_PREV_ITE_FILENAME
 #.................................................
 #   PROGRAM START:
 # Preliminary operations:
@@ -302,7 +304,7 @@ while (n_case < n_lines):  # Loop through all the cases
     )
     species_names_out[n_case] = species_names
     species_Y_out[n_case] = species_Y
-    print("Executing case number "+str(n_case)+"...done")
+    print("Executing case number " + str(n_case) + "...done")
 print("--------------------------------------------------")
 print("End of main program loop...")
 # END OF MAIN PROGRAM LOOP
@@ -340,7 +342,7 @@ t2 = time.perf_counter()  # I store the time at the end of the program to keep t
 print("Execution time: " + str(t2 - t1) + " seconds.")
 #.................................................
 #   Possible improvements:
-#   - Group all constants in a single file
+#   - Add variable wrappers to make calls shorter
 #   - Add flag for mole/mass fractions
 #.................................................
 #   KNOW PROBLEMS: 

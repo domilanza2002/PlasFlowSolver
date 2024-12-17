@@ -125,7 +125,8 @@ def read_std_values():
         df (dataframe_class): the dataframe object
     """
     # CONSTANTS:
-    FILENAME = "std_values.pfs"  # Filename for the standard values
+    program_constants = classes_file.ProgramConstants()  # Program constants
+    FILENAME = program_constants.XLSX.STD_VALUES_FILENAME  # Filename for the standard values
     # Initialize the dataframe:
     df = classes_file.DataframeClass()
     # I check if the std values file exists:
