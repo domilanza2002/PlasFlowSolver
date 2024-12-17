@@ -57,14 +57,11 @@ def depack_db_to_ic_obj(db_obj):
     Args:
         db_obj (dataframe): the database object
     """
-    # Variables:
-    P = None  # Static pressure
-    P_dyn = None  # Dynamic pressure
-    q_target = None  # Target heat flux
-    T = None  # Initial static temperature
-    T_t = None  # Initial total temperature
-    u = None  # Initial flow velocity
-    # I extract the data
+    # Before extracting the data, remove the duplicates
+    # based on P, P_dyn, q_target to avoid interpolation problems
+    db_obj = db_obj.drop_duplicates(subset=["P", "P_dyn", "q_target"])
+    db_obj = db_obj.reset_index(drop=True)
+    # Extract the data
     P = db_obj["P"].tolist()
     P_dyn = db_obj["P_dyn"].tolist()
     q_target = db_obj["q_target"].tolist()
@@ -76,16 +73,14 @@ def depack_db_to_ic_obj(db_obj):
     
 def create_ic_db_from_p_and_v(filename, points, values):
     """This function creates the initial conditions database
-    file.
+    file from points and values.
 
     Args:
         filename (string): the name of the ic map file
         points (numpy array): the points of the database
         values (numpy array): the values of the database
     """
-    # Variables:
-    f = None  # File object
-    # I create the ic map file
+    # Create the ic map file
     f = h5py.File(filename, 'w')
     f.create_dataset('points', data=points)
     f.create_dataset('values', data=values)
@@ -100,29 +95,19 @@ def create_ic_db(filename, db_obj):
         points (numpy array): the points of the database
         values (numpy array): the values of the database
     """
-    # Variables:
-    f = None  # File object
-    points = None  # Points of the database
-    values = None  # Values of the database
-    P = None  # Static pressure
-    P_dyn = None  # Dynamic pressure
-    q_target = None  # Target heat flux
-    T_0 = None  # Initial static temperature
-    T_t_0 = None  # Initial total temperature
-    u_0 = None  # Initial flow velocity
-    # I extract the data
+    #Extract db data
     P, P_dyn, q_target, T_0, T_t_0, u_0 = depack_db_to_ic_obj(db_obj)
-    # I create the arrays
+    # Create the arrays
     P = np.array(P).flatten()
     P_dyn = np.array(P_dyn).flatten()
     q_target = np.array(q_target).flatten()
     T_0 = np.array(T_0).flatten()
     T_t_0 = np.array(T_t_0).flatten()
     u_0 = np.array(u_0).flatten()
-    # I create the points and values arrays
+    # Create the points and values arrays
     points = np.array([P, P_dyn, q_target]).T
     values = np.array([T_0, T_t_0, u_0]).T
-    # I create the ic map file
+    # Create the ic map file
     create_ic_db_from_p_and_v(filename, points, values)
 
 def concatenate_ic_db(db_obj1, db_obj2):
@@ -137,58 +122,49 @@ def concatenate_ic_db(db_obj1, db_obj2):
         ic_db (initial_conditions_db_class): the initial conditions database object
     """
     # Constants:
-    N = 3  # Number of decimal digits
+    N = 1  # Number of decimal digits for the rounding
     # Variables:
     ic_db = None  # Initial conditions database
     points = None  # Points of the database
     values = None  # Values of the database
-    
-    # I create the object
+    # New ic database
     ic_db = classes_file.initial_conditions_db_class()
-    # I concatenate the data
+    # Concatenate the data
     points = np.concatenate((db_obj1.db_inputs, db_obj2.db_inputs), axis=0)
     values = np.concatenate((db_obj1.db_outputs, db_obj2.db_outputs), axis=0)
-    # I delete the duplicates rows with the same points
+    # Delete the duplicates rows with the same points
     points, indices = np.unique(np.round(points, N), axis=0, return_index=True)
     values = values[indices]
-    # I assign the data
+    # Sssign the data
     ic_db.db_inputs = points
     ic_db.db_outputs = values
-    # I return the object
+    # Return the object
     return ic_db
 
 def update_ic_db(ic_obj, db_obj):
     """This function updates the initial conditions database with a new db object.
 
     Args:
-        db_obj (_type_): _description_
-        ic_obj (_type_): _description_
+        db_obj (pandas dataframe): the new database object
+        ic_obj (initial_conditions_db_class): the initial conditions database object
     """
-    # Variables:
-    new_ic_db = None  # New initial conditions database
-    P = None  # Static pressure
-    P_dyn = None  # Dynamic pressure
-    q_target = None  # Target heat flux
-    T = None  # Initial static temperature
-    T_t = None  # Initial total temperature
-    u = None  # Initial flow velocity
-    # I initialize the new database
+    # Initialize the new ic database
     new_ic_db = classes_file.initial_conditions_db_class()
-    # I extract the data
+    # Extract the data
     P, P_dyn, q_target, T, T_t, u = depack_db_to_ic_obj(db_obj)
-    # I create the new arrays
+    # Create the new arrays
     P = np.array(P).flatten()
     P_dyn = np.array(P_dyn).flatten()
     q_target = np.array(q_target).flatten()
     T = np.array(T).flatten()
     T_t = np.array(T_t).flatten()
     u = np.array(u).flatten()
-    # I create the new points and values arrays
+    # Create the new points and values arrays
     new_ic_db.db_inputs = np.array([P, P_dyn, q_target]).T
     new_ic_db.db_outputs = np.array([T, T_t, u]).T
-    # I concatenate the data
+    # Concatenate the data
     new_ic_db = concatenate_ic_db(ic_obj, new_ic_db)
-    # I return the new database
+    # Return the new database
     return new_ic_db
     
     
@@ -263,5 +239,11 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, max_T_relax, multiplication_fac
         warnings = None
     # I return the object
     return initial_conditions, warnings
-
-    
+#.................................................
+#   Possible improvements:
+#   -create_ic_db_from_p_and_v could use
+#    the ic_db object instead of points and values
+#.................................................
+#   KNOW PROBLEMS: 
+#   None
+#.................................................
