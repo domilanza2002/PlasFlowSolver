@@ -64,7 +64,7 @@ def read_file(FILENAME):
         df (dataframe_class): the dataframe object
     """
     # Initialize the dataframe:
-    df = classes_file.dataframe_class()
+    df = classes_file.DataframeClass()
     # Reading:
     file = open(FILENAME, "r")
     line = file.readline()
@@ -127,7 +127,7 @@ def read_std_values():
     # CONSTANTS:
     FILENAME = "std_values.pfs"  # Filename for the standard values
     # Initialize the dataframe:
-    df = classes_file.dataframe_class()
+    df = classes_file.DataframeClass()
     # I check if the std values file exists:
     try:
         file = open(FILENAME, "r") 
@@ -174,10 +174,10 @@ def retrieve_data(df,n_case):
         settings_object (settings_class): the settings object containing the settings
     """
     # Initialize the objects:
-    inputs_object = classes_file.inputs_class() 
-    initials_object = classes_file.initials_class() 
-    probes_object = classes_file.probes_class()
-    settings_object = classes_file.settings_class() 
+    inputs_object = classes_file.Inputs() 
+    initials_object = classes_file.Initials() 
+    probes_object = classes_file.Probes()
+    settings_object = classes_file.Settings() 
     warnings = ""
     # I read the std values:
     std_values = read_std_values()

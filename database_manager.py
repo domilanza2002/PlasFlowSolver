@@ -5,9 +5,9 @@
 #.................................................
 import pandas as pd
 
-from classes import database_settings_class
-from classes import database_inputs_class
-from classes import database_class
+from classes import DatabaseSettings
+from classes import DatabaseInputs
+from classes import DatabaseClass
 import initial_conditions_map as ic_map_file
 
 def db_inputs_init():
@@ -16,7 +16,7 @@ def db_inputs_init():
     Returns:
         object: the database inputs
     """
-    db_inputs = database_inputs_class()
+    db_inputs = DatabaseInputs()
     db_inputs.P = []  # Pressure
     db_inputs.P_dyn = []  # Dynamic pressure
     db_inputs.q_target = []  # Target heat flux
@@ -96,7 +96,7 @@ def read_pfs_file():
         db_settings (database_settings_class): the database settings
     """
     # Variables:
-    db_settings = database_settings_class()
+    db_settings = DatabaseSettings()
     if (pfs_file_detected == False):
         raise Exception("FileError: The database_settings.pfs file cannot be read. This should not happen. Check the code.")
     # Read the file
@@ -392,7 +392,7 @@ def update_database(db_settings, db_inputs, out_vars, run_time):
         run_time (float): The run times of the simulation
     """
     # Variables:
-    db_data = database_class()
+    db_data = DatabaseClass()
     data = None  # Dictionary to store the data
     db = None  # Dataframe to store the data
     updated_db = None  # Dataframe to store the updated database

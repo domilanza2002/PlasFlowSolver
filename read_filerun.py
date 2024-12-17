@@ -8,7 +8,7 @@
 #   except for specific case data, checked in
 #   the retrieve_data_filerun.py module.
 #.................................................
-from classes import dataframe_class  # Module that contains the classes of the program
+from classes import DataframeClass  # Module that contains the classes of the program
 import script_run as script_run_file  # Module that contains the functions to detect if a scriptrun must be executed
 from initial_conditions_map import verify_ic_db  # Function to verify if the database exists
 from retrieve_helper import retrieve_mixture_name  # Function to retrieve the mixture name
@@ -321,7 +321,7 @@ def read_filerun(script_run):
     input_file.close() 
     n = len(comment)  # Number of cases
     # I now save the variables in the dataframe object
-    df_object = dataframe_class()  # Object with all the variables
+    df_object = DataframeClass()  # Object with all the variables
     df_object.n = n
     df_object.comment = comment
     df_object.P = P

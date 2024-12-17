@@ -5,7 +5,7 @@
 #   organize the final flow properties in 
 #   order to output them.
 #.................................................
-from classes import out_properties_class
+from classes import OutProperties
 
 def append_error_case(
     has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out,
@@ -252,7 +252,7 @@ def return_out_object(
         out_object (dict): output object
     """
     # Initialize the output object
-    out_object = out_properties_class()
+    out_object = OutProperties()
     # Assign the values
     out_object.has_converged_out = has_converged_out
     out_object.rho_out = rho_out
