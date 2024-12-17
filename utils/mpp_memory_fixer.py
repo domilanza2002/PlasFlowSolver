@@ -59,6 +59,7 @@ def fix_mpp_memory_leak():
     if(create_mixture_file(MIXTURE_NAME) == False):
         print("Error: Unable to create the mixture file.")
         print("Memory leak in the MPP library could happen.")
+        return
     # Create the Mixture object
     mix = mpp.Mixture(MIXTURE_NAME)
     # Delete the mixture file
