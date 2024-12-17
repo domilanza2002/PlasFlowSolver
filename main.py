@@ -12,23 +12,23 @@ import numpy as np  # Third party library for math operations
 import mutationpp as mpp  # Third party library for thermodynamic computations
 # Project file imports:
 # The format for the import is: "import filename as filename_file"
-import presentation as presentation_file  # Module to print the presentation of the program
-import prompt_program_mode as prompt_program_mode_file  # Module to prompt the program mode to the user
-import script_run as script_run_file  # Module to execute a scripted run from a bash.pfs file
-import read_data as read_data_file  # Module to read the data from the input file
-import retrieve_data as retrieve_data_file  # Module to retrieve the data from the dataframe
-import heat_flux as heat_flux_file  # Module to compute the stagnation heat flux
-import thermodyn as thermodyn_file  # Module to compute the flow enthalpy
-import barker_effect as barker_effect_file  # Module to compute the Barker effect
-import jacobian_matrix as jacobian_matrix_file  # Module to compute the Jacobian matrix of the system of equations
-import newton_operations as newton_operations_file  # Module to perform the Newton-Raphson's method
-import system_solve as system_solve_file  # Module to solve the system of equations
-import out_properties as out_properties_file  # Module to compute the output properties
-import write_output as write_output  # Module to write the output file
-import database_manager as database_manager_file  # Module to manage the database
-from exit_program import exit_program, clean_files  # Module to kill the program and kill the temporary files
-from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix Mutation++ memory leak (if any, due to Python wrapper)
-from classes import ProgramConstants
+import utils.presentation as presentation_file  # Module to print the presentation of the program
+import utils.prompt_program_mode as prompt_program_mode_file  # Module to prompt the program mode to the user
+import utils.script_run as script_run_file  # Module to execute a scripted run from a bash.pfs file
+import IO_operations.read_data as read_data_file  # Module to read the data from the input file
+import IO_operations.retrieve_data as retrieve_data_file  # Module to retrieve the data from the dataframe
+import heat_flux.heat_flux as heat_flux_file  # Module to compute the stagnation heat flux
+import system_resolution.thermodyn as thermodyn_file  # Module to compute the flow enthalpy
+import system_resolution.barker_effect as barker_effect_file  # Module to compute the Barker effect
+import system_resolution.jacobian_matrix as jacobian_matrix_file  # Module to compute the Jacobian matrix of the system of equations
+import system_resolution.newton_operations as newton_operations_file  # Module to perform the Newton-Raphson's method
+import system_resolution.system_solve as system_solve_file  # Module to solve the system of equations
+import system_resolution.out_properties as out_properties_file  # Module to compute the output properties
+import IO_operations.write_output as write_output  # Module to write the output file
+import utils.database_manager as database_manager_file  # Module to manage the database
+from utils.exit_program import exit_program, clean_files  # Module to kill the program and kill the temporary files
+from utils.mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix Mutation++ memory leak (if any, due to Python wrapper)
+from utils.classes import ProgramConstants
 #.................................................
 # PROGRAM CONSTANTS:
 program_constants = ProgramConstants()  # Program constants object

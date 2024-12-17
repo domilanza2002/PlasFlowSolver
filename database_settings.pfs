@@ -1,6 +1,0 @@
-Database name: new_db.csv
-Create database if not found: true
-Update if lower time: false
-Generate ic map: false
-ic map name (Do not include the .h5): db_air_11
-ic map mixture split: false

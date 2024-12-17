@@ -1,3 +1,5 @@
+# This is not a project file, but a script that can be used to run the main.py script on multiple xlsx files
+
 import subprocess  # For running python scripts from python
 
 def runner(xlsx_to_run):
