@@ -39,7 +39,7 @@ def load_ic_db(db_name):
         ic_db (initial_conditions_db_class): the initial conditions database object
     """
     # Create the object
-    ic_db = classes_file.initial_conditions_db_class()
+    ic_db = classes_file.InitialConditionsDB()
     # Read the h5py file
     with h5py.File(db_name, 'r') as f:
         points = f['points'][:]
@@ -128,7 +128,7 @@ def concatenate_ic_db(db_obj1, db_obj2):
     points = None  # Points of the database
     values = None  # Values of the database
     # New ic database
-    ic_db = classes_file.initial_conditions_db_class()
+    ic_db = classes_file.InitialConditionsDB()
     # Concatenate the data
     points = np.concatenate((db_obj1.db_inputs, db_obj2.db_inputs), axis=0)
     values = np.concatenate((db_obj1.db_outputs, db_obj2.db_outputs), axis=0)
@@ -149,7 +149,7 @@ def update_ic_db(ic_obj, db_obj):
         ic_obj (initial_conditions_db_class): the initial conditions database object
     """
     # Initialize the new ic database
-    new_ic_db = classes_file.initial_conditions_db_class()
+    new_ic_db = classes_file.InitialConditionsDB()
     # Extract the data
     P, P_dyn, q_target, T, T_t, u = depack_db_to_ic_obj(db_obj)
     # Create the new arrays
@@ -192,7 +192,7 @@ def interp_ic_db(ic_db, P, P_dyn, q_target, T_w, max_T_relax, multiplication_fac
     OFFSET_T_T = 100.0  # Offset for the total temperature
     MIN_U = 10  # Minimum flow velocity
     # Preliminary operations
-    initial_conditions = classes_file.initials_class()  # Object with the initial conditions
+    initial_conditions = classes_file.Initials()  # Object with the initial conditions
     int_point = [P, P_dyn, q_target]  # The point to interpolate
     points = ic_db.db_inputs  # The points of the database
     values = ic_db.db_outputs  # The values of the database

@@ -7,7 +7,7 @@
 #   inputs are read, but the settings are not retrieved.
 #   That is done in retrieve_data_srun.py.
 #.................................................
-from classes import dataframe_class  # Class that contains the dataframe object
+from classes import DataframeClass  # Class that contains the dataframe object
 from script_run import retrieve_filename  # Module that contains the bash run functions
 from retrieve_helper import pressure_consistency_check  # Function to check the pressure consistency
 from initial_conditions_map import verify_ic_db  # Function to verify the initial conditions database
@@ -203,7 +203,7 @@ def read_srun(script_run):
     max_T_relax = float(line.split("=")[1].strip())  # It is the float after the "=" sign
     file.close()    
     # I now store the variables in the dataframe object
-    df_object = dataframe_class() # I create the dataframe object to be returned
+    df_object = DataframeClass() # I create the dataframe object to be returned
     df_object.n = 1  # Number of cases (integer)
     df_object.comment = comment  # Comment (string)
     df_object.P = P  # Static pressure (float)

@@ -10,7 +10,7 @@
 #   retrieve_data_xlsx.py module.
 #.................................................
 import pandas as pd  # Library to read the xlsx file
-from classes import dataframe_class  # Module that contains the classes used in the program
+from classes import DataframeClass  # Module that contains the classes used in the program
 from script_run import retrieve_filename  # Module for the script run
 
 def prompt_input_file():
@@ -127,7 +127,7 @@ def read_xlsx(script_run):
     # Maximum value for the temperature used for relaxation:
     max_T_relax = df_dropped['max_T_relax [K]']
     # I store the values in the dataframe object
-    df_object = dataframe_class()  # The dataframe object to be returned
+    df_object = DataframeClass()  # The dataframe object to be returned
     df_object.n = n
     df_object.comment = comment
     df_object.P = P

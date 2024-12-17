@@ -3,18 +3,20 @@
 #.................................................
 #   This module contains all the classes used in the program.
 #   There are currently 13 classes:
-#   -CF_constants: contains the constants used to convert the read values to the SI units
-#   -database_settings_class: contains the database settings read from file
-#   -database_inputs_class: contains the database inputs
-#   -database_class: contains the database data to be stored
-#   -dataframe_class: contains all the variables read from the input files
-#   -inputs_class: contains the thermodynamic inputs of the program for the current case
-#   -initials_class: contains the initial conditions of the program for the current case
-#   -probes_class: contains the probe settings for the current case
-#   -settings_class: contains the settings of the program for the current case
-#   -initial_conditions_db_class: contains the initial conditions database for the current case
-#   -out_properties_class: contains the output properties of the program
+#   - CF_constants: contains the constants used to convert the read values to the SI units 
+#   - DatabaseSettings: contains the database settings read from file
+#   - DatabaseInputs: contains the database inputs
+#   - DatabaseClass: contains the database data to be stored
+#   - DataframeClass: contains all the variables read from the input files, regardless of the type of file
+#   - Inputs: contains the thermodynamic inputs of the program for the current case
+#   - Initials: contains the initial conditions of the program for the current case
+#   - Probes: contains the probe settings for the current case
+#   - Settings: contains the settings of the program for the current case
+#   - InitialConditionsDB: contains the initial conditions database for the current case
+#   - OutProperties: contains the output properties of the program
 #.................................................
+from types import SimpleNamespace
+
 class CF_constants:
     """This class contains the constants used to convert
     the read values to the SI units.
@@ -24,7 +26,7 @@ class CF_constants:
         self.Q_CF = 1e4  # Conversion factor for heat flux (W/cm^2->W/m^2)
         self.L_CF = 1e-3  # Conversion factor for length (mm->m)
 #.................................................
-class database_settings_class:
+class DatabaseSettings:
     """This class contains the database settings read from file.
     """
     def __init__(self):
@@ -35,7 +37,7 @@ class database_settings_class:
         self.ic_name = None  # Initial conditions map name
         self.ic_mixture_split_flag = None  # Flag to indicate if the initial conditions map should be split by mixture
 #.................................................
-class database_inputs_class:
+class DatabaseInputs:
     """This class contains the database inputs.
     """
     def __init__(self):
@@ -51,7 +53,7 @@ class database_inputs_class:
         self.barker_type =  None  # Barker's correction type
         self.stag_type =  None  # Stagnation type
 #.................................................
-class database_class:
+class DatabaseClass:
     """This class contains the database data to be stored.
     """
     def __init__(self):
@@ -75,7 +77,7 @@ class database_class:
         self.has_converged = None  # Flag to indicate if the iteration has converged
         self.run_time = None  # Runnning time
 #.................................................
-class dataframe_class:
+class DataframeClass:
     """This class contains all the variables read from
     the input files, regardless of the type of file.
     """
@@ -118,7 +120,7 @@ class dataframe_class:
         self.min_T_relax = None  # Minimum ammissible value for the temperature, used for relaxation (float)
         self.max_T_relax = None  # Maximum ammissible value for the temperature, used for relaxation (float)
 #..................................................
-class inputs_class: 
+class Inputs: 
     """This class contains the thermodynamic inputs of 
     the program for the current case.
     """
@@ -130,7 +132,7 @@ class inputs_class:
         self.q_target = None  # Target heat flux (float)
         self.mixture_name = None  # Mixture name (string)
 #.................................................
-class initials_class:
+class Initials:
     """This class contains the initial conditions 
     of the program for the current case.
     """
@@ -141,7 +143,7 @@ class initials_class:
         self.u_0 = None  # Initial flow velocity (float)
         self.P_t_0 = None  # Initial total pressure (float)
 #.................................................
-class probes_class:
+class Probes:
     """This class contains the probe settings
     for the current case.
     """
@@ -155,7 +157,7 @@ class probes_class:
         self.stag_type = None  # Stagnation type (integer)
         self.stag_var = None  # Stagnation variable, beta*u/R_m (float)
 #..................................................
-class settings_class:
+class Settings:
     """This class contains the settings of the program
     for the current case.
     """
@@ -172,7 +174,7 @@ class settings_class:
         self.min_T_relax = None #Minimum value for the temperature used for relaxation, float
         self.max_T_relax = None #Maximum value for the temperature used for relaxation, float
 #.................................................
-class initial_conditions_db_class:
+class InitialConditionsDB:
     """This class contains the initial conditions 
     database for the current case.
     """
@@ -180,7 +182,7 @@ class initial_conditions_db_class:
         self.db_inputs = None
         self.db_outputs = None
 #.................................................
-class out_properties_class:
+class OutProperties:
     """This class contains the output properties of the program.
     """
     def __init__(self):

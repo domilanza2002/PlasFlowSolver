@@ -32,10 +32,10 @@ def retrieve_data(df):
         settings_object (settings_class): the settings object
     """
     # I create the objects
-    inputs_object = classes_file.inputs_class()
-    initials_object = classes_file.initials_class() 
-    probes_object = classes_file.probes_class()
-    settings_object = classes_file.settings_class()
+    inputs_object = classes_file.Inputs()
+    initials_object = classes_file.Initials() 
+    probes_object = classes_file.Probes()
+    settings_object = classes_file.Settings()
     warnings = "" 
     # Inputs:
     inputs_object.comment = df.comment
