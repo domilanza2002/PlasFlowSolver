@@ -111,7 +111,7 @@ def read_srun(script_run):
     ic_db_name = line.split("=")[1].strip()  # The initial conditions database name is the string after the "=" sign
     if(verify_ic_db(ic_db_name) == True):  # If the initial conditions database is specified and valid, it is used, and 
         # the initial conditions are not read from the file
-        print("Initial database " + ic_db_name + " verified.")
+        print("Initial conditions database " + ic_db_name + " verified.")
         # I skip the lines that contain the initial conditions
         line = file.readline()
         line = file.readline()
