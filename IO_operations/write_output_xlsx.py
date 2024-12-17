@@ -162,7 +162,7 @@ def write_output_xlsx(output_filename, out_obj):
         for cell in col:
             try:
                 if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+                    max_length = len(str(cell.value))
             except:
                 pass
         adjusted_width = (max_length + 2)
@@ -175,31 +175,31 @@ def write_output_xlsx(output_filename, out_obj):
         for cell in col:
             try:
                 if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+                    max_length = len(str(cell.value))
             except:
                 pass
         adjusted_width = (max_length + 2)
         ws.column_dimensions[column].width = adjusted_width
     # For column 30 and for the one before the last column, base on the rows after the second row
-    for col in ws.iter_cols(min_row=3, max_row=df.shape[0], min_col=29, max_col=29):
+    for col in ws.iter_cols(min_row=3, max_row=df.shape[0]+2, min_col=30, max_col=30):
         max_length = 0
         column = col[0].column_letter
         for cell in col:
             try:
                 if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+                    max_length = len(str(cell.value))
             except:
                 pass
         adjusted_width = (max_length + 2)
         ws.column_dimensions[column].width = adjusted_width
     # For the column before the last, base on the rows after the second row
-    for col in ws.iter_cols(min_row=3, max_row=df.shape[0], min_col=df.shape[1]-1, max_col=df.shape[1]-1):
+    for col in ws.iter_cols(min_row=3, max_row=df.shape[0]+2, min_col=df.shape[1]-1, max_col=df.shape[1]-1):
         max_length = 0
         column = col[0].column_letter
         for cell in col:
             try:
                 if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+                    max_length = len(str(cell.value))
             except:
                 pass
         adjusted_width = (max_length + 2)
