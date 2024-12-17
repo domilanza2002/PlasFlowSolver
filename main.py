@@ -72,7 +72,11 @@ except Exception as e:
 #   MAIN PROGRAM LOOP:
 n_case = 0  # Case counter
 n_lines = df_object.n  # I store the number of cases to be executed = number of lines in the dataframe object
-print("Number of cases to be executed: " + str(n_lines) + ".")
+if (n_lines == 0):
+    print("No cases to be executed. The program will now terminate.")
+    exit_program()
+else:
+    print("Number of cases to be executed: " + str(n_lines) + ".")
 # I initialize the output vectors
 (
     has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, 
@@ -310,15 +314,27 @@ out_object = out_properties_file.return_out_object(
     Re_out, Kn_out, warnings_out, res_out, species_names_out, species_Y_out
 )
 # Writing the output file:
-write_output.write_output(output_filename, out_object, program_mode, df_object)
+try:
+    write_output.write_output(output_filename, out_object, program_mode, df_object)
+except Exception as e:
+    print("Unhandled exception while writing the output file: " + str(e))
+    print("Operation cancelled.")
 print("Writing output file...done")
 # Database operations:
 if (db_used):
     print("Generating database...")
-    database_manager_file.update_database(db_settings, db_inputs, out_object, run_time_vect)
+    try:
+        if(database_manager_file.update_database(db_settings, db_inputs, out_object, run_time_vect) != -1):
+            print("Database updated successfully.")
+        else:
+            print("Error while updating the database.")
+            print("Operation cancelled.")
+    except Exception as e:
+        print("Unhandled exception while updating the database: " + str(e))
+        print("Operation cancelled.")
     print("Generating database...done")
 # Clean temporary files:
 clean_files()
-print("Program terminated.")
+print("Program terminated!")
 t2 = time.time()
 print("Execution time: " + str(t2 - t1) + " seconds.")

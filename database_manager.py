@@ -223,12 +223,16 @@ def create_database(db_name):
     u = []  # Velocity
     P_t = []  # Total pressure
     run_time = []  # Run time
-    # I create the dictionary
-    data = {"P": P, "P_dyn": P_dyn, "q_target": q_target, "mixture_name": mixture_name, "T_w": T_w, "R_p": R_p, "R_m": R_m, "R_j": R_j,
-            "barker_type": barker_type, "stag_type": stag_type, "T": T, "T_t": T_t, "u": u, "P_t": P_t, "run_time": run_time}
-    # I create the dataframe
+    # Create the dictionary
+    data = {
+        "P": P, "P_dyn": P_dyn, "q_target": q_target, "mixture_name": mixture_name,
+        "T_w": T_w, "R_p": R_p, "R_m": R_m, "R_j": R_j,
+        "barker_type": barker_type, "stag_type": stag_type, "T": T, "T_t": T_t,
+        "u": u, "P_t": P_t, "run_time": run_time
+    }
+    # Create the dataframe
     db = pd.DataFrame(data)
-    # I save the dataframe
+    # Save the dataframe
     db.to_csv(db_name, index=False)
     
 def database_updater(db_name, db, lower_time_flag):
@@ -236,45 +240,51 @@ def database_updater(db_name, db, lower_time_flag):
 
     Args:
         db_name (str): The name of the database
-        db (dataframe): The new data to append
-        lower_time_flag (bool): The flag to update the run time only if it is lower
+        db (pandas dataframe): The new data to append
+        lower_time_flag (bool): The flag to update the run_time only if it is lower
 
     Raises:
         Exception: DatabaseError: The database could not be read. This should not happen. Check the code
 
     Returns:
-        dataframe: The updated database
+        dataframe (pandas dataframe): The updated database
     """
     # Constants:
-    TOL = 1e-3  # Tolerance for the comparison of the values
-    # Variables:
-    current_db = None  # Dataframe to store the current database
-    # I read the current database
+    TOL = 1e-1  # Tolerance for the comparison of the values
+    # Read the current database
     try:
         current_db = pd.read_csv(db_name)
     except:
-        raise Exception("DatabaseError: The database could not be read. This should not happen. Check the code.")
-    # I concatenate the two dataframes
+        raise Exception("DatabaseError: The database could not be read. This should not happen. Check your code.")
+    # Concatenate the two dataframes
     if(current_db.empty):
         current_db = db
     else:
         current_db = pd.concat([current_db, db], ignore_index=True)
-    # I drop the duplicates
+    # Drop the duplicates
     current_db = current_db.drop_duplicates()
-    # I update the run time if needed
+    # Update the run time if needed
     if (lower_time_flag == True):
-        # First check for exact duplicates
+        # Check for exact duplicates
+        # Sort by run time
         current_db = current_db.sort_values(by="run_time", ascending=True)
+        # Drop all the duplicates except the first one (lowest run time)
         current_db = current_db.drop_duplicates(subset=["P", "P_dyn", "q_target", "mixture_name", "T_w", "R_p", "R_m", "R_j", "barker_type", "stag_type"], keep="first")
+        # Reset the index
         current_db = current_db.reset_index(drop=True)
-        # Check with tolerance
-        l_t_s = len(current_db)
+        # Let's do the same but with some tolerance
+        l_t_s = len(current_db)  # Length of the dataframe
         i = 0
+        # Scan the rows
         while i < l_t_s:
             j = i + 1
+            # scan the rows with another index
             while j < l_t_s:
+                # Match information without tolerance
                 if (current_db["mixture_name"][i] == current_db["mixture_name"][j] and current_db["barker_type"][i] == current_db["barker_type"][j] and current_db["stag_type"][i] == current_db["stag_type"][j]):
+                    # Match information with tolerance
                     if (abs(current_db["P"][i] - current_db["P"][j]) < TOL and abs(current_db["P_dyn"][i] - current_db["P_dyn"][j]) < TOL and abs(current_db["q_target"][i] - current_db["q_target"][j]) < TOL and abs(current_db["T_w"][i] - current_db["T_w"][j]) < TOL and abs(current_db["R_p"][i] - current_db["R_p"][j]) < TOL and abs(current_db["R_m"][i] - current_db["R_m"][j]) < TOL and abs(current_db["R_j"][i] - current_db["R_j"][j]) < TOL):
+                        # Keep the lowest run time
                         if (current_db["run_time"][i] < current_db["run_time"][j]):
                             current_db = current_db.drop(j)
                             j = j - 1
@@ -289,7 +299,7 @@ def database_updater(db_name, db, lower_time_flag):
                 j = j + 1
             i = i + 1
         current_db = current_db.reset_index(drop=True)
-    # I return the updated database
+    # Return the updated database
     return current_db
 
 
@@ -300,65 +310,76 @@ def generate_ic_map(db, ic_name, ic_split_flag):
         db (dataframe): The database
         ic_mixture_split_flag (bool): The flag to split the mixtures in the IC map
     """
-    # Variables:
-    ic_filename = None  # The name of the IC map file
-    previous_ic = None  # The previous IC map
-    current_ic = None  # The current IC map
-    if (ic_split_flag == False):  # We do not split the mixtures
-        ic_filename = ic_name + ".h5"
+    # Before doing anything, we need to remove the duplicates indipedently from the run_time
+    db = db.drop_duplicates(subset=["P", "P_dyn", "q_target", "mixture_name", "T_w", "R_p", "R_m", "R_j", "barker_type", "stag_type"], keep="first")
+    db = db.reset_index(drop=True)
+    # Checkt the flag
+    if (ic_split_flag == False):  # We do not split per mixture
+        ic_filename = ic_name + ".h5"  # The name of the IC map
         # Verify the database
-        if(ic_map_file.verify_ic_db(ic_filename) == False):
+        if(ic_map_file.verify_ic_db(ic_filename) == False):  # ic_map does not exist
+            # Create the IC map
             try:
                 ic_map_file.create_ic_db(ic_filename, db)
             except Exception as e:
                 print("DatabaseError: The IC map could not be created. Error: ", e)
                 print("The IC map will not be generated.")
-                return
+                return -1
         else:  # The database exists
             try:
-                previous_ic = ic_map_file.load_ic_db(ic_filename)  # I load the previous IC map
+                # Return ic_object
+                previous_ic = ic_map_file.load_ic_db(ic_filename)  # Load the previous IC map
             except Exception as e:
                 print("DatabaseError: The IC map could not be loaded. Error: ", e)
                 print("The IC map will not be generated.")
-                return
-            # I update the IC map
+                return -1
+            # Update the IC map
             current_ic = ic_map_file.update_ic_db(previous_ic, db)
             try:
                 ic_map_file.create_ic_db_from_p_and_v(ic_filename, current_ic.db_inputs, current_ic.db_outputs)
             except Exception as e:
                 print("DatabaseError: The IC map could not be updated. Error: ", e)
                 print("The IC map will not be generated.")
-                return
-    else:  # We split the mixtures
-        # We find the unique mixtures
+                return -1
+    else:  # Split per mixtures
+        # Find the unique mixtures in the database
         mixtures = db["mixture_name"].unique()
-        # We create the IC maps
+        # Create an IC map for each mixture
         for mixture in mixtures:
+            # Create the name of the IC map
             ic_filename = ic_name + "_" + mixture + ".h5"
-            # Verify the database
+            # Verify if the IC map exists
             if(ic_map_file.verify_ic_db(ic_filename) == False):
+                # If it does not exist, create it
                 try:
+                    # Filter per mixture
                     current_ic = db[db["mixture_name"] == mixture]
+                    # Create the IC map
                     ic_map_file.create_ic_db(ic_filename, current_ic)
                 except Exception as e:
                     print("DatabaseError: The IC map could not be created. Error: ", e)
                     print("The IC map will not be generated.")
-                    return
-            else:
+                    return -1
+            else:  # The ic_map exists
+                # Load previous the IC map
                 try:
-                    previous_ic = ic_map_file.load_ic_db(ic_filename)  # I load the previous IC map
+                    previous_ic = ic_map_file.load_ic_db(ic_filename)
                 except Exception as e:
                     print("DatabaseError: The IC map could not be loaded. Error: ", e)
                     print("The IC map will not be generated.")
-                    return
+                    return -1
+                # Filter the database per mixture
                 current_db = db[db["mixture_name"] == mixture]
+                # Update the IC map
                 current_ic = ic_map_file.update_ic_db(previous_ic, current_db)
+                # Create the IC map from the updated data
                 try:
                     ic_map_file.create_ic_db_from_p_and_v(ic_filename, current_ic.db_inputs, current_ic.db_outputs)
                 except Exception as e:
                     print("DatabaseError: The IC map could not be updated. Error: ", e)
                     print("The IC map will not be generated.")
-                    return
+                    return -1
+    return 0
         
 
 def update_database(db_settings, db_inputs, out_vars, run_time):
@@ -375,7 +396,7 @@ def update_database(db_settings, db_inputs, out_vars, run_time):
     data = None  # Dictionary to store the data
     db = None  # Dataframe to store the data
     updated_db = None  # Dataframe to store the updated database
-    # Depackaging the database settings
+    # Unpackaging the database settings
     db_name = db_settings.db_name
     create_db_flag = db_settings.create_db_flag
     lower_time_flag = db_settings.lower_time_flag
@@ -387,10 +408,9 @@ def update_database(db_settings, db_inputs, out_vars, run_time):
         print("DatabaseError: The database is not valid and the create_db_flag is set to False. The database will not be generated.")
         return
     if (verify_database(db_name) == False and create_db_flag == True):
-        create_database(db_name)  # I create the database
+        create_database(db_name)  # This is a dataframe
         print("The database has been created.")
-    # Now we need to update the database
-    # Packing all the data
+    # Packing all the data up
     db_data.P = db_inputs.P
     db_data.P_dyn = db_inputs.P_dyn
     db_data.q_target = db_inputs.q_target
@@ -407,22 +427,29 @@ def update_database(db_settings, db_inputs, out_vars, run_time):
     db_data.P_t = out_vars.P_t_out
     db_data.has_converged = out_vars.has_converged_out
     db_data.run_time = run_time
-    # I create the dictionary
+    # Create the dictionary
     data = {"P": db_data.P, "P_dyn": db_data.P_dyn, "q_target": db_data.q_target, "mixture_name": db_data.mixture_name, "T_w": db_data.T_w, "R_p": db_data.R_p, "R_m": db_data.R_m, "R_j": db_data.R_j,
             "barker_type": db_data.barker_type, "stag_type": db_data.stag_type, "T": db_data.T, "T_t": db_data.T_t, "u": db_data.u, "P_t": db_data.P_t, "run_time": db_data.run_time, "has_converged": db_data.has_converged}
-    # I create the dataframe
+    # Create the pandas dataframe
     db = pd.DataFrame(data)
-    # I delete the rows which did not converge
+    # Delete the rows which did not converge
     db = db[db["has_converged"] == "yes"]
-    # I drop the has_converged column
+    # Drop the has_converged column
     db = db.drop(columns=["has_converged"])
-    # I update the database
+    # Update the database
     updated_db = database_updater(db_name, db, lower_time_flag)
-    # I save the updated database
+    # Save the updated database
     updated_db.to_csv(db_name, index=False)
     print("The database has been updated.")
     # If needed, we generate the IC map
     if (generate_ic_flag == True):
         generate_ic_map(updated_db, ic_map_name, ic_mixture_split_flag)
         print("The IC map has been generated.")
-    
+#.................................................
+#   Possible improvements:
+#   - The database_class is kind of useless
+#   and could be removed.
+#.................................................
+#   KNOW PROBLEMS: 
+#   None
+#.................................................

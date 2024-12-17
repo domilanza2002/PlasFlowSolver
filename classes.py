@@ -64,16 +64,16 @@ class database_class:
         self.R_p = None  # Pitot external radius
         self.R_m = None  # Heat flux probe external radius
         self.R_j = None  # Plasma jet radius
-        self.barker_type = None  # Barker's correction type
+        self.barker_type = None  # Barker correction type
         self.stag_type = None  # Stagnation type
         # Output properties:
         self.T = None  # Temperature
         self.T_t = None  # Total temperature
         self.u = None  # Flow velocity
         self.P_t = None  # Total pressure
-        self.time = None  # Runnning time
         # Convergence properties:
         self.has_converged = None  # Flag to indicate if the iteration has converged
+        self.run_time = None  # Runnning time
 #.................................................
 class dataframe_class:
     """This class contains all the variables read from
