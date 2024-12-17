@@ -259,7 +259,7 @@ def retrieve_data(df,n_case):
     # Initials:
     ic_db_name = df.ic_db_name[n_case]  # Initial conditions database name (string)
     if(verify_ic_db(ic_db_name) == True):
-        print("Initial database " + ic_db_name + " verified.")
+        print("Initial conditions database " + ic_db_name + " verified.")
         initials_object, warnings_int = retrieve_ic(
             ic_db_name, inputs_object.P, inputs_object.P_dyn, inputs_object.q_target,
             probes_object.T_w, settings_object.max_T_relax
@@ -268,8 +268,8 @@ def retrieve_data(df,n_case):
             warnings += warnings_int
     else:
         if(ic_db_name != "" and (pd.isna(ic_db_name) == False)):
-            print("Initial database " + ic_db_name + " invalid. Initial conditions will be read from the file.")
-            warnings += "Invalid database, the initial conditions are read from the xlsx file.|"
+            print("Initial conditions database " + ic_db_name + " invalid. Initial conditions will be read from the file.")
+            warnings += "Invalid initial conditions database|"
         T_0 = df.T_0[n_case]  # Initial temperature (float)
         if (is_valid_data(T_0) == False):
             initials_object.T_0 = std_values.T_0

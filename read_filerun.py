@@ -111,7 +111,7 @@ def read_filerun(script_run):
     line = settings_file.readline()
     ic_db_name = line.split("=")[1].strip()  # Initial conditions database name (string)
     if (verify_ic_db(ic_db_name) == True):
-        print("Initial database " + ic_db_name + " verified.")
+        print("Initial conditions database " + ic_db_name + " verified.")
         # I skip the lines that contain the initial conditions
         line = settings_file.readline()
         line = settings_file.readline()

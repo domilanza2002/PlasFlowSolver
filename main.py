@@ -29,12 +29,12 @@ import database_manager as database_manager_file  # Module to manage the databas
 from exit_program import exit_program, clean_files  # Module to kill the program and kill the temporary files
 from mpp_memory_fixer import fix_mpp_memory_leak  # Module to fix Mutation++ memory leak (if any, due to Python wrapper)
 #.................................................
-# PROGRAM CONSTANTS: %TO REVIEW
+# PROGRAM CONSTANTS:
 USE_PREV_ITE_FILENAME = "hf_first_comp.var"  # File to store the flag for the use_prev_ite option
 #.................................................
 #   PROGRAM START:
 # Preliminary operations:
-t1 = time.time()  # I store the time at the beginning of the program to keep track of the execution time
+t1 = time.perf_counter()  # I store the time at the beginning of the program to keep track of the execution time
 presentation_file.presentation()  # I write the presentation of the program
 fix_mpp_memory_leak()  # Fix the memory leak in the MPP library:
 # Program scripting check:
@@ -77,7 +77,7 @@ if (n_lines == 0):
     exit_program()
 else:
     print("Number of cases to be executed: " + str(n_lines) + ".")
-# I initialize the output vectors
+# Initialize the output vectors
 (
     has_converged_out, rho_out, T_out, h_out, u_out, a_out, M_out, T_t_out, 
     h_t_out, P_t_out, Re_out, Kn_out, warnings_out, res_out, 
@@ -86,7 +86,7 @@ else:
 print("Starting main program loop...")
 while (n_case < n_lines):  # Loop through all the cases
     print("--------------------------------------------------")
-    # Now I retrieve the data for the current case
+    # Retrieve the data for the current case
     try:
         (
             inputs_object, initials_object, probes_object, 
@@ -155,7 +155,7 @@ while (n_case < n_lines):  # Loop through all the cases
     # Database operation:
     if(db_used):
         db_inputs = database_manager_file.db_inputs_append(db_inputs, inputs_object, probes_object)
-        t_start_case = time.time()  # I store the time at the beginning of the case
+        t_start_case = time.perf_counter()  # I store the time at the beginning of the case
     # NEWTON-RAPHSON LOOP:
     while (iter < max_newton_iter):
         iter += 1
@@ -257,7 +257,7 @@ while (n_case < n_lines):  # Loop through all the cases
     #.................................................
     # Database operation:
     if (db_used):
-        t_end_case = time.time()  # Store the time at the end of the case
+        t_end_case = time.perf_counter()  # Store the time at the end of the case
         run_time_vect.append(t_end_case - t_start_case)  # Store the run time
     # Check if the heat flux converged in the last iteration:
     if (bad_hf):
@@ -336,5 +336,14 @@ if (db_used):
 # Clean temporary files:
 clean_files()
 print("Program terminated!")
-t2 = time.time()
+t2 = time.perf_counter()  # I store the time at the end of the program to keep track of the execution time
 print("Execution time: " + str(t2 - t1) + " seconds.")
+#.................................................
+#   Possible improvements:
+#   - Group all constants in a single file
+#   - Add flag for mole/mass fractions
+#.................................................
+#   KNOW PROBLEMS: 
+#   - Mach number < 1 should be enforced with 
+#   same penalization scheme in the Newton loop
+#.................................................
