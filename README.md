@@ -11,5 +11,7 @@ PlasFlowSolver is a Python-based data reduction code designed to determine free-
 - **Dependencies:**
   - `numpy`
   - `scipy`
-  - `mutationpp` (Mutation++ Python interface)
-  - to finish
+  - `mutationpp`
+  - `h5py`
+  - `openpyxl`
+  - `pandas`
